@@ -28,3 +28,8 @@
   --ifm-color-primary-lightest: #4fddbf;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
+
+.markdown > h2 {
+  border-bottom: 1px var(--ifm-color-content) dotted;
+  padding-bottom: 0.3rem;
+}
