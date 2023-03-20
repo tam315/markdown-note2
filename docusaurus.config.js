@@ -86,7 +86,7 @@ const config = {
           //   label: 'Docs',
           // },
           {
-            href: 'https://github.com/facebook/docusaurus',
+            href: 'https://github.com/junkboy0315/markdown-note2',
             label: 'GitHub',
             position: 'right',
           },
