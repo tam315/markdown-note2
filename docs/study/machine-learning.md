@@ -500,7 +500,7 @@ accuracy
 
 - `cross_val_score()` --- k-fold cross validation を行う
 
-<Img src="//s3.amazonaws.com/dq-content/185/kaggle_cross_validation.svg" maxWidth="500px" />
+<img src="//s3.amazonaws.com/dq-content/185/kaggle_cross_validation.svg" maxWidth="500px" />
 
 ```py
 from sklearn.model_selection import cross_val_score
