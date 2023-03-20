@@ -329,7 +329,7 @@ $n$が大きくなるほど、標準正規分布に近づく。
   - 最尤（さいゆう）推定
   - ベイズ推定
 
-<Slideshare slideId="jEIgDi1eRs54TU" startPage="17" maxWidth="360px" />
+[参考動画](https://www.slideshare.net/slideshow/embed_code/key/jEIgDi1eRs54TU)
 
 ## 複数の入出力をまとめて処理する
 
