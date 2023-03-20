@@ -8,7 +8,7 @@ const katex = require('rehype-katex');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'My Site',
+  title: 'Yuuniworks Notes',
   tagline: 'Dinosaurs are cool',
   favicon: 'img/favicon.ico',
 
@@ -71,20 +71,20 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       // Replace with your project's social card
-      image: 'img/docusaurus-social-card.jpg',
+      // image: 'img/docusaurus-social-card.jpg',
       navbar: {
-        title: 'My Site',
-        logo: {
-          alt: 'My Site Logo',
-          src: 'img/logo.svg',
-        },
+        title: 'Yuuniworks Notes',
+        // logo: {
+        //   alt: 'Yuuniworks Notes Logo',
+        //   src: 'img/logo.svg',
+        // },
         items: [
-          {
-            type: 'doc',
-            docId: 'intro',
-            position: 'left',
-            label: 'Docs',
-          },
+          // {
+          //   type: 'doc',
+          //   docId: 'intro',
+          //   position: 'left',
+          //   label: 'Docs',
+          // },
           {
             href: 'https://github.com/facebook/docusaurus',
             label: 'GitHub',
