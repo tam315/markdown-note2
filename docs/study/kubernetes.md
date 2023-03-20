@@ -1,4 +1,4 @@
-# [Kubernetes](http://kubernetes.io/docs/)
+# Kubernetes
 
 ## 環境構築メモ
 
