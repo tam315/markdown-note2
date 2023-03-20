@@ -8,12 +8,12 @@ const katex = require('rehype-katex');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'Yuuniworks Notes',
-  tagline: 'Dinosaurs are cool',
+  title: 'Yuuniworks Note',
+  tagline: 'Shota Tamuraの個人的なメモ帳です✍🏻',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
-  url: 'https://your-docusaurus-test-site.com',
+  url: 'https://note.yuuniworks.com',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
@@ -73,9 +73,9 @@ const config = {
       // Replace with your project's social card
       // image: 'img/docusaurus-social-card.jpg',
       navbar: {
-        title: 'Yuuniworks Notes',
+        title: 'Yuuniworks Note',
         // logo: {
-        //   alt: 'Yuuniworks Notes Logo',
+        //   alt: 'Yuuniworks Note Logo',
         //   src: 'img/logo.svg',
         // },
         items: [
