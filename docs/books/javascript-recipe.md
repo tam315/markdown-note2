@@ -1,7 +1,5 @@
 # JavaScript コードレシピ集
 
-[[toc]]
-
 ## Bool, Number, String
 
 ### slice

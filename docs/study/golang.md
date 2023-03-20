@@ -1,7 +1,5 @@
 # Golang
 
-[[toc]]
-
 ## Packages, Valiables and Functions
 
 ### Packages

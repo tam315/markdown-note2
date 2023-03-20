@@ -1,7 +1,5 @@
 # JWT Tutorial w/ Node.js, GraphQL, React
 
-[[toc]]
-
 [動画](https://www.youtube.com/watch?v=25GS0MLT8JU)のまとめ
 
 ## サーバ側

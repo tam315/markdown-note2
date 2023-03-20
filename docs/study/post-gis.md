@@ -1,7 +1,5 @@
 # PostGIS
 
-[[toc]]
-
 ## Query
 
 ### 前提

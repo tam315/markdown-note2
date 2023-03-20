@@ -1,7 +1,5 @@
 # Django REST framework
 
-[[toc]]
-
 ## Serialization
 
 ### Model の作成

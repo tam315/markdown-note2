@@ -1,7 +1,5 @@
 # Gatsby
 
-[[toc]]
-
 ## 基本
 
 ### 初期設定
@@ -157,7 +155,7 @@ export const query = graphql`
 
 GraphiQL is the GraphQL integrated development environment (IDE). It's a powerful (and all-around awesome) tool you'll use often while building Gatsby websites.
 
-http://localhost:8000/___graphql　でアクセスできる。
+http://localhost:8000/\_\_\_graphql 　でアクセスできる。
 
 - 主要コマンド
   - Ctrl+Space オートコンプリート
@@ -338,7 +336,7 @@ exports.createPages = ({ graphql, boundActionCreators }) => {
           }
         }
       }
-    `).then(result => {
+    `).then((result) => {
       result.data.allMarkdownRemark.edges.forEach(({ node }) => {
         createPage({
           path: node.fields.slug,

@@ -4,8 +4,6 @@ category: python
 
 # Python
 
-[[toc]]
-
 ## 基本
 
 ### インストール

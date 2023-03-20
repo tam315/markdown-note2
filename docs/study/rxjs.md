@@ -1,19 +1,17 @@
 # RxJS
 
-[[toc]]
-
 [参考](https://chrisnoring.gitbooks.io/rxjs-5-ultimate/)
 
 ## create observable
 
 ```js
 // create
-const stream$ = Observable.create(observer => {
+const stream$ = Observable.create((observer) => {
   observer.next(1);
   observer.error('error message');
   observer.complete();
 
-  return function() {
+  return function () {
     someCleanUp();
   };
 });
@@ -47,8 +45,8 @@ subscription.unsubscribe();
 
 // cold observable => 1,2,3,1,2,3
 let stream$ = of(1, 2, 3);
-stream$.subscribe(data => console.log(data));
-stream$.subscribe(data => console.log(data));
+stream$.subscribe((data) => console.log(data));
+stream$.subscribe((data) => console.log(data));
 
 // hot observable => 0,1,2,2,3,3,4,4
 let stream$ = interval(1000).pipe(
@@ -56,14 +54,14 @@ let stream$ = interval(1000).pipe(
   publish(), // important
 );
 stream$.subscribe(
-  data => console.log(`subscriber from first minute: ${data}`),
-  err => console.log(err),
+  (data) => console.log(`subscriber from first minute: ${data}`),
+  (err) => console.log(err),
   () => console.log('completed'),
 );
 setTimeout(() => {
   stream$.subscribe(
-    data => console.log(`subscriber from 2nd minute: ${data}`),
-    err => console.log(err),
+    (data) => console.log(`subscriber from 2nd minute: ${data}`),
+    (err) => console.log(err),
     () => console.log('completed'),
   );
 }, 2100);
@@ -77,10 +75,10 @@ let stream$ = interval(1000).pipe(
   refCount(), // important
 );
 setTimeout(() => {
-  stream$.subscribe(data => console.log(data));
+  stream$.subscribe((data) => console.log(data));
 }, 2000);
 setTimeout(() => {
-  stream$.subscribe(data => console.log(data));
+  stream$.subscribe((data) => console.log(data));
 }, 5100);
 ```
 
@@ -91,24 +89,24 @@ setTimeout(() => {
 const stream$ = of(1, 2, 3, 4, 5);
 
 // tap
-tap(value => console.log(value));
+tap((value) => console.log(value));
 
 // filter
-filter(value => value % 2 == 0);
+filter((value) => value % 2 == 0);
 
 // creating observable in observable
 const stream$ = of(1, 2, 3).pipe(
   // we need to make it 'flat' because 'map' returns array of observable
-  flatMap(val =>
+  flatMap((val) =>
     of(val)
       .pipe(ajax({ url: url + val }))
-      .pipe(map(e => e.response)),
+      .pipe(map((e) => e.response)),
   ),
 );
 
 // fetch
 from(fetch('https://jsonplaceholder.typicode.com/posts/1/'))
-  .pipe(flatMap(res => from(res.json())))
+  .pipe(flatMap((res) => from(res.json())))
   .subscribe(console.log);
 
 // to promise
@@ -158,7 +156,7 @@ debounceTime(500); // wait 0.5s and pass to next. timer and values is throw away
 // buffer (0,1,2,3,4,5,6,7,8,9) => ([0,1,2,3,4],[5,6,7,8,9])
 let breakWhen$ = interval(500);
 let stream$ = interval(100).pipe(buffer(breakWhen$));
-stream$.subscribe(data => console.log('values', data));
+stream$.subscribe((data) => console.log('values', data));
 
 // buffertime
 bufferTime(500);
@@ -173,7 +171,7 @@ buffer(interval(500));
 // retry all th stream from the beginning
 // (1, 2) => (1,1,1,1,1,1,2(error))
 let stream$ = of(1, 2).pipe(
-  map(value => {
+  map((value) => {
     if (value > 1) throw 'error';
     return value;
   }),
@@ -181,13 +179,13 @@ let stream$ = of(1, 2).pipe(
 );
 
 // retryWhen
-retryWhen(stream => stream.delay(200));
+retryWhen((stream) => stream.delay(200));
 
 // catchError(エラーを正常系に変換して流す)
-let error$ = throwError('crash').pipe(catchError(err => of('patched', err)));
+let error$ = throwError('crash').pipe(catchError((err) => of('patched', err)));
 error$.subscribe(
-  data => console.log(data),
-  err => console.error(err),
+  (data) => console.log(data),
+  (err) => console.error(err),
   () => console.log('complete'),
 );
 // ('patched', 'crash', 'complete')　すべて正常系

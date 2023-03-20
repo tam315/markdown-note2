@@ -1,7 +1,5 @@
 # Node.js
 
-[[toc]]
-
 ## File System (fs)
 
 ### readFile
@@ -60,12 +58,12 @@ fs.unlinkSync('some.txt');
 const process = spawn('ls', ['-la']);
 
 // 標準出力のハンドリング
-process.stdout.on('data', data => {});
+process.stdout.on('data', (data) => {});
 
 // 標準エラーのハンドリング
-process.stderr.on('data', data => {});
+process.stderr.on('data', (data) => {});
 
 // 終了のハンドリング
 // codeが0でなければエラーが発生したことを意味する
-process.on('close', code => {});
+process.on('close', (code) => {});
 ```

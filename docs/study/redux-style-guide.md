@@ -1,7 +1,5 @@
 # Redux - Style Guide
 
-[[toc]]
-
 ## 絶対に守ること
 
 ### state を改変しない

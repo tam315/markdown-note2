@@ -1,7 +1,5 @@
 # Prettier
 
-[[toc]]
-
 ## セッティング
 
 ```yaml

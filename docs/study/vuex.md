@@ -1,7 +1,5 @@
 # Vuex
 
-[[toc]]
-
 ## What is Vuex
 
 - State を予見可能な形で集中管理する

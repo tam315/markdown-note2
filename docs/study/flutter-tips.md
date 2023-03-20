@@ -1,7 +1,5 @@
 # Flutter - tips
 
-[[toc]]
-
 ## 縦横スクロールバーを常時表示する
 
 https://github.com/flutter/flutter/issues/70380#issuecomment-841544548

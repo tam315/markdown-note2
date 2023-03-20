@@ -1,20 +1,19 @@
 # Type challenges
 
-[[toc]]
-
 ## 雑多メモ
 
 - 左辺の`extends`は、受け取れる型の定義に使う
 - 右辺の`extends`は、型の検査(===や!==に近いイメージ)に使う
-  - ここでUnion型を使った場合は、総当りで処理されるイメージになる(詳細は`Exclude`を参照)
-- オブジェクトのkey名部分では`[P in ***]`のような表記ができる。この`P`は右辺でそのまま使える。
-- `SomeArr[number]`で、配列型をUnion型に変換できる
+  - ここで Union 型を使った場合は、総当りで処理されるイメージになる(詳細は`Exclude`を参照)
+- オブジェクトの key 名部分では`[P in ***]`のような表記ができる。この`P`は右辺でそのまま使える。
+- `SomeArr[number]`で、配列型を Union 型に変換できる
+
   ```ts
-  type List = (string | number | boolean)[]
+  type List = (string | number | boolean)[];
 
   // - string | number | boolean になる
   // - 配列が持ちうる全ての型を、Union型にまとめる感じ
-  type Elem = List[number]
+  type Elem = List[number];
   ```
 
 ## --- Challenges - Easy ---
@@ -23,17 +22,17 @@
 
 ```ts
 interface Todo {
-  title: string
-  description: string
-  completed: boolean
+  title: string;
+  description: string;
+  completed: boolean;
 }
 
-type TodoPreview = MyPick<Todo, 'title' | 'completed'>
+type TodoPreview = MyPick<Todo, 'title' | 'completed'>;
 
 const todo: TodoPreview = {
-    title: 'Clean room',
-    completed: false,
-}
+  title: 'Clean room',
+  completed: false,
+};
 ```
 
 ```ts
@@ -46,20 +45,20 @@ type Pick<T, K extends keyof T> = {
 
 ```ts
 interface Todo {
-  title: string
-  description: string
+  title: string;
+  description: string;
 }
 
 const todo: MyReadonly<Todo> = {
-  title: "Hey",
-  description: "foobar"
-}
+  title: 'Hey',
+  description: 'foobar',
+};
 ```
 
 ```ts
 type MyReadonly<T> = {
-  readonly [P in keyof T]: T[P]
-}
+  readonly [P in keyof T]: T[P];
+};
 ```
 
 ## Tuple to object
@@ -83,11 +82,11 @@ type TupleToObject<T extends readonly string[]> = {
 ## First of Array
 
 ```ts
-type arr1 = ['a', 'b', 'c']
-type arr2 = [3, 2, 1]
+type arr1 = ['a', 'b', 'c'];
+type arr2 = [3, 2, 1];
 
-type head1 = First<arr1> // expected to be 'a'
-type head2 = First<arr2> // expected to be 3
+type head1 = First<arr1>; // expected to be 'a'
+type head2 = First<arr2>; // expected to be 3
 ```
 
 ```ts
@@ -97,15 +96,21 @@ type First<T extends any[]> = T extends [] ? never : T[0];
 ## Length of Tuple
 
 ```ts
-type tesla = ['tesla', 'model 3', 'model X', 'model Y']
-type spaceX = ['FALCON 9', 'FALCON HEAVY', 'DRAGON', 'STARSHIP', 'HUMAN SPACEFLIGHT']
+type tesla = ['tesla', 'model 3', 'model X', 'model Y'];
+type spaceX = [
+  'FALCON 9',
+  'FALCON HEAVY',
+  'DRAGON',
+  'STARSHIP',
+  'HUMAN SPACEFLIGHT',
+];
 
-type teslaLength = Length<tesla>  // expected 4
-type spaceXLength = Length<spaceX> // expected 5
+type teslaLength = Length<tesla>; // expected 4
+type spaceXLength = Length<spaceX>; // expected 5
 ```
 
 ```ts
-type Length<T extends any[]> = T['length']
+type Length<T extends any[]> = T['length'];
 ```
 
 ## Exclude
@@ -122,9 +127,9 @@ type MyExclude<T, U> = T extends U ? never : T;
 ## Awaited
 
 ```ts
-type MyPromise = Promise<number>
+type MyPromise = Promise<number>;
 // expected number
-type MyPromiseResult = Awaited<MyPromise>
+type MyPromiseResult = Awaited<MyPromise>;
 ```
 
 ```ts
@@ -166,11 +171,11 @@ type Includes<T extends any[], U> = U extends T[number] ? true : false;
 ## Push
 
 ```ts
-type Result = Push<[1, 2], 3> // [1, 2, 3]
+type Result = Push<[1, 2], 3>; // [1, 2, 3]
 ```
 
 ```ts
-type Push<T extends any[], U> = [...T, U]
+type Push<T extends any[], U> = [...T, U];
 ```
 
 ## Unshift
@@ -186,9 +191,9 @@ type Unshift<T extends any[], U> = [U, ...T];
 ## Parameters
 
 ```ts
-type MyFunction = (i: number, s:string) => void;
+type MyFunction = (i: number, s: string) => void;
 // expects [i: number, s: string]
-type MyParameter = Parameter<MyFunction>
+type MyParameter = Parameter<MyFunction>;
 ```
 
 ```ts
@@ -216,48 +221,48 @@ type MyReturnType<T> = T extends (...args) => infer R ? R : never;
 
 ```ts
 interface Todo {
-  title: string
-  description: string
-  completed: boolean
+  title: string;
+  description: string;
+  completed: boolean;
 }
 
-type TodoPreview = MyOmit<Todo, 'description' | 'title'>
+type TodoPreview = MyOmit<Todo, 'description' | 'title'>;
 
 const todo: TodoPreview = {
   completed: false,
-}
+};
 ```
 
 ```ts
 type MyOmit<T, U> = {
-  [P in Exclude<keyof T, U>]: T[P]
-}
+  [P in Exclude<keyof T, U>]: T[P];
+};
 ```
 
 ## Readonly 2
 
 ```ts
 interface Todo {
-  title: string
-  description: string
-  completed: boolean
+  title: string;
+  description: string;
+  completed: boolean;
 }
 
 const todo: MyReadonly2<Todo, 'title' | 'description'> = {
-  title: "Hey",
-  description: "foobar",
+  title: 'Hey',
+  description: 'foobar',
   completed: false,
-}
+};
 
-todo.title = "Hello" // Error: cannot reassign a readonly property
-todo.description = "barFoo" // Error: cannot reassign a readonly property
-todo.completed = true // OK
+todo.title = 'Hello'; // Error: cannot reassign a readonly property
+todo.description = 'barFoo'; // Error: cannot reassign a readonly property
+todo.completed = true; // OK
 ```
 
 ```ts
 type MyReadonly2<T, K extends keyof T> = T & {
-  readonly [P in K]: T[P]
-}
+  readonly [P in K]: T[P];
+};
 ```
 
 ## Deep Readonly
@@ -269,11 +274,10 @@ pass
 
 ```ts
 // 変数ではなく tuple type である点に注意
-type Arr = ['1', '2', '3']
-const a: TupleToUnion<Arr> // expected to be '1' | '2' | '3'
+type Arr = ['1', '2', '3'];
+const a: TupleToUnion<Arr>; // expected to be '1' | '2' | '3'
 ```
 
 ```ts
-type TupleToUnion<T extends any[]> = T[number]
+type TupleToUnion<T extends any[]> = T[number];
 ```
-

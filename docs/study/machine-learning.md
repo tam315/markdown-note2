@@ -2,8 +2,6 @@
 
 Pandas, NumPy, scikit-learn など
 
-[[toc]]
-
 ## 機械学習
 
 ### 目的

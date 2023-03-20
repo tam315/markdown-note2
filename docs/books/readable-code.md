@@ -1,7 +1,5 @@
 # リーダブルコード
 
-[[toc]]
-
 ## 表面上の改善
 
 ### 理解しやすいコード
@@ -39,16 +37,16 @@ serverCanStart() => canListenOnPort()
 
 ```js
 // フォーマットを追加する
-const id = "af84ef845cd8";
-const hexId = "af84ef845cd8";
+const id = 'af84ef845cd8';
+const hexId = 'af84ef845cd8';
 
 // 単位を追加する
 const size = 10;
 const sizeMb = 10;
 
 // 文脈を追加する（セキュリティ被害やバグが出そうな場合）
-const url = "http://danger.com";
-const untrustedUrl = "http://danger.com";
+const url = 'http://danger.com';
+const untrustedUrl = 'http://danger.com';
 ```
 
 #### 名前の長さ

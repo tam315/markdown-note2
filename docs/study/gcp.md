@@ -1,7 +1,5 @@
 # Google Cloud Platform
 
-[[toc]]
-
 ## Functions
 
 ### babel 関係のセットアップ

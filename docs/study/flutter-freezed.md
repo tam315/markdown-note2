@@ -1,7 +1,5 @@
 # Flutter - Freezed
 
-[[toc]]
-
 ## 参考資料
 
 - [freezed パッケージの使い方](https://note.com/mxiskw/n/n55441444bd46)

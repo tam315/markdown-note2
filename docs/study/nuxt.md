@@ -1,7 +1,5 @@
 # Nuxt.js
 
-[[toc]]
-
 ## API
 
 [https://nuxtjs.org/api](https://nuxtjs.org/api)

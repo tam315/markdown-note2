@@ -1,7 +1,5 @@
 # Apollo Client
 
-[[toc]]
-
 ## なぜ Apollo Client か
 
 ### 宣言的なデータ取得

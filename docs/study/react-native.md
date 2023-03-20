@@ -1,7 +1,5 @@
 # React Native
 
-[[toc]]
-
 ## セットアップ
 
 ### ドキュメント
@@ -122,7 +120,7 @@ DOM と異なり、例えば View などのオブジェクトは、デフォル�
 <FlatList
   style={styles.container}
   data={props.places}
-  renderItem={info => (
+  renderItem={(info) => (
     <ListItem
       placeName={info.item.name}
       onPress={() => props.onItemDeleted(info.item.key)}
@@ -706,7 +704,7 @@ const region = {
 下記のようにしたうえで、`this.map.***` の形で呼び出せる。
 
 ```jsx
-<MapView ref={ref => (this.map = ref)} />
+<MapView ref={(ref) => (this.map = ref)} />
 ```
 
 [MapView のメソッド例](https://github.com/react-community/react-native-maps/blob/master/docs/mapview.md#methods)

@@ -1,7 +1,5 @@
 # Algorithms
 
-[[toc]]
-
 ## Sort
 
 ### Quick Sort
@@ -13,7 +11,7 @@
 - pivot は、各ループが回り終わったあとに、ソート完了後の正しい位置にいる
 - pivot の左側は pivot より小さく、右側は大きい
 
-JavaScriptは末尾再帰最適化に対応していない。このため、再帰処理を使うとstack overflowになりがち。下記のようにwhileで実装するのが安心。
+JavaScript は末尾再帰最適化に対応していない。このため、再帰処理を使うと stack overflow になりがち。下記のように while で実装するのが安心。
 
 ```js
 function quicksort(array) {
@@ -80,4 +78,4 @@ quicksort([3, 6, 2, 4, 1, 5]); // => [1,2,3,4,5,6]
    - ファイルをいくつかに分割する
    - 分割したファイルごとに、クイックソートなどを使ってインメモリで並び替える
 2. Marge Phase
-   ソート済みの分割ファイル群を [k-way merge](https://www.youtube.com/watch?v=wTAVwbvjiac) (マージソート、Minimun Heapなどの組み合わせ)を使って一つのファイルに統合する
+   ソート済みの分割ファイル群を [k-way merge](https://www.youtube.com/watch?v=wTAVwbvjiac) (マージソート、Minimun Heap などの組み合わせ)を使って一つのファイルに統合する

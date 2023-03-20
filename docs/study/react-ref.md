@@ -1,7 +1,5 @@
 # React - Ref
 
-[[toc]]
-
 ## Refs and the DOM
 
 ### 「宣言的」と「命令的」の違い
@@ -73,7 +71,7 @@ class CustomTextInput extends React.Component {
     this.textInput = null;
   }
 
-  setTextInputRef = element => {
+  setTextInputRef = (element) => {
     this.textInput = element;
   };
 
@@ -109,7 +107,7 @@ function CustomTextInput(props) {
 
 class Parent extends React.Component {
   render() {
-    return <CustomTextInput inputRef={el => (this.inputElement = el)} />;
+    return <CustomTextInput inputRef={(el) => (this.inputElement = el)} />;
   }
 }
 ```

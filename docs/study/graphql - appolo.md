@@ -1,7 +1,5 @@
 # GraphQL - Appolo
 
-[[toc]]
-
 ## Mutation 時のキャッシュの更新方法
 
 ### refetchQueries を使う方法

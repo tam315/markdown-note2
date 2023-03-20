@@ -1,7 +1,5 @@
 # React
 
-[[toc]]
-
 ## Tips
 
 ### props をパスするーする際の注意点

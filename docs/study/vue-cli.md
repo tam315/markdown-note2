@@ -1,7 +1,5 @@
 # Vue CLI
 
-[[toc]]
-
 ## Overview
 
 ### 構成要素
@@ -296,7 +294,7 @@ index.html では lodash template が使える。
 例：
 
 ```html
-<link rel="icon" href="<%= BASE_URL %>favicon.ico">
+<link rel="icon" href="<%= BASE_URL %>favicon.ico" />
 ```
 
 ### Preload
@@ -447,7 +445,7 @@ config を直接編集するか、マージしたい Object を return するこ
 ```js
 // vue.config.js
 module.exports = {
-  configureWebpack: config => {
+  configureWebpack: (config) => {
     if (process.env.NODE_ENV === 'production') {
       // mutate config for production...
     } else {
@@ -466,12 +464,12 @@ module.exports = {
 ```js
 // vue.config.js
 module.exports = {
-  chainWebpack: config => {
+  chainWebpack: (config) => {
     config.module
       .rule('vue')
       .use('vue-loader')
       .loader('vue-loader')
-      .tap(options => {
+      .tap((options) => {
         // modify the options...
         return options;
       });
@@ -484,7 +482,7 @@ module.exports = {
 ```js
 // vue.config.js
 module.exports = {
-  chainWebpack: config => {
+  chainWebpack: (config) => {
     // GraphQL Loader
     config.module
       .rule('graphql')
@@ -500,7 +498,7 @@ module.exports = {
 
 ```js
 module.exports = {
-  chainWebpack: config => {
+  chainWebpack: (config) => {
     const svgRule = config.module.rule('svg');
 
     // clear all existing loaders.
@@ -519,8 +517,8 @@ module.exports = {
 ```js
 // vue.config.js
 module.exports = {
-  chainWebpack: config => {
-    config.plugin('html').tap(args => {
+  chainWebpack: (config) => {
+    config.plugin('html').tap((args) => {
       return [
         /* new args to pass to html-webpack-plugin's constructor */
       ];

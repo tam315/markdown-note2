@@ -1,7 +1,5 @@
 # Redux - Deriving Data with Selectors
 
-[[toc]]
-
 ## 派生データ
 
 - state は小さく保つ。必要なら派生データを作る。

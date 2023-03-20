@@ -1,7 +1,5 @@
 # JavaScript パターン
 
-[[toc]]
-
 ## はじめに
 
 ### JavaScript はオブジェクト指向
@@ -38,7 +36,7 @@ const obj = new Object();
 `new`を使うと実際には下記のような処理が行われる
 
 ```js
-const Person = function(name) {
+const Person = function (name) {
   // 暗黙的にオブジェクトを作成
   // const this = Object.create(Person.prototype);
   this.name = name;
@@ -47,7 +45,7 @@ const Person = function(name) {
   // return this;
 };
 
-Person.prototype.say = function() {
+Person.prototype.say = function () {
   return 'I am ' + this.name;
 };
 ```
@@ -57,7 +55,7 @@ Person.prototype.say = function() {
 また、暗黙的に作成されたオブジェクトは破棄される。
 
 ```js
-const Person = function(name) {
+const Person = function (name) {
   return { name: 'john' }; // Person.prototypeは継承されない
 };
 ```
@@ -65,7 +63,7 @@ const Person = function(name) {
 ### new を忘れたときのための保険
 
 ```js
-const Person = function() {
+const Person = function () {
   if (!(this instanceof Person)) {
     return new Person();
   }
@@ -126,7 +124,7 @@ throw {
 const add = function add() {};
 
 // anonymous function expression(無名関数式)
-const add = function() {};
+const add = function () {};
 
 // function statement(関数宣言)
 function add() {}
@@ -151,7 +149,7 @@ a(); // => ok
 b(); // => errorになる。b===undefined だから。
 
 function a() {}
-const b = function() {};
+const b = function () {};
 ```
 
 ### name プロパティ
@@ -194,7 +192,7 @@ scareMe(); // => Double Boo
 グローバル環境を汚さずに初期セットアップをする際によく使われる。
 
 ```js
-(function(global) {
+(function (global) {
   const a = 1; // ローカル変数
 
   // ここでglobalを操作
@@ -204,7 +202,7 @@ scareMe(); // => Double Boo
 IIFE は値を返すので、クロージャを作る時に便利
 
 ```js
-const a = (function() {
+const a = (function () {
   return 1;
 })();
 ```
@@ -230,7 +228,7 @@ IIFE と同じく、グローバルを汚さずに初期設定を行うために
 重たい処理を無駄に行わないために使う。
 
 ```js
-const myFunc = param => {
+const myFunc = (param) => {
   // キャッシュがあればそれを返す
   if (myFunc.cache[param]) return myFunc.cache[param];
 
@@ -270,7 +268,7 @@ myFunc.cache = {};
 ```js
 const alien = {
   name: 'UFO',
-  sayHi: function(message) {
+  sayHi: function (message) {
     console.log(this.name, message);
   },
 };
@@ -326,7 +324,7 @@ function Car() {
   const name = 'bmw';
 
   // public
-  this.getName = function() {
+  this.getName = function () {
     console.log(name);
   };
 }
@@ -341,7 +339,7 @@ class Car {
     const name = 'bmw';
 
     // public
-    this.getName = function() {
+    this.getName = function () {
       console.log(name);
     };
   }
@@ -358,10 +356,10 @@ class Car {
 ```js
 let obj;
 
-(function() {
+(function () {
   const name = 'john';
   obj = {
-    getName: function() {
+    getName: function () {
       return name;
     },
   };
@@ -373,10 +371,10 @@ console.log(obj.getName());
 または
 
 ```js
-const obj = (function() {
+const obj = (function () {
   const name = 'john';
   return {
-    getName: function() {
+    getName: function () {
       return name;
     },
   };
@@ -393,10 +391,10 @@ console.log(obj.getName());
 ```js
 function Car() {}
 
-Car.prototype = (function() {
+Car.prototype = (function () {
   const secret = 'my-secret';
   return {
-    getSecret: function() {
+    getSecret: function () {
       return secret;
     },
   };
@@ -414,7 +412,7 @@ console.log(car.getSecret()); // => 'my-secret'
 ```js
 let myUtil;
 
-(function() {
+(function () {
   function a() {}
   function b() {}
   function c() {}
@@ -438,14 +436,14 @@ let myUtil;
 MYAPP = { utilities: {} };
 
 // 即時関数でクロージャを作成
-MYAPP.utilities.array = (function(global) {
+MYAPP.utilities.array = (function (global) {
   // 依存関係の宣言
   const utilObj = MYAPP.utilities.object;
   const utilLang = MYAPP.utilities.lang;
 
   // プライベートメンバ
   const privateVar = 1;
-  const privateMethod = function() {};
+  const privateMethod = function () {};
 
   // 一度限りの初期化処理
   doSomething();
@@ -453,8 +451,8 @@ MYAPP.utilities.array = (function(global) {
   // パブリックAPI
   return {
     // ここでプライベートメンバを使ってなにかを行う
-    somePublicMethod: function() {},
-    somePublicMethod2: function() {},
+    somePublicMethod: function () {},
+    somePublicMethod2: function () {},
   };
 })(global); // globalを渡してクロージャ内部で使うことが多い
 ```
@@ -464,11 +462,11 @@ MYAPP.utilities.array = (function(global) {
 ```js
 MYAPP = { utilities: {} };
 
-MYAPP.utilities.Array = (function() {
+MYAPP.utilities.Array = (function () {
   /* この部分は先例と同じ */
 
   // パブリックAPI　コンストラクタ
-  const Constructor = function() {
+  const Constructor = function () {
     // ここでプライベートメンバを使ってなにかを行う
   };
 
@@ -520,13 +518,13 @@ Sandbox.modules.module2 = function something2();
 #### パブリックなスタティックメンバ
 
 ```js
-const Car = function() {};
+const Car = function () {};
 
 // スタティックメソッド
-Car.ride = function() {};
+Car.ride = function () {};
 
 // インスタンスメソッド
-Car.prototype.sayName = function() {};
+Car.prototype.sayName = function () {};
 
 const bmw = new Car();
 
@@ -540,7 +538,7 @@ bmw.sayName(); // ok
 この場合、スタティックメソッド内で、スタティックに呼ばれたのかインスタンスから呼ばれたのかを判定し、適切な分岐処理を行う必要がある。
 
 ```js
-Car.ride = function() {
+Car.ride = function () {
   if (this instanceof Car) {
     /* インスタンスメソッドとして呼び出された場合の処理 */
   }
@@ -552,16 +550,16 @@ Car.prototype.sayName = Car.ride;
 #### プライベートなスタティックメンバ
 
 ```js
-const Car = (function() {
+const Car = (function () {
   let count = 0; // プライベートなスタティックメンバ
 
   // returnするコンストラクタ
-  const NewCar = function() {
+  const NewCar = function () {
     couner += 1; // newされるたびにスタティックメンバを加算する
   };
 
   // スタティックメンバを取得する特権メソッド
-  NewCar.prototype.getLastId = function() {
+  NewCar.prototype.getLastId = function () {
     return counter;
   };
 
@@ -598,21 +596,18 @@ Car.MAX_WIDTH = 1780;
 ```js
 const obj = {
   value: 1,
-  increment: function() {
+  increment: function () {
     this.value++;
     return this;
   },
-  decrement: function() {
+  decrement: function () {
     this.value--;
     return this;
   },
 };
 
 console.log(
-  obj
-    .increment()
-    .increment()
-    .decrement().value, // 2
+  obj.increment().increment().decrement().value, // 2
 );
 ```
 
@@ -637,7 +632,7 @@ Child.prototype = new Parent();
 function Parent() {
   this.name = 'Adam';
 }
-Parent.prototype.say = function() {
+Parent.prototype.say = function () {
   return this.name;
 };
 
@@ -675,7 +670,7 @@ Child.prototype = new Parent();
 function Parent(name) {
   this.name = name || 'Adam';
 }
-Parent.prototype.say = function() {
+Parent.prototype.say = function () {
   return this.name;
 };
 
@@ -740,7 +735,7 @@ Child.prototype = Parent.prototype;
 これが、ほぼベストと言える。
 
 ```js
-const Proxy = function() {};
+const Proxy = function () {};
 Proxy.prototype = Parent.prototype;
 Child.prototype = new Proxy();
 Child.prototype.constructor = Child; // Parentじゃないよーと明示
@@ -759,7 +754,7 @@ Child.prototype.constructor = Child; // Parentじゃないよーと明示
 function Parent(name) {
   this.name = name || 'Adam';
 }
-Parent.prototype.say = function() {
+Parent.prototype.say = function () {
   return this.name;
 };
 
@@ -818,7 +813,7 @@ console.log(slice(1, 2, 3, 4, 5, 6)); // 2, 3
 
 ```js
 function bind(obj, func) {
-  return function(...args) {
+  return function (...args) {
     return func.apply(obj, args);
   };
 }
@@ -866,12 +861,12 @@ console.log(new Car() === new Car()); // true
 先例では書き換えが可能なので、書き換えをできなくしたパターン。
 
 ```js
-const Car = (function() {
+const Car = (function () {
   // プライベートメンバ
   let instance;
 
   // 特権メソッド（コンストラクタ）を返す
-  return function() {
+  return function () {
     // キャッシュがあればそれを返して終わる
     if (instance) return instance;
 
@@ -898,21 +893,21 @@ console.log(new Car() === new Car()); // true
 ```js
 function Car() {}
 
-Car.prototype.drive = function() {
+Car.prototype.drive = function () {
   console.log(`I have ${this.doors} doors.`);
 };
 
-Car.Compact = function() {
+Car.Compact = function () {
   this.doors = 4;
 };
-Car.Convertible = function() {
+Car.Convertible = function () {
   this.doors = 2;
 };
-Car.Bus = function() {
+Car.Bus = function () {
   this.doors = 20;
 };
 
-Car.factory = function(type) {
+Car.factory = function (type) {
   // 一度だけプロトタイプを継承する処理
   if (typeof Car[type].prototype.drive) {
     Car[type].prototype = new Car();
@@ -937,24 +932,24 @@ API には、`next()`,`hasNext()`,`rewind()`,`current()`などを用意する。
 データはプライベートにすることが多い。
 
 ```js
-iterable = (function() {
+iterable = (function () {
   let index = 0;
   const data = [1, 2, 3, 4, 5];
 
   return {
-    next: function() {
+    next: function () {
       if (!this.hasNext()) return null;
       element = data[index];
       index += 1;
       return element;
     },
-    hasNext: function() {
+    hasNext: function () {
       return index < data.length;
     },
-    rewind: function() {
+    rewind: function () {
       index = 0;
     },
-    current: function() {
+    current: function () {
       return data[index];
     },
   };
@@ -981,23 +976,23 @@ function Sale(price) {
 // デコレータには、デコレートしたい関数と同名の関数を持たせる
 Sale.decorators = {
   tax: {
-    getPrice: price => price * 1.05,
+    getPrice: (price) => price * 1.05,
   },
   sending: {
-    getPrice: price => price + 1500,
+    getPrice: (price) => price + 1500,
   },
   jpy: {
-    getPrice: price => `JPY:${price}`,
+    getPrice: (price) => `JPY:${price}`,
   },
 };
 
 // 実行時にデコレータが追加されたら、キューに保存しておく
-Sale.prototype.decorate = function(decorator) {
+Sale.prototype.decorate = function (decorator) {
   this.queue.push(decorator);
 };
 
 // キューからデコレータを読み出し順に実行していく
-Sale.prototype.getPrice = function() {
+Sale.prototype.getPrice = function () {
   let price = this.price;
   for (name of this.queue) {
     price = Sale.decorators[name].getPrice(price);
@@ -1026,15 +1021,15 @@ const validator = {
   // これがストラテジー（戦略）
   strtegy: {
     isNonEmpty: {
-      validate: _ => _ !== '',
+      validate: (_) => _ !== '',
       instructions: '何か入力してください',
     },
     isNumber: {
-      validate: _ => !isNaN(_),
+      validate: (_) => !isNaN(_),
       instructions: '数値にしてください',
     },
     isAlphaNum: {
-      validate: _ => !/[^a-z0-9]/i.test(_),
+      validate: (_) => !/[^a-z0-9]/i.test(_),
       instructions: '英数字にしてください',
     },
   },
@@ -1049,7 +1044,7 @@ const validator = {
 
   messages: [],
 
-  validate: function(data) {
+  validate: function (data) {
     this.messages = [];
     for (key in data) {
       // プロトタイプはスルー
@@ -1070,7 +1065,7 @@ const validator = {
     }
   },
 
-  hasErrors: function() {
+  hasErrors: function () {
     return this.messages.length !== 0;
   },
 };
@@ -1228,7 +1223,7 @@ worker 側で`postMessage`して、ブラウザ側の`onmessage`で受け取る�
 ```js
 // Browser
 const worker = new Worker('myWebWorker.js');
-worker.onmessage = e => console.log(e.data); // => 'hello' 'done!'
+worker.onmessage = (e) => console.log(e.data); // => 'hello' 'done!'
 
 // Web Worker
 postMessage('hello');

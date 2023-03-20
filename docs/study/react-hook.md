@@ -1,7 +1,5 @@
 # React - Hook
 
-[[toc]]
-
 ## Introducing Hooks
 
 ### Hook とは
@@ -23,7 +21,7 @@ class Example extends React.Component {
       <div>
         <p>You clicked {count} times</p>
         <button
-          onClick={() => this.setState(state => ({ count: state.count + 1 }))}
+          onClick={() => this.setState((state) => ({ count: state.count + 1 }))}
         >
           Click me
         </button>

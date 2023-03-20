@@ -1,7 +1,5 @@
 # Hugo
 
-[[toc]]
-
 ## Quick Start
 
 ```bash
@@ -165,9 +163,7 @@ images, CSS, Javascript といった静的コンテンツを管理する。
 タイプ名は、ページの場合は`page`、その他の場合は `image`や`json`などの MIME タイプで指定する。
 
 ```html
-{{ range .Resources.ByType "image" }}
-  {{ .ResourceType }}
-{{ end }}
+{{ range .Resources.ByType "image" }} {{ .ResourceType }} {{ end }}
 ```
 
 ### 特定の条件にあてはまる Resouces を表示
@@ -176,13 +172,10 @@ images, CSS, Javascript といった静的コンテンツを管理する。
 
 ```html
 <!-- 当てはまるもの全てを取得 -->
-{{ range .Resources.GetMatch "logo*" }}
-  {{ . }}
-{{ end }}
+{{ range .Resources.GetMatch "logo*" }} {{ . }} {{ end }}
 
 <!-- 当てはまる最初の一つのみを取得 -->
-{{ $logo = .Resources.Match "logo*" }}
-{{ $logo.ResourceType }}
+{{ $logo = .Resources.Match "logo*" }} {{ $logo.ResourceType }}
 ```
 
 ### コンテンツを表示
@@ -190,9 +183,7 @@ images, CSS, Javascript といった静的コンテンツを管理する。
 Page Resources = カレントページから見た他の page, images, pdfs, etc...
 
 ```html
-{{ range .Resources.ByType "image" }}
-  {{ .Content }}
-{{ end }}
+{{ range .Resources.ByType "image" }} {{ .Content }} {{ end }}
 ```
 
 ## Themes
@@ -288,8 +279,8 @@ Page Resources を管理する方法のこと。下記の赤い枠が Page Bundl
 #### Resize
 
 ```html
-{{ $logo.Resize "200x" }} // アスペクト比は維持される
-{{ $logo.Resize "200x100" }} // アスペクト比は変更される
+{{ $logo.Resize "200x" }} // アスペクト比は維持される {{ $logo.Resize "200x100"
+}} // アスペクト比は変更される
 ```
 
 #### Fit
@@ -305,9 +296,9 @@ Page Resources を管理する方法のこと。下記の赤い枠が Page Bundl
 指定したサイズで、かつサイズ全体が埋まるように画像を切り出す。アスペクト比は維持される。
 
 ```html
-{{ $logo.Fill "200x100" }} // 真ん中を基準にして切り出し
-{{ $logo.Fill "200x100 right" }} // 右端を基準にして切り出し
-{{ $logo.Fill "200x100 left" }} // 左端を基準にして切り出し
+{{ $logo.Fill "200x100" }} // 真ん中を基準にして切り出し {{ $logo.Fill "200x100
+right" }} // 右端を基準にして切り出し {{ $logo.Fill "200x100 left" }} //
+左端を基準にして切り出し
 ```
 
 #### 画像の表示
@@ -427,12 +418,11 @@ taxonomy templates が存在する場合、Hugo は下記のページを生成�
 
 ```html
 {{ range first 10 .Pages }}
-  <div>{{ .Summary }}</div>
+<div>{{ .Summary }}</div>
 
-  {{ if .Truncated }}
-    <div>Read More…</div>
-  {{ end }}
-{{ end }}
+{{ if .Truncated }}
+<div>Read More…</div>
+{{ end }} {{ end }}
 ```
 
 - `.Pages` ページの一覧を取得
@@ -578,8 +568,8 @@ params:
 テンプレートの中で、下記のようにして使う。
 
 ```html
-{{ i18n "home" }}
-{{ i18n "wordcount" . }} <!-- コンテキスト「.」を渡している点に注目 -->
+{{ i18n "home" }} {{ i18n "wordcount" . }}
+<!-- コンテキスト「.」を渡している点に注目 -->
 ```
 
 #### 日時の翻訳
@@ -618,7 +608,7 @@ languageName = "Deutsch"
 
 ```html
 {{ range .Site.Menus.main }}
-  <a href="{{ .URL | absLangURL }}">{{ .Name }}</a>
+<a href="{{ .URL | absLangURL }}">{{ .Name }}</a>
 {{ end }}
 
 <!-- もしくは -->
@@ -632,7 +622,7 @@ Hugo は Chroma をシンタックスハイライターとして使用してい�
 
 ```html
 {{< highlight go "linenos=table,hl_lines=8 15-17,linenostart=199" >}}
-  <!-- ... code -->
+<!-- ... code -->
 {{< / highlight >}}
 ```
 
@@ -656,9 +646,12 @@ Go Templates は、HTML, variables, functions から構成される。
 variables と functions は `{{}}` の中で使用することができる。
 
 ```html
-{{ .Title }} <!-- predefined variable -->
-{{ .$mykey }} <!-- custom variable -->
-{{ FUNCTION ARG1 ARG2 ..... }} <!-- function -->
+{{ .Title }}
+<!-- predefined variable -->
+{{ .$mykey }}
+<!-- custom variable -->
+{{ FUNCTION ARG1 ARG2 ..... }}
+<!-- function -->
 ```
 
 メソッドやフィールドには、ドットでアクセスする。
@@ -684,15 +677,14 @@ variables と functions は `{{}}` の中で使用することができる。
 Custom Variable は下記のように使う。`$`が必ず必要。
 
 ```html
-{{ $address := "123 Main St." }}
-{{ $address }}
+{{ $address := "123 Main St." }} {{ $address }}
 ```
 
 #### Functions
 
 ```html
-{{ add 1 2 }}
-{{ lt 1 2 }} <!-- 1 less than 2 ? -->
+{{ add 1 2 }} {{ lt 1 2 }}
+<!-- 1 less than 2 ? -->
 ```
 
 #### Partials
@@ -716,24 +708,20 @@ partials を使うときの記法。
 
 ```html
 <!-- コンテキストを使う場合 -->
-{{ range $array }}
-    {{ . }} <!-- . は$arrayの中にある各要素を指す -->
+{{ range $array }} {{ . }}
+<!-- . は$arrayの中にある各要素を指す -->
 {{ end }}
 
 <!-- カスタム変数を使う場合 -->
-{{ range $elem_val := $array }}
-    {{ $elem_val }}
-{{ end }}
+{{ range $elem_val := $array }} {{ $elem_val }} {{ end }}
 
 <!-- インデックスも使いたい場合 -->
-{{ range $elem_index, $elem_val := $array }}
-   {{ $elem_index }} -- {{ $elem_val }}
-{{ end }}
+{{ range $elem_index, $elem_val := $array }} {{ $elem_index }} -- {{ $elem_val
+}} {{ end }}
 
 <!-- マップのkey-valueペアを使いたい場合 -->
-{{ range $elem_key, $elem_val := $map }}
-   {{ $elem_key }} -- {{ $elem_val }}
-{{ end }}
+{{ range $elem_key, $elem_val := $map }} {{ $elem_key }} -- {{ $elem_val }} {{
+end }}
 ```
 
 #### 条件分岐
@@ -754,9 +742,9 @@ Go Templates が false と判定するもの
 
 ```html
 {{ with .Params.title }}
-  <h4>{{ . }}</h4>
+<h4>{{ . }}</h4>
 {{ else }}
-  <h4>no data!</h4>
+<h4>no data!</h4>
 {{ end }}
 ```
 
@@ -765,19 +753,16 @@ Go Templates が false と判定するもの
 with より細かい制御ができる。with と異なり、`.`はパラメータとバインドされない。
 
 ```html
-{{ if (isset .Params "description") }}
-    {{ .Params.description }}
-{{ else if (isset .Params "summary") }}
-    {{ .Params.summary }}
-{{ else }}
-    {{ .Params.something }}
-{{ end }}
+{{ if (isset .Params "description") }} {{ .Params.description }} {{ else if
+(isset .Params "summary") }} {{ .Params.summary }} {{ else }} {{
+.Params.something }} {{ end }}
 ```
 
 #### and, or
 
 ```html
-{{ if (and (or (isset .Params "title") (isset .Params "caption")) (isset .Params "attr")) }}
+{{ if (and (or (isset .Params "title") (isset .Params "caption")) (isset .Params
+"attr")) }}
 ```
 
 #### Pipes
@@ -790,8 +775,8 @@ with より細かい制御ができる。with と異なり、`.`はパラメー�
 {{ index .Params "disqus_url" | html }}
 
 <!-- 条件文を簡単に書く -->
-{{ if isset .Params "caption" | or isset .Params "title" | or isset .Params "attr" }}
-{{ end }}
+{{ if isset .Params "caption" | or isset .Params "title" | or isset .Params
+"attr" }} {{ end }}
 ```
 
 #### Context(`.`のこと)
@@ -814,9 +799,7 @@ range ブロックの中などでグローバルコンテキストにアクセ�
 ビルド時に`{{}}`の周りにホワイトスペースや改行を作りたくないときは、下記のようにする。
 
 ```html
-<div>
-  {{- .Title -}}
-</div>
+<div>{{- .Title -}}</div>
 
 <!-- 上記のコードは下記のHTMLに変換される -->
 
@@ -877,11 +860,9 @@ Section 名
 <!-- layouts/_default/baseof.html -->
 
 {{ block "main" . }}
-  <h1>baseof page main!</h1>
-{{ end }}
-
-{{ block "footer" . }}
-  <h1>baseof page footer</h1>
+<h1>baseof page main!</h1>
+{{ end }} {{ block "footer" . }}
+<h1>baseof page footer</h1>
 {{ end }}
 ```
 
@@ -889,14 +870,15 @@ Section 名
 <!-- layouts/_default/single.html -->
 
 {{ define "main" }}
-  <h1>hello from single page</h1>
+<h1>hello from single page</h1>
 {{ end }}
 ```
 
 出力結果
 
 ```html
-<h1>hello from single page</h1><!-- 上書きされている -->
+<h1>hello from single page</h1>
+<!-- 上書きされている -->
 <h1>baseof page footer</h1>
 ```
 
@@ -931,13 +913,11 @@ list templates を使って自動的に作成される。
 #### グルーピング
 
 ```html
-{{ range .Pages.GroupBy "Section" }}
-  {{ .Key }} <!-- セクション名 -->
+{{ range .Pages.GroupBy "Section" }} {{ .Key }}
+<!-- セクション名 -->
 
-  {{ range .Pages }}
-    {{ . }}<!-- セクションごとの個別ページ -->
-  {{ end }}
-{{ end }}
+{{ range .Pages }} {{ . }}<!-- セクションごとの個別ページ -->
+{{ end }} {{ end }}
 ```
 
 - `.Pages.GroupBy "Section"`
@@ -985,8 +965,7 @@ Hugo の全てのページは、ページの種類を表す`.Kind`変数を持�
 特定の Kind の中の、特定の値のページを抜き出すときは`.Site.GetPage`を使う。
 
 ```html
-{{ .Site.GetPage "section" "posts" }}
-{{ .Site.GetPage "page" "search" }}
+{{ .Site.GetPage "section" "posts" }} {{ .Site.GetPage "page" "search" }}
 ```
 
 ### Taxonomy Templates
@@ -1046,14 +1025,10 @@ Content View Template には、呼び出し元の`.`が自動的に渡される�
 
 <h1 id="title">{{ .Title }}</h1>
 
-{{ range .Pages }}
-  {{ .Render "summary"}}
-{{ end }}
+{{ range .Pages }} {{ .Render "summary"}} {{ end }}
 
 <!-- summary.html -->
-<article class="post">
-  {{ .Title }} - {{ .Summary }}
-</article>
+<article class="post">{{ .Title }} - {{ .Summary }}</article>
 ```
 
 ### Data Templates
@@ -1063,8 +1038,7 @@ Content View Template には、呼び出し元の`.`が自動的に渡される�
 動的に JSON や CSV を取得することもできる。ただし、認証は使えず、Method も GET のみ。
 
 ```html
-{{ $data := getJSON "url" }}
-{{ $data := getCSV "separator" "url" }}
+{{ $data := getJSON "url" }} {{ $data := getCSV "separator" "url" }}
 ```
 
 ### Partial Templates
@@ -1113,14 +1087,10 @@ partial は、コンテキストが引数として渡されていない限り、
 
 ```html
 <!-- markdown -->
-{{< mycode >}}
-  some contents
-{{< /mycode >}}
+{{< mycode >}} some contents {{< /mycode >}}
 
 <!-- markdown(処理が必要な場合) -->
-{{% mycode %}}
-  **some contents**
-{{% /mycode %}}
+{{% mycode %}} **some contents** {{% /mycode %}}
 
 <!-- short code -->
 <p>{{ .Inner }}</p>
@@ -1165,23 +1135,21 @@ paginatePath: page # デフォルト　post/1/ など
 
 ```html
 <!-- Paginator -->
-{{ range .Paginator.Pages }}
-{{ range (.Paginator 20).Pages }} <!-- 上限数は上書きできる -->
+{{ range .Paginator.Pages }} {{ range (.Paginator 20).Pages }}
+<!-- 上限数は上書きできる -->
 
 <!-- Paginate -->
-{{ range (.Paginate ( .Pages.ByTitle )).Pages }}
-{{ range (.Paginate ( .Pages.ByTitle ) 20).Pages }} <!-- 上限数は上書きできる -->
+{{ range (.Paginate ( .Pages.ByTitle )).Pages }} {{ range (.Paginate (
+.Pages.ByTitle ) 20).Pages }}
+<!-- 上限数は上書きできる -->
 ```
 
 テンプレートの書き方。ビルトインテンプレートを使う。
 自身で作る場合は[ドキュメント](https://gohugo.io/templates/pagination/#build-the-navigation)を読んで頑張る。
 
 ```html
-{{ template "_internal/pagination.html" . }}
-
-{{ range .Paginator.Pages }}
-   {{ .Title }}
-{{ end }}
+{{ template "_internal/pagination.html" . }} {{ range .Paginator.Pages }} {{
+.Title }} {{ end }}
 ```
 
 ### RSS Templates
@@ -1238,6 +1206,6 @@ paginatePath: page # デフォルト　post/1/ など
 ```html
 <!-- たとえばここに余計なコメントが有ると適用されない -->
 {{ define "main" }}
-  <h1>hello from lista page</h1>
+<h1>hello from lista page</h1>
 {{ end }}
 ```

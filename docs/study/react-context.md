@@ -1,7 +1,5 @@
 # React - Context
 
-[[toc]]
-
 ## 参考
 
 - [Context vs Redux](https://www.youtube.com/watch?v=OvM4hIxrqAw)

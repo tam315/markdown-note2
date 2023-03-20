@@ -1,7 +1,5 @@
 # Linux 標準教科書
 
-[[toc]]
-
 ## Linux とは
 
 - UNIX --- AT&T, Ken Tompthon, System-V, BSD

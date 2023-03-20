@@ -1,7 +1,5 @@
 # [Kubernetes](http://kubernetes.io/docs/)
 
-[[toc]]
-
 ## 環境構築メモ
 
 1. クラスタ作成

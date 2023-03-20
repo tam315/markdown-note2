@@ -1,7 +1,5 @@
 # Dataquest
 
-[[toc]]
-
 ## 2-1 Pandas and NumPy Fundamentals
 
 ### Introduction to NumPy

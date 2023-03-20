@@ -1,7 +1,5 @@
 # CSS
 
-[[toc]]
-
 ## animation, transition, transform
 
 下記がよくまとまっているので参照すること

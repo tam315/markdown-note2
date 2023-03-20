@@ -1,7 +1,5 @@
 # JavaScript
 
-[[toc]]
-
 [参考資料](https://qiita.com/hakozaru/items/c00e472ab0f5e823098c)
 
 ## Functions
@@ -63,7 +61,7 @@ a(); // => window / global
 変数に代入した場合も同様
 
 ```js
-const a = function() {
+const a = function () {
   console.log(this);
 };
 a(); // => window / global
@@ -73,7 +71,7 @@ a(); // => window / global
 
 ```js
 const obj = {
-  say: function() {
+  say: function () {
     console.log(this);
   },
 };
@@ -87,7 +85,7 @@ someVar(); // => window / global
 ```js
 const obj = {
   say() {
-    (function() {
+    (function () {
       console.log(this);
     })();
   },
@@ -121,7 +119,7 @@ instanceof と異なり、コンストラクタの種類が判定できるため
 ```js
 const a = [];
 const b = {};
-const c = function() {};
+const c = function () {};
 
 a.constructor; //=> ƒ Array() { [native code] }
 b.constructor; //=> ƒ Object() { [native code] }
@@ -168,7 +166,7 @@ func.constructor; //=> ƒ Myfunction() {}
 ```js
 const a = {};
 const b = [];
-const c = function() {};
+const c = function () {};
 
 a instanceof Object; //=> true
 b instanceof Array; //=> true

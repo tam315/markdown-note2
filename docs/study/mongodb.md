@@ -1,7 +1,5 @@
 # MongoDB
 
-[[toc]]
-
 ## 資料
 
 - [User authentication](http://qiita.com/y-hara/items/83a86655bba48dc8b140)

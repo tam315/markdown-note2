@@ -1,7 +1,5 @@
 # Google Cloud Platform - Associate Cloud Engineer
 
-[[toc]]
-
 ## 基本
 
 ```sh

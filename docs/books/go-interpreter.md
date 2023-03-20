@@ -1,7 +1,5 @@
 # Go 言語で作るインタプリタ
 
-[[toc]]
-
 ## Lexical Analysis(字句解析)
 
 [https://en.wikipedia.org/wiki/Lexical_analysis](https://en.wikipedia.org/wiki/Lexical_analysis)

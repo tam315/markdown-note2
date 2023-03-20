@@ -1,7 +1,5 @@
 # React - TypeScript
 
-[[toc]]
-
 [こちらの記事](https://blog.bitsrc.io/react-typescript-cheetsheet-2b6fa2cecfe2)のまとめ
 
 ## props の型を定義する

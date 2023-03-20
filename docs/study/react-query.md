@@ -1,7 +1,5 @@
 # React Query
 
-[[toc]]
-
 ## 原典
 
 [https://react-query.tanstack.com/overview](https://react-query.tanstack.com/overview)
@@ -42,9 +40,9 @@ import { useQuery } from 'react-query';
 
 function MyComponent() {
   const { isLoading, error, data } = useQuery('repoData', () =>
-    fetch(
-      'https://api.github.com/repos/tannerlinsley/react-query',
-    ).then((res) => res.json()),
+    fetch('https://api.github.com/repos/tannerlinsley/react-query').then(
+      (res) => res.json(),
+    ),
   );
 
   if (isLoading) return 'Loading...';
@@ -248,15 +246,8 @@ const { isIdle, data: projects } = useQuery(
 データを作成・更新・削除する場合は`useQuery`ではなく`useMutation`を使う。
 
 ```ts
-const {
-  status,
-  isLoading,
-  isError,
-  isSuccess,
-  mutate,
-  error,
-  data,
-} = useMutation((newTodo) => axios.post('/todos', newTodo));
+const { status, isLoading, isError, isSuccess, mutate, error, data } =
+  useMutation((newTodo) => axios.post('/todos', newTodo));
 
 mutate({ id: 1234, title: 'hello' });
 ```

@@ -1,7 +1,5 @@
 # Redux - Toolkit
 
-[[toc]]
-
 ## QuickStart
 
 ### 目的
@@ -840,33 +838,29 @@ export const {
 
 export default issues.reducer;
 
-export const fetchIssues = (
-  org: string,
-  repo: string,
-  page?: number,
-): MyThunkAction => async (dispatch: MyDispatch) => {
-  try {
-    dispatch(getIssuesStart());
-    const issues = await getIssues(org, repo, page);
-    dispatch(getIssuesSuccess(issues));
-  } catch (err) {
-    dispatch(getIssuesFailure(err.toString()));
-  }
-};
+export const fetchIssues =
+  (org: string, repo: string, page?: number): MyThunkAction =>
+  async (dispatch: MyDispatch) => {
+    try {
+      dispatch(getIssuesStart());
+      const issues = await getIssues(org, repo, page);
+      dispatch(getIssuesSuccess(issues));
+    } catch (err) {
+      dispatch(getIssuesFailure(err.toString()));
+    }
+  };
 
-export const fetchIssue = (
-  org: string,
-  repo: string,
-  number: number,
-): MyThunkAction => async (dispatch: MyDispatch) => {
-  try {
-    dispatch(getIssueStart());
-    const issue = await getIssue(org, repo, number);
-    dispatch(getIssueSuccess(issue));
-  } catch (err) {
-    dispatch(getIssueFailure(err.toString()));
-  }
-};
+export const fetchIssue =
+  (org: string, repo: string, number: number): MyThunkAction =>
+  async (dispatch: MyDispatch) => {
+    try {
+      dispatch(getIssueStart());
+      const issue = await getIssue(org, repo, number);
+      dispatch(getIssueSuccess(issue));
+    } catch (err) {
+      dispatch(getIssueFailure(err.toString()));
+    }
+  };
 ```
 
 ### createSlice を使わないという選択

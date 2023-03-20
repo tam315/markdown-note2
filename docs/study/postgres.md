@@ -1,7 +1,5 @@
 # PostgreSQL
 
-[[toc]]
-
 ## psql
 
 ### DB への接続

@@ -1,7 +1,5 @@
 # GraphQL
 
-[[toc]]
-
 ## Schema Type
 
 GraphQL では Schema Type というものを宣言する。種類は以下の通り。

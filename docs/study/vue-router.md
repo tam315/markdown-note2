@@ -1,7 +1,5 @@
 # vue-router
 
-[[toc]]
-
 ## API
 
 [https://router.vuejs.org/api/](https://router.vuejs.org/api/)
@@ -205,8 +203,8 @@ routes = [
 
 ```html
 <!-- UserSettings.vue -->
-<router-view/>
-<router-view name="helper"/>
+<router-view />
+<router-view name="helper" />
 ```
 
 ```js
@@ -244,7 +242,7 @@ routes = [
   // ファンクションを使ってリダイレクト
   {
     path: '/a',
-    redirect: to => {
+    redirect: (to) => {
       // TODO: toがなんなのかよくわからない
       // return redirect path/location here.
     },
@@ -392,7 +390,7 @@ routes = [
   - `this`でコンポーネントインスタンスにアクセスできない（作られる前だから）
   - インスタンスへアクセスするには `next` コールバックを使う。ナビーゲーションの確定後に実行される。
     ```js
-    next(vm => {
+    next((vm) => {
       // `vm` を通じてコンポーネントインスタンスにアクセス
     });
     ```
@@ -450,7 +448,7 @@ routes = [
 メタ情報は`route`オブジェクトの`matched`Array の各アイテムの`meta`として取得できる。
 
 ```js
-if (someRouteObject.matched.some(record => record.meta.requiresAuth)) {
+if (someRouteObject.matched.some((record) => record.meta.requiresAuth)) {
   alert('require authengication');
 }
 ```
@@ -483,7 +481,7 @@ routes = [
 
 // ナビゲーションガード
 router.beforeEach((to, from, next) => {
-  if (to.matched.some(record => record.meta.requiresAuth)) {
+  if (to.matched.some((record) => record.meta.requiresAuth)) {
     // this route requires auth, check if logged in
     // if not, redirect to login page.
     if (!auth.loggedIn()) {

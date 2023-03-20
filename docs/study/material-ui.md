@@ -1,7 +1,5 @@
 # Material-UI
 
-[[toc]]
-
 ## Setup
 
 - add font link to `index.html` file

@@ -1,7 +1,5 @@
 # Firebase - Firestore
 
-[[toc]]
-
 ## API
 
 - [Web](https://firebase.google.com/docs/reference/js/firebase.firestore)
@@ -108,11 +106,9 @@ db.collection('cities')
 db.collection('users').add({
   name: 'Ada',
 });
-db.collection('users')
-  .doc()
-  .set({
-    name: 'Ada',
-  });
+db.collection('users').doc().set({
+  name: 'Ada',
+});
 
 // ドキュメントのIDを指定する場合
 db.doc('users/someSpecificId').set(
@@ -184,7 +180,7 @@ batch.update(sfRef, { population: 1000000 });
 var laRef = db.collection('cities').doc('LA');
 batch.delete(laRef);
 
-batch.commit().then(function() {
+batch.commit().then(function () {
   // ...
 });
 ```
@@ -213,10 +209,7 @@ match /countries/{country} {
 `delete()`を使う。
 
 ```js
-await db
-  .collection('cities')
-  .doc('DC')
-  .delete();
+await db.collection('cities').doc('DC').delete();
 ```
 
 #### フィールドの削除
@@ -224,12 +217,9 @@ await db
 `FieldValue.delete()`を使う。
 
 ```js
-await db
-  .collection('cities')
-  .doc('BJ')
-  .update({
-    capital: firebase.firestore.FieldValue.delete(),
-  });
+await db.collection('cities').doc('BJ').update({
+  capital: firebase.firestore.FieldValue.delete(),
+});
 ```
 
 ### データのインポートとエクスポート
@@ -270,7 +260,7 @@ const querySnapshot = await db
 
 // querySnapshot.docs[]に、documentSnapshotが入っている。
 // これらにforEachするためのショートハンド。
-querySnapshot.forEach(queryDocumentSnapshot =>
+querySnapshot.forEach((queryDocumentSnapshot) =>
   console.log(queryDocumentSnapshot.data()),
 );
 ```
@@ -283,16 +273,16 @@ querySnapshot.forEach(queryDocumentSnapshot =>
 // 特定のドキュメント
 db.collection('cities')
   .doc('SF')
-  .onSnapshot(doc => {
+  .onSnapshot((doc) => {
     console.log('Current data: ', doc.data());
   });
 
 // 特定のデータ群（stateがCAのもの）
 db.collection('cities')
   .where('state', '==', 'CA')
-  .onSnapshot(querySnapshot => {
+  .onSnapshot((querySnapshot) => {
     var cities = [];
-    querySnapshot.forEach(doc => {
+    querySnapshot.forEach((doc) => {
       cities.push(doc.data().name);
     });
     console.log('Current cities in CA: ', cities.join(', '));
@@ -306,7 +296,7 @@ db.collection('cities')
 ```js
 db.collection('cities')
   .doc('SF')
-  .onSnapshot(function(doc) {
+  .onSnapshot(function (doc) {
     var source = doc.metadata.hasPendingWrites ? 'Local' : 'Server';
     console.log(source);
   });
@@ -323,7 +313,7 @@ db.collection('cities')
       // Listen for document metadata changes
       includeMetadataChanges: true,
     },
-    function(doc) {},
+    function (doc) {},
   );
 ```
 
@@ -332,8 +322,8 @@ db.collection('cities')
 `docChanges()`を使用して、スナップショット間の差分を取得できる。
 
 ```js
-db.collection('cities').onSnapshot(snapshot => {
-  snapshot.docChanges().forEach(change => {
+db.collection('cities').onSnapshot((snapshot) => {
+  snapshot.docChanges().forEach((change) => {
     if (change.type === 'added') {
       console.log('New city: ', change.doc.data());
     }
@@ -359,7 +349,10 @@ unsubscribe();
 権限設定などの失敗により、リッスンが失敗することがある。予め第 2 引数にエラーハンドを渡しておくと、unsubscribe しなくて良いので便利。
 
 ```js
-db.collection('cities').onSnapshot(snapshot => {}, error => {});
+db.collection('cities').onSnapshot(
+  (snapshot) => {},
+  (error) => {},
+);
 ```
 
 ### クエリ
@@ -399,10 +392,7 @@ citiesRef.where('state', '>=', 'CA').where('population', '>', 100000);
 citiesRef.orderBy('name').limit(3);
 citiesRef.orderBy('name', 'desc').limit(3);
 citiesRef.orderBy('state').orderBy('population', 'desc');
-citiesRef
-  .where('population', '>', 100000)
-  .orderBy('population')
-  .limit(2);
+citiesRef.where('population', '>', 100000).orderBy('population').limit(2);
 
 // 範囲フィルタと最初の orderBy を異なるフィールドに使用することはできない
 citiesRef.where('population', '>', 100000).orderBy('country');
@@ -427,7 +417,7 @@ citiesRef.orderBy('population').endBefore(20000); // 20000を含まない
 return citiesRef
   .doc('SF')
   .get()
-  .then(doc => {
+  .then((doc) => {
     // Get all cities with a population bigger than San Francisco
     var biggerThanSf = citiesRef.orderBy('population').startAt(doc);
   });
@@ -436,12 +426,9 @@ return citiesRef
 #### ページネーションの設定
 
 ```js
-var first = db
-  .collection('cities')
-  .orderBy('population')
-  .limit(25);
+var first = db.collection('cities').orderBy('population').limit(25);
 
-return first.get().then(documentSnapshots => {
+return first.get().then((documentSnapshots) => {
   // Get the last visible document
   var lastVisible = documentSnapshots.docs[documentSnapshots.docs.length - 1];
 
@@ -685,7 +672,7 @@ allow list: if request.query.limit <= 10;
 firebase
   .firestore()
   .enablePersistence()
-  .then(function() {
+  .then(function () {
     // Initialize Cloud Firestore through firebase
     var db = firebase.firestore();
   });
@@ -699,8 +686,8 @@ firebase
 ```js
 db.collection('cities').onSnapshot(
   { includeQueryMetadataChanges: true }, // metadataの変更はデフォルトではイベントを起こさないので
-  snapshot => {
-    snapshot.docChanges.forEach(change => {
+  (snapshot) => {
+    snapshot.docChanges.forEach((change) => {
       var source = snapshot.metadata.fromCache ? 'local cache' : 'server';
       console.log('Data came from ' + source);
     });

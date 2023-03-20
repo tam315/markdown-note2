@@ -1,7 +1,5 @@
 # Firebase
 
-[[toc]]
-
 ## Functions
 
 ### 名称

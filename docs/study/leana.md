@@ -1,7 +1,5 @@
 # Lerna
 
-[[toc]]
-
 ## Setup
 
 ```bash

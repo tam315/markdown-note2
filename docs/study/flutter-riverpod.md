@@ -1,7 +1,5 @@
 # Flutter - Riverpod
 
-[[toc]]
-
 ## インストール
 
 - Flutter + flutter_hooks で使う場合 => `hooks_riverpod`
