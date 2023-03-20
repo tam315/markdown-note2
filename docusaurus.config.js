@@ -47,7 +47,7 @@ const config = {
           // Remove this to remove the "edit this page" links.
           // editUrl: 'https://github.com/junkboy0315/markdown-note2',
           remarkPlugins: [math],
-          rehypePlugins: [katex],
+          rehypePlugins: [[katex, { strict: false }]],
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
