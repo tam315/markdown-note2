@@ -256,7 +256,7 @@ $$
 - $P(A)$ --- 事前確率 まだ何も情報がないときに、既に知っている確率のこと
 - $P(A|B)$ --- 事後確率　$B$という情報が**後から**加わる事により、$A$である確率をより絞りんだもの
 
-<Youtube maxWidth="360px" videoId="oUN_GhB00fU" />
+<iframe width="560" height="315" src="https://www.youtube.com/embed/oUN_GhB00fU" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 例）罹患率 0.01%の病気の検査の精度が以下の場合において、陽性と診断されたときに本当に罹患している確率は？
 
