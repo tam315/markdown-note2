@@ -36,8 +36,7 @@ var app = new Vue({
 属性にデータをバインドする。バインドしないと、ただのテキストとして評価される。
 
 ```html
-<a v-bind:href="someUrl" />
-<a :href="someUrl" />
+<a v-bind:href="someUrl" /> <a :href="someUrl" />
 ```
 
 ```jsx
@@ -65,9 +64,7 @@ new Vue({
 ### for
 
 ```html
-<li v-for="todo in todos">
-  {{ todo.text }}
-</li>
+<li v-for="todo in todos">{{ todo.text }}</li>
 ```
 
 ```js
@@ -124,10 +121,7 @@ new Vue({
 ### components
 
 ```html
-<todo-item
-  v-for="item in groceryList"
-  v-bind:todo="item"
-/>
+<todo-item v-for="item in groceryList" v-bind:todo="item" />
 ```
 
 ```js
@@ -189,7 +183,7 @@ vm.a; // => 3
 vm.$data === data; // => true
 vm.$el === document.getElementById('example'); // => true
 
-vm.$watch('a', function(newValue, oldValue) {
+vm.$watch('a', function (newValue, oldValue) {
   // This callback will be called when `vm.a` changes
 });
 ```
@@ -235,7 +229,8 @@ vm.$watch('a', function(newValue, oldValue) {
 
 ```html
 <div v-bind:id="dynamicId"></div>
-<div v-bind:active="isActive"></div> // falsyならactiveはレンダリングされない
+<div v-bind:active="isActive"></div>
+// falsyならactiveはレンダリングされない
 ```
 
 #### Javascript
@@ -243,9 +238,8 @@ vm.$watch('a', function(newValue, oldValue) {
 テンプレートには 1 文までの Javascript を記載できる。
 
 ```html
-{{ number + 1 }}
-{{ ok ? 'YES' : 'NO' }}
-{{ message.split('').reverse().join('') }}
+{{ number + 1 }} {{ ok ? 'YES' : 'NO' }} {{ message.split('').reverse().join('')
+}}
 <div v-bind:id="'list-' + id"></div>
 ```
 
@@ -276,7 +270,7 @@ var vm = new Vue({
     message: 'Hello',
   },
   computed: {
-    reversedMessage: function() {
+    reversedMessage: function () {
       return this.message.split('');
     },
   },
@@ -321,9 +315,10 @@ computed: {
 - Array Syntax で複数の要素を指定することもできる
 
 ```html
-<div class="some-default-class"
-     v-bind:class="{ active: isActive, 'text-danger': hasError }">
-</div>
+<div
+  class="some-default-class"
+  v-bind:class="{ active: isActive, 'text-danger': hasError }"
+></div>
 
 <!-- errorClass='some-string' -->
 <div v-bind:class="[{ active: isActive }, errorClass]"></div>
@@ -352,18 +347,10 @@ Component に Class を指定したときは、そのコンポーネントのル
 ### v-if
 
 ```html
-<div v-if="type === 'A'">
-  A
-</div>
-<div v-else-if="type === 'B'">
-  B
-</div>
-<div v-else-if="type === 'C'">
-  C
-</div>
-<div v-else>
-  Not A/B/C
-</div>
+<div v-if="type === 'A'">A</div>
+<div v-else-if="type === 'B'">B</div>
+<div v-else-if="type === 'C'">C</div>
+<div v-else>Not A/B/C</div>
 ```
 
 ### template
@@ -386,11 +373,11 @@ Component に Class を指定したときは、そのコンポーネントのル
 ```html
 <template v-if="loginType === 'username'">
   <label>Username</label>
-  <input key="username-input">
+  <input key="username-input" />
 </template>
 <template v-else>
   <label>Email</label>
-  <input key="email-input">
+  <input key="email-input" />
 </template>
 ```
 
@@ -432,7 +419,8 @@ v-if との違いは下記の通り
 <!-- Object -->
 <li v-for="item in object"></li>
 <div v-for="(value, key) in object">
-<div v-for="(value, key, index) in object">
+  <div v-for="(value, key, index) in object"></div>
+</div>
 ```
 
 #### key
@@ -578,9 +566,9 @@ v-if と同じく、template を使う。
 ### Key Modifier
 
 ```html
-<input v-on:keyup.13="submit">
+<input v-on:keyup.13="submit" />
 <!-- same as above -->
-<input v-on:keyup.enter="submit">
+<input v-on:keyup.enter="submit" />
 ```
 
 エイリアスの一覧
@@ -598,7 +586,7 @@ v-if と同じく、template を使う。
 [KeyboardEvent.key](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values)をケバブケースにしたものも使用可能。
 
 ```html
-<input @keyup.page-down="onPageDown">
+<input @keyup.page-down="onPageDown" />
 ```
 
 独自のエイリアス設定も可能
@@ -616,7 +604,7 @@ Vue.config.keyCodes.f1 = 112;
 
 ```html
 <!-- Alt + C -->
-<input @keyup.alt.67="clear">
+<input @keyup.alt.67="clear" />
 
 <!-- Ctrl + Click -->
 <div @click.ctrl="doSomething">Do something</div>
@@ -650,7 +638,7 @@ Vue.config.keyCodes.f1 = 112;
 #### Text
 
 ```html
-<input v-model="message">
+<input v-model="message" />
 ```
 
 #### Multiline text
@@ -663,21 +651,16 @@ Vue.config.keyCodes.f1 = 112;
 
 ```html
 <!-- checkedはbooleanになる -->
-<input type="checkbox" id="checkbox" v-model="checked">
+<input type="checkbox" id="checkbox" v-model="checked" />
 
 <!-- もし、toggleに特定の文字列を入れたい場合 -->
-<input
-  type="checkbox"
-  v-model="toggle"
-  true-value="yes"
-  false-value="no"
->
+<input type="checkbox" v-model="toggle" true-value="yes" false-value="no" />
 
 <!-- checkedNamesは、valueの値からなる配列になる -->
 <div>
-  <input type="checkbox" id="jack" value="Jack" v-model="checkedNames">
-  <input type="checkbox" id="john" value="John" v-model="checkedNames">
-  <input type="checkbox" id="mike" value="Mike" v-model="checkedNames">
+  <input type="checkbox" id="jack" value="Jack" v-model="checkedNames" />
+  <input type="checkbox" id="john" value="John" v-model="checkedNames" />
+  <input type="checkbox" id="mike" value="Mike" v-model="checkedNames" />
   <span>Checked names: {{ checkedNames }}</span>
 </div>
 ```
@@ -687,8 +670,8 @@ Vue.config.keyCodes.f1 = 112;
 `picked`には value の値が入る。
 
 ```html
-<input type="radio" id="one" value="One" v-model="picked">
-<input type="radio" id="two" value="Two" v-model="picked">
+<input type="radio" id="one" value="One" v-model="picked" />
+<input type="radio" id="two" value="Two" v-model="picked" />
 ```
 
 #### Select（単一選択）
@@ -727,9 +710,9 @@ Vue.config.keyCodes.f1 = 112;
 - `.trim` 余分な空白等を削る
 
 ```html
-<input v-model.lazy="msg" >
-<input v-model.number="age" type="number">
-<input v-model.trim="msg">
+<input v-model.lazy="msg" />
+<input v-model.number="age" type="number" />
+<input v-model.trim="msg" />
 ```
 
 ## Components Basics
@@ -796,12 +779,12 @@ v-bind は、内部的には次の 2 つの機能から成り立っている。
 - `input`イベントによるデータの更新
 
 ```html
-<input v-model="searchText">
+<input v-model="searchText" />
 <!-- これは下記と等価 -->
 <input
   v-bind:value="searchText"
   v-on:input="searchText = $event.target.value"
->
+/>
 ```
 
 コンポーネントの場合は、上記を念頭に置き、下記のようにする。
@@ -814,10 +797,7 @@ v-bind は、内部的には次の 2 つの機能から成り立っている。
 ></custom-input>
 
 <!-- component -->
-<input
-  v-bind:value="value"
-  v-on:input="$emit('input', $event.target.value)"
->
+<input v-bind:value="value" v-on:input="$emit('input', $event.target.value)" />
 
 <!-- ここまで来たら、parentは下記の通り書き換えてもOK -->
 <custom-input v-model="searchText" />
@@ -853,13 +833,12 @@ React での children と同じ。
 
 ```html
 <!-- parent -->
-<alert-box>
-  Something bad happened.
-</alert-box>
+<alert-box> Something bad happened. </alert-box>
 
 <!-- component -->
 <div>
-  <slot></slot> <!-- ここに`Something bad happened.`が入る -->
+  <slot></slot>
+  <!-- ここに`Something bad happened.`が入る -->
 </div>
 ```
 
@@ -997,13 +976,13 @@ Vue.component('my-component', {
       type: Object,
       // Object or array defaults must be returned from
       // a factory function
-      default: function() {
+      default: function () {
         return { message: 'hello' };
       },
     },
     // Custom validator function
     propF: {
-      validator: function(value) {
+      validator: function (value) {
         // The value must match one of these strings
         return ['success', 'warning', 'danger'].indexOf(value) !== -1;
       },
@@ -1042,7 +1021,9 @@ v-bind を使うと、様々な Javascript の値を渡すことができる。
 <blog-post :comment-ids="[234, 266, 273]"></blog-post>
 
 <!-- オブジェクトとして -->
-<blog-post :author="{ name: 'Veronica', company: 'Veridian Dynamics' }"></blog-post>
+<blog-post
+  :author="{ name: 'Veronica', company: 'Veridian Dynamics' }"
+></blog-post>
 ```
 
 ### オブジェクトのプロパティを分解して渡す
@@ -1059,10 +1040,7 @@ post: {
 ```html
 <blog-post v-bind="post"></blog-post>
 <!-- 上記は下記と等価 -->
-<blog-post
-  v-bind:id="post.id"
-  v-bind:title="post.title"
-></blog-post>
+<blog-post v-bind:id="post.id" v-bind:title="post.title"></blog-post>
 ```
 
 ### One-way data flow
@@ -1221,8 +1199,8 @@ this.$emit('update:title', newTitle);
 Vue.component('async-example', option);
 
 // 方法1（ファンクションを使う）
-const option = function(resolve, reject) {
-  setTimeout(function() {
+const option = function (resolve, reject) {
+  setTimeout(function () {
     resolve({
       template: '<div>I am async!</div>',
     });
@@ -1230,7 +1208,7 @@ const option = function(resolve, reject) {
 };
 
 // 方法2（Webpack の code-splitting の機能 を使用）
-const option = function(resolve) {
+const option = function (resolve) {
   require(['./my-async-component'], resolve);
 };
 
@@ -1346,7 +1324,7 @@ components: {
 
 - `v-if`が使われている
 - `v-show`が使われている
-- [Dynamic Component](/study/vuejs.html#dynamic-components) である
+- Dynamic Component である
 - Component root nodes である
 
 ```html
@@ -1429,7 +1407,7 @@ components: {
 <transition
   enter-active-class="animated tada"
   leave-active-class="animated bounceOutRight"
->
+></transition>
 ```
 
 #### animation と transition の同時利用
@@ -1455,7 +1433,6 @@ Vue はアニメーションやトランジションの終了を`transitionend` 
   @enter="enter"
   @after-enter="afterEnter"
   @enter-cancelled="enterCancelled"
-
   @before-leave="beforeLeave"
   @leave="leave"
   @after-leave="afterLeave"
@@ -1466,15 +1443,15 @@ Vue はアニメーションやトランジションの終了を`transitionend` 
 ```js
 const option = {
   methods: {
-    beforeEnter: function(el) {},
-    enter: function(el, done) {},
-    afterEnter: function(el) {},
-    enterCancelled: function(el) {},
+    beforeEnter: function (el) {},
+    enter: function (el, done) {},
+    afterEnter: function (el) {},
+    enterCancelled: function (el) {},
 
-    beforeLeave: function(el) {},
-    leave: function(el, done) {},
-    afterLeave: function(el) {},
-    leaveCancelled: function(el) {},
+    beforeLeave: function (el) {},
+    leave: function (el, done) {},
+    afterLeave: function (el) {},
+    leaveCancelled: function (el) {},
   },
 };
 ```
@@ -1493,15 +1470,9 @@ const option = {
 
 ```html
 <transition>
-  <button v-if="docState === 'saved'" key="saved">
-    Edit
-  </button>
-  <button v-if="docState === 'edited'" key="edited">
-    Save
-  </button>
-  <button v-if="docState === 'editing'" key="editing">
-    Cancel
-  </button>
+  <button v-if="docState === 'saved'" key="saved">Edit</button>
+  <button v-if="docState === 'edited'" key="edited">Save</button>
+  <button v-if="docState === 'editing'" key="editing">Cancel</button>
 </transition>
 ```
 
@@ -1513,7 +1484,7 @@ const option = {
 - `in-out` 上記の逆。あまり使わない。
 
 ```html
-<transition name="fade" mode="out-in">
+<transition name="fade" mode="out-in"></transition>
 ```
 
 ### 複数のコンポーネントのトランジション
@@ -1566,7 +1537,9 @@ new Vue({
 
 ```html
 <transition-group tag="div">
-  <span v-for="item in items" v-bind:key="item" class="list-item">{{ item }}</span>
+  <span v-for="item in items" v-bind:key="item" class="list-item"
+    >{{ item }}</span
+  >
 </transition-group>
 ```
 

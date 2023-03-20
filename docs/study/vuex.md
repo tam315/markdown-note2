@@ -91,7 +91,7 @@ export default {
   computed: {
     ...mapState({
       // ファンクションを使う方法
-      count: state => state.count,
+      count: (state) => state.count,
       // storeのキー名を使う方法
       countAlias: 'count',
       // ローカルStateと組み合わせる場合はノーマル関数を使う
@@ -131,7 +131,7 @@ const store = new Vuex.Store({
     count: 1,
   },
   getters: {
-    bigCount: state => state.count * 10,
+    bigCount: (state) => state.count * 10,
     // 第2引数に他のgetterを取ることもできる
     moreBigCount: (state, getters) => getters.bigCount * 10,
   },
@@ -157,8 +157,8 @@ getter がファンクションを返すようにすることで、コンポー�
 ```js
 // store側
 getters: {
-  getTodoById: state => id => {
-    return state.todos.find(todo => todo.id === id);
+  getTodoById: (state) => (id) => {
+    return state.todos.find((todo) => todo.id === id);
   };
 }
 
@@ -242,7 +242,7 @@ store.commit({
 
 ### ハンドラを作成するときの注意点
 
-Vuex の state に関する注意点は、[Vue の data に関する注意点](/study/vuejs.html#object-の変更検知)と同じ。
+Vuex の state に関する注意点は、Vue の data に関する注意点と同じ。
 
 - 必要な State は、はじめから**全て**セットしておく（少なくとも初期値は）。
   **後から追加しないこと**。
@@ -669,7 +669,7 @@ store ファイルは単一で管理してもいいし、もし大きくなり�
 ### 作り方とセットアップ方法
 
 ```js
-const myPlugin = store => {
+const myPlugin = (store) => {
   // called when the store is initialized
 
   store.subscribe((mutation, state) => {
@@ -687,7 +687,7 @@ const store = new Vuex.Store({
 ### state のスナップショットを取るプラグイン例
 
 ```js
-const myPluginWithSnapshot = store => {
+const myPluginWithSnapshot = (store) => {
   let prevState = _.cloneDeep(store.state);
 
   store.subscribe((mutation, state) => {
@@ -721,7 +721,7 @@ const store = new Vuex.Store({
 Strict モードでは、v-model に vuex の state をセットするとエラーになる（直接、値を変更しているから）。これを避けるには下記のような工夫が必要。
 
 ```html
-<input v-model="message">
+<input v-model="message" />
 ```
 
 ```js

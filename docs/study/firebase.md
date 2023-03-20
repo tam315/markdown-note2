@@ -27,7 +27,7 @@ Node.js v8.\* を使うなら、`functions/package.json` に `"engines": { "node
 const functions = require('firebase-functions');
 
 // ユーザの削除をトリガにする
-exports.helloWorld = functions.auth.user().onDelete(user => {});
+exports.helloWorld = functions.auth.user().onDelete((user) => {});
 
 // http通信をトリガにする
 exports.helloWorld2 = functions.https.onRequest(async (req, res) => {});
@@ -124,7 +124,7 @@ const token = await firebase.auth().currentUser.getIdToken();
 
 #### gapi を使った手動でのログイン
 
-[gapi](/study/gapi.html) を使って取得した idToken を使う方法。匿名アカウントのアップグレードなどが必要な場合は、この方法をとる必要がある。
+gapi を使って取得した idToken を使う方法。匿名アカウントのアップグレードなどが必要な場合は、この方法をとる必要がある。
 
 ```js
 var credential = firebase.auth.GoogleAuthProvider.credential(ID_TOKEN);

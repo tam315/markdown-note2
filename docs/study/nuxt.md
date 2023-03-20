@@ -84,7 +84,7 @@ yarn dev
 
 - Vue コンポーネントを格納する
 - Nuxt.js は `components` ディレクトリ内のコンポーネントの data メソッドについては手を加えない
-- 一方、Nuxt.js は `pages` ディレクトリ内のコンポーネントの data メソッドには非同期データを扱えるよう[手を加える](/study/nuxt.html#pages-2)
+- 一方、Nuxt.js は `pages` ディレクトリ内のコンポーネントの data メソッドには非同期データを扱えるよう手を加える
 
 #### `layouts`
 
@@ -425,7 +425,7 @@ export default {
 
 ```js
 // middleware/auth.js
-export default function(context) {
+export default function (context) {
   context.userAgent = context.isServer
     ? context.req.headers['user-agent']
     : navigator.userAgent;
@@ -580,8 +580,7 @@ export default {
     return {
       script: [
         {
-          src:
-            'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js',
+          src: 'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js',
         },
       ],
       link: [
@@ -652,10 +651,10 @@ export default {
   asyncData({ params, error }) {
     return axios
       .get(`https://my-api/posts/${params.id}`)
-      .then(res => {
+      .then((res) => {
         return { title: res.data.title };
       })
-      .catch(e => {
+      .catch((e) => {
         error({ statusCode: 404, message: 'Post not found' });
       });
   },
@@ -799,7 +798,7 @@ module.exports = {
 ```js
 // plugins/vue-inject.js
 import Vue from 'vue';
-Vue.prototype.$myInjectedFunction = string =>
+Vue.prototype.$myInjectedFunction = (string) =>
   console.log('This is an example', string);
 
 // nuxt.config.js
@@ -935,7 +934,7 @@ module.exports = {
 };
 
 // module.js
-module.exports = function(moduleOptions) {
+module.exports = function (moduleOptions) {
   const options = Object.assign({}, this.options.axios, moduleOptions);
   // ...
 };
@@ -950,7 +949,7 @@ import BootstrapVue from 'bootstrap-vue/dist/bootstrap-vue.esm';
 Vue.use(BootstrapVue);
 
 // module.js
-module.exports = function(moduleOptions) {
+module.exports = function (moduleOptions) {
   // Register `plugin.js` template
   this.addPlugin(path.resolve(__dirname, 'plugin.js'));
 };
@@ -979,7 +978,7 @@ module.exports = function nuxtBootstrapVue(moduleOptions) {
 
 ```js
 // module.js
-module.exports = function(moduleOptions) {
+module.exports = function (moduleOptions) {
   this.options.css.push('font-awesome/css/font-awesome.css');
 };
 ```
@@ -990,7 +989,7 @@ webpack プラグインを登録する方法
 TODO: よくわからない
 
 ```js
-module.exports = function(moduleOptions) {
+module.exports = function (moduleOptions) {
   const info = 'Built by awesome module - 1.3 alpha on ' + Date.now();
 
   this.options.build.plugins.push({
@@ -1014,7 +1013,7 @@ module.exports = function(moduleOptions) {
 前項と同じことは`extendBuild`を使って実現することもできる。
 
 ```js
-module.exports = function(moduleOptions) {
+module.exports = function (moduleOptions) {
   this.extendBuild((config, { isClient, isServer }) => {
     // `.foo` Loader
     config.module.rules.push({
@@ -1026,7 +1025,7 @@ module.exports = function(moduleOptions) {
 
     // Customize existing loaders
     const barLoader = config.module.rules.find(
-      rule => rule.loader === 'bar-loader',
+      (rule) => rule.loader === 'bar-loader',
     );
   });
 };
@@ -1036,19 +1035,19 @@ module.exports = function(moduleOptions) {
 
 ```js
 // module.js
-module.exports = function() {
+module.exports = function () {
   // Add hook for modules
-  this.nuxt.hook('module', moduleContainer => {
+  this.nuxt.hook('module', (moduleContainer) => {
     // This will be called when all modules finished loading
   });
 
   // Add hook for renderer
-  this.nuxt.hook('renderer', renderer => {
+  this.nuxt.hook('renderer', (renderer) => {
     // This will be called when renderer was created
   });
 
   // Add hook for build
-  this.nuxt.hook('build', async builder => {
+  this.nuxt.hook('build', async (builder) => {
     // This will be called once when builder created
 
     // We can even register internal hooks here
@@ -1058,7 +1057,7 @@ module.exports = function() {
   });
 
   // Add hook for generate
-  this.nuxt.hook('generate', async generator => {
+  this.nuxt.hook('generate', async (generator) => {
     // This will be called when a Nuxt generate starts
   });
 };
@@ -1120,27 +1119,27 @@ export const mutations = {
     state.counter++;
   },
 };
-export const plugins = [ myPlugin ]
+export const plugins = [myPlugin];
 
 // store/todos.js（サブフォルダにする必要はない）
 export const state = () => ({
-  list: []
-})
+  list: [],
+});
 
 export const mutations = {
-  add (state, text) {
+  add(state, text) {
     state.list.push({
       text: text,
-      done: false
-    })
+      done: false,
+    });
   },
-  remove (state, { todo }) {
-    state.list.splice(state.list.indexOf(todo), 1)
+  remove(state, { todo }) {
+    state.list.splice(state.list.indexOf(todo), 1);
   },
-  toggle (state, todo) {
-    todo.done = !todo.done
-  }
-}
+  toggle(state, todo) {
+    todo.done = !todo.done;
+  },
+};
 ```
 
 ### nuxtServerInit
