@@ -88,8 +88,6 @@ Author: the WordPress team
 
 ### テンプレートの優先順位
 
-![テンプレートの優先順位](//wpdocs.osdn.jp/wiki/images/wp-template-hierarchy.jpg)
-
 ## 基本部分の構築
 
 ### 下準備
