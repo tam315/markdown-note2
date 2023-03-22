@@ -29,6 +29,7 @@
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
 
+/* 大項目を判別しやすいように下線を表示する */
 .markdown > h2 {
   border-bottom: 1px var(--ifm-color-content) dotted;
   padding-bottom: 0.3rem;
