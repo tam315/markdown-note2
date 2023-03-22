@@ -33,3 +33,8 @@
   border-bottom: 1px var(--ifm-color-content) dotted;
   padding-bottom: 0.3rem;
 }
+
+/* マークダウンページ下部の「前へ」「次へ」のリンクを表示しない */
+.pagination-nav__link--prev, .pagination-nav__link--next {
+  display: none
+}
