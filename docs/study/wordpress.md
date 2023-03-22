@@ -1,7 +1,5 @@
 # Wordpress
 
-[[toc]]
-
 ## Lightsail
 
 ### セットアップ

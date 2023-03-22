@@ -1,7 +1,5 @@
 # Wordpress - Theme
 
-[[toc]]
-
 ## テーマ開発の流れ
 
 1. PHP / WordPress のエラーを修正する。この際、`wp-config.php`に`define('WP_DEBUG', true)`を追記して行うと良い。
