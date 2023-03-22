@@ -149,6 +149,11 @@ const config = {
         disableSwitch: false,
         respectPrefersColorScheme: true,
       },
+      algolia: {
+        appId: '90AYZ8JBZS',
+        apiKey: '7d2afa92fabbf6e52b3ba06109fd79f0',
+        indexName: 'yuuniworksnotes',
+      },
     }),
 };
 
