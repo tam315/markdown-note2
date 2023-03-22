@@ -151,7 +151,7 @@ const config = {
       },
       algolia: {
         appId: '90AYZ8JBZS',
-        apiKey: '7d2afa92fabbf6e52b3ba06109fd79f0',
+        apiKey: 'cb3c9cc933ec96a9066aa4b5b575523a',
         indexName: 'yuuniworksnotes',
       },
     }),
