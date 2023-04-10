@@ -185,9 +185,10 @@ function fetchTodoList({ queryKey }) {
   - クエリが実行される
 - ネットワーク接続がないとき
   - クエリは実行されず、Status の値は従前の`loading`,`error`,`success`の状態を維持する。
-- クエリ実行中にネットワーク接続がなくなったとき
+  - `fetchStatus`は`pending`になる
+- クエリ実行している最中にネットワーク接続を失ったとき
   - リトライ機能は無効化される
-  - ただし`refetchOnReconnect`は実行される(正確には再取得というよりは継続というべき性質のものだから)
+  - ただし`refetchOnReconnect`は実行される(これは正確には再取得というよりは継続というべき性質のものだから)
 
 ### `always`
 
