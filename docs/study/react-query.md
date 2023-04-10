@@ -63,6 +63,8 @@ function MyComponent() {
 
 ## デフォルト設定に関する注意
 
+デフォルト設定を知っておかないと罠にはまるのでここはきちんと抑えておくこと。
+
 - キャッシュデータは stale として扱われる(`staleTime`)。このため、下記の場合にデータが自動的に再取得される。
   - クエリを使用する新しいコンポーネントがマウントされた時(`refetchOnMount`)
   - ウィンドウが再フォーカスされた時(`refetchOnWindowFocus`)
@@ -72,7 +74,7 @@ function MyComponent() {
 - 失敗したクエリは自動的に３回再試行される。間隔は指数関数的に伸びる。(`retry`, `retryDelay`)
 - クエリ結果は[Structural Sharing](https://medium.com/@dtinth/immutable-js-persistent-data-structures-and-structural-sharing-6d163fbd73d2)という仕組みで保持されている。これにより、本当に値が変わった時にだけ最小限のオブジェクトの参照が変更される。これは、ほとんどの場合で効率的である。
 
-## クエリ
+## Query
 
 - クエリするには下記の２つが必要
   - ユニークなキー
@@ -87,16 +89,31 @@ const result = useQuery({
 });
 ```
 
-- result
-  - `isLoading` or `status === 'loading'` 初期ロード中
-  - `isError` or `status === 'error'` エラーが発生した状態
-    - `error` エラーの内容
-  - `isSuccess` or `status === 'success'` データ取得が成功した状態
-    - `data` データ
-  - `isIdle` or `status === 'idle'` クエリが無効化された状態
-  - `isFetching` なんらかの通信中である(`isLoading`を含む)
+### Status
 
-## クエリキー
+Status は`data`に関する情報である。`data`を持っているかどうかを示す。
+
+- `isLoading` or `status === 'loading'` データがまだ存在しない状態 (通信中かどうかは関係しないので注意)
+- `isError` or `status === 'error'` エラーが発生した状態
+  - `error` エラーの内容
+- `isSuccess` or `status === 'success'` データ取得が成功した状態
+  - `data` データ
+
+`!isLoading && !isError`であることをチェックすれば、Type Narrowing が効くので、`data`にアクセスできる。
+
+### FetchStatus
+
+FetchStatus は`queryFn`に関する情報である。`queryFn`が動作中かどうかを示す。
+
+- `fetchStatus === 'fetching'` or `isFetching` - 通信中である
+- `fetchStatus === 'paused'` or `isPaused` - 通信したいがオフラインなどの理由により保留中
+- `fetchStatus === 'idle'` - 通信していない
+
+### なぜ 2 つのステータスが必要だったのか
+
+Background refetches と stale-while-revalidate の仕組みがあることにより、上記ステータスのあらゆる組み合わせが発生しうるため。
+
+## Query Key
 
 - クエリキーに基づいてキャッシュが行われる
 - シリアライズ可能な値ならなんでもキーとして使用できる
@@ -116,7 +133,7 @@ useQuery(['todos', { status, page }], ...)
 useQuery(['todos', { page, status }], ...)
 ```
 
-クエリが特定の id 等に基づいて行われるものであるならば、その値をキーとして含めておくこと
+クエリ関数が変数に依存している場合、例えば特定の id 等に基づいてクエリが実行されるなどの場合は、クエリキーにもその変数を含めること。
 
 ```ts
 function Todos({ todoId }) {
@@ -124,9 +141,12 @@ function Todos({ todoId }) {
 }
 ```
 
-## クエリを実行する(データを取得する)関数
+## Query Functions
 
-- データ取得に失敗した時は必ずエラーを投げること(この制約は React Query の仕様によるもの)
+Query Functions = クエリを実行する(データを取得する)関数のこと。
+
+- データ取得に失敗した時は必ずエラーを投げるもしくは`Promise.reject()`を返すこと。
+  - そうすることで React Query は適切にエラーをハンドリングできる
   - `axios`と異なり、`fetch`はデフォルトではエラーを投げないので注意する
 
 ```ts
@@ -139,7 +159,8 @@ useQuery(['todos', todoId], async () => {
 });
 ```
 
-- ユニークキーは Query function に渡されるので、必要に応じて使用するとよい
+- Query function にはコンテキストが渡されるので、必要に応じて使用するとよい
+  - `queryKey`や AbortSignal など
 
 ```ts
 function Todos({ status, page }) {
@@ -151,6 +172,35 @@ function fetchTodoList({ queryKey }) {
   return new Promise();
 }
 ```
+
+## Network Mode
+
+3 つのモードがある
+
+### `online`
+
+デフォルトはコレ
+
+- ネットワーク接続があるとき
+  - クエリが実行される
+- ネットワーク接続がないとき
+  - クエリは実行されず、Status の値は従前の`loading`,`error`,`success`の状態を維持する。
+- クエリ実行中にネットワーク接続がなくなったとき
+  - リトライ機能は無効化される
+  - ただし`refetchOnReconnect`は実行される(正確には再取得というよりは継続というべき性質のものだから)
+
+### `always`
+
+ネットワークを使用せず、AsyncStorage などで完結している場合に最適
+
+- ネットワーク接続状態を考慮せず、常にクエリが実行される
+- `fetchStatus`が`paused`になることはない
+- リトライが pause されることもなく、失敗時には直ちに`error`状態になる
+- `refetchOnReconnect`はデフォルトで無効化される
+
+### `offlineFirst`
+
+（online と always の中間とのことだがちょっとよくわからん）
 
 ## クエリを並列で実行する
 
@@ -168,78 +218,104 @@ const userQueries = useQueries(
 )``;
 ```
 
-## クエリを順次に実行する
+## クエリを直列に実行する
 
 - クエリの実行結果を使って別のクエリを実行するには、`enabled`オプションを使用する。
-- `isIdle` は初めは `true`となる。`enabled`になりデータ取得が始まると`false`になる
 
 ```ts
-// ユーザIDの取得
+// まずはユーザIDを取得する
 const { data: user } = useQuery(['user', email], getUserByEmail);
 const userId = user?.id;
 
-// ユーザIDを使用して、プロジェクトを取得
-const { isIdle, data: projects } = useQuery(
-  ['projects', userId],
-  getProjectsByUser,
-  {
-    // userIDが存在する場合のみこのクエリを実行する
-    enabled: !!userId,
-  },
-);
+// 次にユーザIDを使用してプロジェクトを取得する
+const {
+  status,
+  fetchStatus,
+  data: projects,
+} = useQuery(['projects', userId], getProjectsByUser, {
+  // userIDが存在する場合のみこのクエリを実行する
+  enabled: !!userId,
+});
 ```
 
-## バックグラウドでのデータ取得をユーザに通知する
+project の status, fetchStatus は以下の通り遷移することになる。
 
-- `isFetching`を使う。
-  - `isFetching`はあらゆる通信で`true`となる
-  - `idLoading`は初回データ取得の時だけ`true`となる
+```txt
+✅最初の状態
+status: 'loading'
+fetchStatus: 'idle'
+
+✅ユーザの取得が終わって`enabled`が`true`になった時
+status: 'loading'
+fetchStatus: 'fetching'
+
+✅projectが取得できたあと
+status: 'success'
+fetchStatus: 'idle'
+```
+
+## バックグラウドでの通信をユーザに知らせるには
+
+- `isFetching`を使えばよい
+  - `isFetching`はリトライやリフェッチなどを含め、あらゆる通信で`true`となる
+  - `isLoading`は初回データ取得のとき(過去に 1 度もデータを取得できていない状態のとき)だけ`true`となる
 - アプリ全体での通信状態を取得したい場合は`useIsFetching`を使用する
 
 ## Window Focus Refetching
 
 - デフォルトで有効になっている
-- 詳細略
+- React Native で同様のことをしたい場合は AppState の active イベントにリスナーを登録する
+- その他、詳細略
 
-## クエリの無効化・停止
+## Disabling / Pausing Queries
 
 `enabled`オプションを`false`設定することで以下のようになる。
 
-- キャッシュデータが存在する場合は、`isSuccess`状態になり、かつ`data`が提供される
-- キャッシュデータがない場合は`isIdle`状態になる
+- キャッシュデータが存在する場合は、`status === 'success'`状態になり、かつ`data`が提供される
+- キャッシュデータがない場合は`status === 'loading`かつ`fetchStatus === 'idle'`状態になる
 - マウント時にクエリが実行されない
-- バックグラウンドで再クエリされない
-- `invalidateQueries`や`refetchQueries`が発火されても再クエリしない
-- `refetch`を使って手動でクエリを実行できる
+- バックグラウンドでリフェッチされない
+- `invalidateQueries()`や`refetchQueries()`が発火されても再クエリしない
+- `refetch()`を使って手動でクエリを実行することはできる
 
-## リトライ
+## Query Retries
 
-デフォルトで有効。詳細略。
+queryFn の失敗時にはデフォルトで 3 回リトライする
 
-## ページネーション
+## Pagenation
 
-- 普通にページネーションしようとすると、切り替えのたびに画面がローディング中になり、がたつく。これを防ぐには`keepPreviousData`オプションを有効にする。
-  - ユニークキーが変更されても、前回取得した`data`が利用可能で、かつステータスが毎回`isLoading`にならない
-  - データ取得が成功すると`data`が差し替えられる
+- 普通にページネーションしようとすると、切り替えのたびに`data`が空になったり`loading` state になることで、画面がガタつくなど UI としてよろしくない挙動になる。
+- これを防ぐには`keepPreviousData`オプションを有効にする。
+- このオプションが無効だと：
+  - クエリ開始時には`status==='loading' && data === undefined`に毎回戻ってしまう
+- このオプションが有効だと：
+  - クエリ開始時には`status==='success' && data === <前回取得したデータのキャッシュ>`になる
+    - 過去に少なくとも一度クエリが成功している前提
+  - ユニークキーが変更されても、前回取得した`data`が利用可能
+  - データ取得が成功した段階で`data`が差し替えられる
   - `isPreviousData`フラグが提供される
-
-詳細略
+- [サンプルコード](https://tanstack.com/query/latest/docs/react/guides/paginated-queries)をそのままパクれば OK!
 
 ## Infinite Queries
 
 略
 
-## Placeholder Query Data
-
-略
-
 ## Initial Query Data
 
-略
+- 例えばローカルストレージにキャッシュしていたデータを初期データとして設定したい場合などを想定
+- プレースホルダのような不完全なデータには後述の`placeholderData`を使う
+- 詳細略
+
+## Placeholder Query Data
+
+- 例えばブログの個別ページを取得したい状況において、前もってその個別ページの一部分のデータを取得済みの場合に、データ取得が完了するまでの間、先んじて一部分のデータを画面に表示させたい場合などを想定
+- UI 改善のために使用するもの。Optimistic Update とやや似ている。
 
 ## Prefetching
 
-略
+- ユーザが次に必要としそうなデータが予め分かっている場合に、そのデータを事前に取得しておくことで UI パフォーマンスを改善するためのもの
+- `queryClient.prefetchQuery`を使う
+- 詳細略
 
 ## Mutations
 
@@ -259,9 +335,9 @@ mutate({ id: 1234, title: 'hello' });
 - `isSuccess` or `status === 'success'`
   - `data` レスポンス
 - `reset` --- `error`や`data`をリセットする
-- `mutate` データを更新する。渡せる引数は 1 つ。
+- `mutate` Mutation を実行する。渡せる引数は 1 つ。サーバからのレスポンス等が返ってくる。
 
-これだけならなんの変哲もないが、`invalidateQeries`や`setQueryData`と組み合わせることで強力になる。
+これだけならなんの変哲もないが、`onSuccess`, `invalidateQeries`や`setQueryData`と組み合わせることで強力になる。
 
 ### Mutation Side Effects
 
@@ -288,15 +364,29 @@ useMutation(addTodo, {
 });
 ```
 
-`useMutation`だけでなく、`mutate`にも記載できる。この場合、`useMutation`の後に実行される。
+- `useMutation`だけでなく、`mutate`にも記載できる
+- この場合、`useMutation`の後に実行される。
 
 ```ts
 mutate(todo, { onSuccess, onError, onSettled });
 ```
 
+### 複数の `mutate` を連続して実行するときの注意点
+
+useMutation に渡した`onSuccess`等は毎回実行されるが、mutate には渡した`onSuccess`等は最後のものだけが実行される。詳細は[こちら](https://tanstack.com/query/latest/docs/react/guides/mutations#consecutive-mutations)。
+
 ### Promises
 
-`mutateAsync`を使えば Promise 形式で Side Effects を記載することもできるが、省略。
+- `mutateAsync`を使えば Promise 形式で Side Effects を記載することもできる。
+- これにより、サイドエフェクトを使って事後処理を組み立てること（Composition）が可能になる。
+
+```ts
+const mutation = useMutation({ mutationFn: addTodo });
+
+const result = await mutation.mutateAsync(todo);
+await someOtherSideEffect(result);
+await someOtherSideEffect();
+```
 
 ### Retry
 
@@ -318,15 +408,17 @@ queryClient.invalidateQueries();
 queryClient.invalidateQueries('todos');
 ```
 
+例えば redux などではデータを正規化して命令的に手動で管理していくスタイルが取られる。一方、react-query ではそういった手法を取る代わりに、的を絞ったキャッシュの Invalidation と、バックグラウンドリフェッチを組み合わせることにより、そもそもデータの正規化を行う必要性をなくした。
+
 ### どのクエリを無効化するか
 
 先頭のキーが一致するものは全て無効化される
 
 ```ts
 // キーが一つ
-queryClient.invalidateQueries('todos');
+queryClient.invalidateQueries(['todos']);
 // 両方とも無効化される
-const todoListQuery = useQuery('todos', fetchTodoList);
+const todoListQuery = useQuery(['todos'], fetchTodoList);
 const todoListQuery = useQuery(['todos', { page: 1 }], fetchTodoList);
 ```
 
@@ -336,13 +428,13 @@ queryClient.invalidateQueries(['todos', { type: 'done' }]);
 // こっちは無効化される
 const todoListQuery = useQuery(['todos', { type: 'done' }], fetchTodoList);
 // こっちは無効化されない
-const todoListQuery = useQuery('todos', fetchTodoList);
+const todoListQuery = useQuery(['todos'], fetchTodoList);
 ```
 
 完全一致するものだけを無効化するには`exact`オプションを使う
 
 ```ts
-queryClient.invalidateQueries('todos', { exact: true });
+queryClient.invalidateQueries(['todos'], { exact: true });
 // 無効化される
 const todoListQuery = useQuery(['todos'], fetchTodoList);
 // 無効化されない
@@ -365,7 +457,6 @@ const queryClient = useQueryClient();
 const mutation = useMutation(addTodo, {
   onSuccess: () => {
     queryClient.invalidateQueries('todos');
-    queryClient.invalidateQueries('reminders');
   },
 });
 ```
@@ -404,32 +495,44 @@ mutation.mutate({
 - スクロールポジションの復元については、React Query では特に心配する必要がない。
 - なぜなら、データがキャッシュされている限り、再マウント時などでも同期的にデータが取得でき、前回と全く同じ通り画面が描写されるため。
 
-## Query Filters
+## Filters
 
-- Query Filters とは、クエリをフィルタするためのオブジェクト
-- `cancelQueries`, `removeQueries`, `refetchQueries`などに渡して使うことができる
-- 指定できるキー
-  - `exact`
-  - `active`
-  - `inactive`
-  - `stale`
-  - `fetching`
-  - `predicate` --- 手動で詳細にフィルタしたい時に使う
+### Query Filters
+
+- `cancelQueries`, `removeQueries`, `refetchQueries`などにを実行する際に、どのクエリを対象にするかを指定するために使う
+- 指定できるキーは以下の通り。
   - `queryKey`
+  - `exact`
+  - `type`
+    - `all`, `active`,`inactive`のいずれか
+  - `stale`
+  - `fetchStatus`
+  - `predicate`
+    - 手動で詳細にフィルタしたい時に使う
 
 ```ts
 // 全てのクエリ（Query Filters指定しないパターン）
 await queryClient.cancelQueries();
 
 // 全ての非アクティブなクエリ
-queryClient.removeQueries('posts', { inactive: true });
+queryClient.removeQueries({ queryKey: ['posts'], type: 'inactive' });
 
 // 全てのアクティブなクエリ
-await queryClient.refetchQueries({ active: true });
+await queryClient.refetchQueries({ type: 'active' });
 
 // `post`で始まる全てのクエリ
-await queryClient.refetchQueries('posts', { active: true });
+await queryClient.refetchQueries({ queryKey: ['posts'], type: 'active' });
 ```
+
+### Mutation Filters
+
+- `queryClient.isMutating()`などにを実行する際に、どの Mutation を対象にするかを指定するために使う
+- 指定できるキーは以下の通り。
+  - `mutationKey`
+  - `exact`
+  - `fetching`
+  - `predicate`
+    - 手動で詳細にフィルタしたい時に使う
 
 ## SSR & Next.js
 
@@ -440,6 +543,8 @@ await queryClient.refetchQueries('posts', { active: true });
 略
 
 ## Default Query Function
+
+もしアプリ全体で同じクエリ関数を使いたい場合には、デフォルトクエリ関数を設定しておくことで実現できる。
 
 ```tsx
 // デフォルトクエリ関数を作る
