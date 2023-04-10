@@ -1,8 +1,8 @@
-# React Query
+# Tanstack Query (ex. React Query)
 
 ## 原典
 
-[https://react-query.tanstack.com/overview](https://react-query.tanstack.com/overview)
+[https://tanstack.com/query/latest/docs/react/overview](https://tanstack.com/query/latest/docs/react/overview)
 
 ## 概要
 
