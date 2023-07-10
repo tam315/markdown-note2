@@ -2,9 +2,14 @@
 
 ## Server Components
 
-- どこで（Client or Server）レンダリングするか選べるようになった
-  - 今までの pre-rendering & hydration とは異なり、JavaScript が完全に必要なくなる
-- Server Components はサーバーサイドでのみレンダリングされ、クライアントサイドでレンダリングされることはない
+- レンダリングされる場所をサーバ側に固定できるようになった
+  - Client Components (及びこれまでの Pages Router)
+    - pre-rendering & hydration で動作する。つまりどちらサイドでも描写される可能性がある。
+    - 依然として JavaScript が必要
+  - Server Components
+    - サーバーサイドでのみレンダリングされる
+    - クライアントサイドでレンダリングされることはない
+    - JavaScript は完全に必要ない
 - Server Components にはレンダリングの種類が 2 つある
   - Static Rendering
     - ビルド時に確定するもの
@@ -63,8 +68,9 @@
 ### Client Component と Server Component を組み合わせて使う
 
 - サーバーではすべての Server Component が事前にレンダリングされて Client に送られる
-- Composition の書き方をすれば、Client Component の中に Server Component をネストさせることもできる
-  - Client Component 内で Server Component をインポートして使うことはできないので注意
+- Client Component 内で Server Component をインポートして使うことはできない
+  - より具体的には、祖先から子孫に下っていく過程で一つでも`use client`している箇所があれば、その配下では Server Component を使うことはできない
+- ただし、Composition の書き方をすれば、Client Component の中に Server Component をネストさせることはできる
 
 ```tsx
 const SomeServerComponent = () => {
@@ -78,11 +84,11 @@ const SomeServerComponent = () => {
 
 ### Client Component に props を渡す
 
-- Client Component には Serializable な値しか渡せない
+- Server Component から Client Component に props を渡すときには Serializable な値しか渡せない
   - e.g. コールバック関数を与えることはできない
-- なぜならそこにネットワークの境界があるため
-  - App Router では、Server Component と Client Component の間
-  - Pages Router では、`get***Props`と Page Component の間
+- なぜならそこにネットワークによる境界(断絶)があるため
+  - App Router では、Server Component と Client Component の間に境界がある
+  - Pages Router では、`get***Props`と Page Component の間に境界がある
 
 ### サーバサイド or クライアントサイドでしか使えないコードを明示する
 
