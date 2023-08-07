@@ -73,3 +73,131 @@
 - Bridge
 - Strategy
 - Factory Method
+
+## Deno + Rust
+
+- Wasm / WebAssembly
+  - バイナリ形式のアセンブリ風の言語
+  - 仮想マシン上で動くため OS や CPU に依存しない
+  - C、Rust、Go など色々な言語からコンパイルできる
+- Deno で Wasm を使う場合は、wasmbuild というツールを使う
+  - Deno から Wasm の関数を簡単に扱うためのコードを自動生成してくれる
+  - JS 側では単にインポートして関数を呼び出すだけで OK
+
+## Go 言語らしい書き方
+
+- if 文を以下と組み合わせて使う場合は else を省略できる
+  - 早期リターン
+  - continue
+  - break
+  - goto
+
+```go
+if ok := check(); ok {
+  doSomeThingA()
+  return
+} else {
+  doSomeThingB()
+}
+
+// ↓
+
+if ok := check(); ok {
+  doSomeThingA()
+  return
+}
+doSomeThingB()
+```
+
+- 第 2 戻り値で条件分岐をする際は、else 句を使わずに変数を地べたに置いて、ネストをなくす方が良い
+
+```go
+
+if x, err := f(); err != nil {
+  return err
+} else {
+  // use x
+}
+
+// ↓
+
+x, err := f()
+if err != nil {
+  return err
+}
+// use x
+```
+
+- else if が多用されている場合は switch 文に書き換える
+- defer 文を活用する
+  - 関数が return されるまで処理を後回しにする
+  - 用途
+    - DB やファイルのクローズ
+    - ロックの解放
+    - 送信チャネルのクローズ
+  - メリット
+    - 確保と解放が近い場所に書けるので美しいし漏れが出にくい
+- iota を活用する
+  - Go には Enum がないので代わりに使う
+  - 数値が割り振られる
+  - 数値自体は代入できない
+    - キャストすれば代入できるが、そもそもキャストしなくていいコードにしろ
+    - Validation は自前で書く必要がある
+- プリント出力時に数値ではなく意味のある文字列にしたい場合
+  - 対象となる型に String メソッドを自前で実装する
+  - 準標準パッケージである stringer を使う
+    - `golang.org/x/tools/cmd/stringer`
+    - `// go:generate stringer -type=Animal`のようなコメントを入れておくと自動で String メソッドが実装される
+
+## Plurality
+
+- オードリー・タンが提唱する、多様性を表す言葉
+- クアドラティックボーティング
+  - 参加者は一定量のクレジットをもち、それを投票に使う
+  - ただし、同一選択肢への投票は二次関数的にコストがかかる
+  - より多様な候補が選ばれやすくなる
+- 分散型テクノロジー
+  - 分散型 ID / Decentralized IDentifiers / DID
+    - 人の証明
+  - 検証可能な資格証明 / Verifiable Credentials / VC
+    - 資格の証明
+  - Non-Fungible Token / NFT
+    - 交換できない価値を持つデータ
+    - e.g. 絵画など
+  - Soulbound Tokens / SBT
+    - 購入では取得できないデータを表すための仕組み
+    - 個人に紐付き、他人に売却や譲渡はできない
+    - e.g. 能力証明書、評判、医療記録などに最適
+
+## Terraform + Github Actions
+
+- IaC / Infrasturcture as Code
+  - インフラをコードで管理すること
+  - アプリケーションコードと同じように、インフラに関しても PR、Lint、Test、Merge、Deploy の流れを作ることができる
+- 認証方法
+  - 🚨 サービスアカウントキーを使う方法
+    - Github Actions のシークレットにサービスアカウントキーを登録する
+    - Github Actions においてクレデンシャルとしてそれを読み込む
+    - これはセキュリティ的によろしくない
+  - ✅ Workload Identity を使う方法
+    - Workload Identity とは、外部プロバイダ / IdP の認証情報をもとに、Google Cloud リソースへのアクセス制御を行う仕組み
+    - 外部 IdP で発行されたトークンを検証し、そのトークンに事前に紐づけておいた Google Cloud のサービスアカウントを使ってリソースにアクセスする
+    - Github Actions は OIDC に対応しているので、ID 連携に利用できる
+- 自前で CI を構築する方法もあるが、Terraform なら Terraform Cloud を素直に使った方が予後がよさそう
+
+## Figma + Storybook
+
+- デザイントークン
+  - 一定の定数から選べるように型化された値のこと
+  - json ファイルで出力し、コードから参照して使う
+  - デザインに統一性を持たせるために使う
+- Storybook Connect
+  - Figma の画面上から、リモートにホストされている Storybook URL を確認できるようにするプラグイン
+  - デザインと実装がかけ離れていないか素早く確認するためのもの
+  - UI コンポーネント単位でリンクする
+- Chromatic
+  - Storybook を含むリポジトリを一瞬でオンラインにサーブするための SaaS
+- Figma は：
+  - 「デザイン → 実装」工程に強い
+  - 「実装 → デザイン確認」の工程に弱い
+    - この弱みを補うのが Storybook Connect + Chromatic
