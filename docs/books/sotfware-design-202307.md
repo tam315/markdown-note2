@@ -26,6 +26,127 @@
   - 最初の 30 分だけペアプロする
   - 難しい技術課題が見つかったときだけする
 
+## gRPC で始める Web API 開発
+
+### gRPC の特徴と登場背景
+
+- gRPC とは
+  - 手元のプログラムから遠隔地に存在するプログラム処理の呼び出しを行う技術
+- IDL
+  - インターフェースの定義に使用できる言語
+  - 特定のプログラミング技術に依存しない
+- Protocol Buffer
+  - gRPC で採用されている IDL
+  - Protocol Buffer により記載した、サービス・メソッド・メッセージの定義を元に、API クライアント(Stubs ともいう)が自動生成される。
+- Protocol Buffer の役割
+  - インターフェースの定義をする
+  - データのシリアライズ・デシリアライズをする
+    - 各プログラミング言語のデータ構造と対応する形でデータをシリアライズ・デシリアライズできる
+    - これにより、お互いの言語を気にする必要が完全になくなる
+    - シリアライズ等の処理は API クライアントに隠蔽されているので意識することはない
+- protoc
+  - IDL からコードを生成するコンパイラ
+
+#### サービスやメソッドの定義の例
+
+- サービス
+  - RPC メソッドの集合
+- メソッド
+  - メソッドごとにリクエストとレスポンスの型を指定する
+  - リクエストとレスポンスのことをメッセージという
+
+```grpc
+service ProductManagement {
+  rpc GetProduct(GetProductRequest) returns (GetProductResponse) {}
+  rpc ListProducts(ListProductsRequest) returns (ListProductsResponse) {}
+  rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse) {}
+  rpc UpdateProduct(UpdateProductRequest) returns (UpdateProductResponse) {}
+  rpc DeleteProduct(DeleteProductRequest) returns (DeleteProductResponse) {}
+}
+```
+
+#### メッセージの定義の例
+
+- 型、名前、フィールド番号（タグナンバーからなる）
+
+```grpc
+message GetProductRequest {
+  uint64 product_id = 1;
+}
+
+message GetProductResponse {
+  Product product = 1;
+}
+
+message Product {
+  uint64 product_id = 1;
+  string name = 2;
+  string description = 3;
+  uint64 price = 4;
+}
+```
+
+#### gRPC の特徴
+
+- RPC フレームワークである
+  - 「フレームワーク」なので、API と Client の間でやるべきことをほとんど代わりにやってくれる
+  - 技術選定や実装の幅を減らすことで：
+    - 強い規約が不要になる
+    - メンバーのキャッチアップコストが減る
+    - ライブラリのメンテナンスコストが減る
+- 現代的
+  - 現代的な開発体験
+    - 自動生成されるコード
+    - 型チェック
+    - IDE 補完
+    - インターセプター
+      - middleware ともいう
+      - ロガー・認証・分散トレーシングの実装が容易
+    - API の段階的な変更・リリース
+    - メッセージの自動バリデーション
+  - 現代的な技術
+    - HTTP/2
+      - 高効率
+      - ストリーミングの実装が容易
+  - 現代的アーキテクチャ(マイクロサービス)との相性の良さ
+- 高効率
+  - JSON よりも小さい
+- どんな環境でも動作する
+  - 言語・プラットフォームに依存しない
+  - （ただしブラウザではいまいち使えないらしい）
+- オープンソース
+
+#### 登場の背景
+
+- Stubby という、Google 社内で使われていた高パフォーマンスな RPC フレームワークがあった
+- これを標準技術を活用する形で作り直し、オープンソースとして公開したもの
+- 主眼は「パフォーマンス」
+
+#### 他の技術との比較
+
+- REST API
+  - CRUD の枠に収まらない昨日の開発を行う際、メソッドの設計にある程度の幅がある。gRPC にはその迷いはない。
+  - 一方、キャッシュを聞かせる場合は REST API が楽（GET リクエストは全てキャッシュ、とか）
+- GraphQL
+  - GraphQL はラウンドトリップ回数を削減してパフォーマンス向上を図る
+  - クライアントでの複雑かつ柔軟なデータ取得が重要な場合に向いている
+  - 双方向ストリーミングの機能は無い
+
+#### ブラウザでの利用
+
+一筋縄ではいかず、以下のいずれかが必要
+
+- gRPC-Web
+  - ブラウザは HTTP/2 に対応していない場合もあるので、HTTP/1.1 に変換するために Envoy Proxy なるものを内部的に使っている
+- gRPC-Gateway
+  - protoc のプラグインである
+  - gRPC との通信を REST API 風の Web API に変換するプロキシサーバを出力する
+  - メッセージは JSON になる
+  - Protocol Buffer のスキーマから OpenAPI のスキーマ生成も可能
+- Connect
+  - Buf という gRPC ラブな会社が作っている、gRPC のスーパーセット的なものらしい
+  - とても有力な選択肢だが、2023/5 時点で connect-web はまだ正式リリース前な点に注意
+
 ## 瞑想
 
 - 科学的に明らかな効果あり
