@@ -25,6 +25,7 @@
 - 並行と並列
   - 並行 / Concurrency / ある時間内に複数の処理を実行すること
   - 並列 / Parallelism / あるタイミングで複数の計算が実際に実行されている
+  - 並行だけど並列でないとか、並列だけど並行でないとかが、ありえる
 - 非同期処理には 2 つの種類がある
   - JavaScript の機能として提供されるもの
     - e.g. Promise, async / await
@@ -32,14 +33,14 @@
       - JavaScript の機能は基本的に並行であり並列ではない
       - 待ち時間を重ね合わせて効率化している程度の話
   - 実行環境から API として提供されるもの
-    - e.g. setTimeout など
+    - e.g. `setTimeout()` など
     - JavaScript の範疇ではないため、マルチスレッド・マルチプロセスもありうる
     - 同期 API と非同期 API がある。後者が非同期処理の本質
 - API の種類
   - Web API
     - 標準仕様がある
     - Browser API ともいう
-    - setTimeout, fetch など
+    - `setTimeout()`, `fetch()` など
     - ブラウザでもサーバサイドでも動くことが多い
   - Runtime API
     - 標準仕様がない
@@ -47,46 +48,88 @@
     - 便宜上そう呼んだだけで正式名称ではない
 - タスクの種類
   - タスク
-    - コード全体の初回評価、UI レンダリング、setTimeout() など
+    - コード全体の初回評価、UI レンダリング、`setTimeout()` など
+    - 優先度が低い
   - マイクロタスク
-    - Promise.then()など
+    - `Promise.then()`など
+    - 優先度が高い
 - 実行順
   - イベントループ
-  - 1 つのタスクが終わったら、全てのマイクロタスクを片付けて、またタスクの処理に戻る、以後繰り返し
+    - 1 つのタスクを終わらせる
+    - マイクロタスクがあればすべて片付ける
+    - 繰り返す
 
 ### Promise とは
 
-- then()の仕組み
+- `then()`の仕組み
   - 新たな Promise オブジェクトを返す
     - コールバック関数が：
       - Promise を返したら、そのオブジェクト
       - Promise 以外を返したら、その値を解決値とする Promise オブジェクト
       - 例外を送出したら、その値を失敗値として返す Promise オブジェクト
-  - catch()は then()の糖衣構文である
-    - then()の第 2 引数に失敗時のコールバック関数を渡した場合と同じ
+  - `catch()`は `then()`の糖衣構文である
+    - `then()`の第 2 引数に失敗時のコールバック関数を渡した場合と同じ
 - このあたりは自前で Promise を実装してみると一発で分かる
 
 ### async / await 深掘り
 
 - async / await は単なる then の糖衣構文ではなく、動作が全く異なるので注意
   - for 文の中で利用した場合など
-- 余談だが、then() という名前の関数は使わないほうが吉
+- 余談だが、`then()` という名前の関数は使わないほうが吉
 
 ### AbortSignal
 
 - Promise を命令的に中断する手段
 - AbortSignal というオブジェクトで制御する
   - 使える場所の例：
-    - fetch() の第 2 引数内
-    - window.addEventListener() の第 3 引数内
+    - `fetch()` の第 2 引数内
+    - `window.addEventListener()` の第 3 引数内
 - JavaScript ではなく DOM 仕様の一部
   - だが Node.js 環境等にも広く移植されている
-- AbortController というオブジェクトを介して AbortSignal を生成する
 - signal により中断された場合、非同期処理の結果は失敗として扱われるのが通常
   - DOMExeption という例外が発生する
   - name が `AbortError` である
+- 実装
+  - 内部処理が fetch 等の AbortSignal に対応しているコード場合は、そのまま渡すだけ
+  - 対応していない場合は、以下のようなプロパティを使いながら自前で実装する
+    - `signal.aborted`
+    - `signal.addEventListener()`
+    - `signal.reason`
+    - `signal.throwIfAborted()`
+- AbortSignal の作成
+  - AbortController というオブジェクトを介してつくるのが一般的
+    - `const controller = new AbortController()`
+    - `const signal = controller.signal`
+  - 中止済みの AbortSignal を作る
+    - `const signal = AbortSignal.abort()`
+  - 一定時間後に中止する AbortSignal を作る
+    - `const signal = AbortSignal.timeout(1000)`
+  - AbortSignal の合成
+    - `const signal = AbortSignal.combine(signal1, signal2)`
+    - 現状、v116 以降の Chrome でのみ使える？
 
 ### AsyncLocalStorage
+
+- Node.js 等で利用可能。ブラウザでは使えない。
+- 1 つの非同期コールスタックに対して 1 つ、共有可能な値を保持・提供するためのもの
+- 用途
+  - 構造化ロギング
+    - ロギングはメインの処理と直交する性質がある
+    - ロギングのために引数が増減したりインターフェースが変わったりするのは好ましくない
+  - 依存注入
+    - 引数を変えることなくピンポイントで依存を注入できる
+- コールバック地獄になりがちなので注意
+
+```js
+const transactionIdStorage = new AsyncLocalStorage();
+transactionIdStorage.run({ transactionId: '123' }, async () => {
+  // これらの関数の中では`transactionIdStorage.getStore()`とすることで
+  // { transactionId: '123' } が取得できる
+  await doSomething();
+  await doSomething2();
+  await doSomething3();
+});
+```
 
 ## 脆いテスト
 
