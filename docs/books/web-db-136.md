@@ -6,7 +6,7 @@
 
 - 変遷
   - コールバック
-  - Promise
+  - Promise チェーン
   - async/await
 - 非同期処理の構成要素
   - タスク
@@ -53,6 +53,40 @@
 - 実行順
   - イベントループ
   - 1 つのタスクが終わったら、全てのマイクロタスクを片付けて、またタスクの処理に戻る、以後繰り返し
+
+### Promise とは
+
+- then()の仕組み
+  - 新たな Promise オブジェクトを返す
+    - コールバック関数が：
+      - Promise を返したら、そのオブジェクト
+      - Promise 以外を返したら、その値を解決値とする Promise オブジェクト
+      - 例外を送出したら、その値を失敗値として返す Promise オブジェクト
+  - catch()は then()の糖衣構文である
+    - then()の第 2 引数に失敗時のコールバック関数を渡した場合と同じ
+- このあたりは自前で Promise を実装してみると一発で分かる
+
+### async / await 深掘り
+
+- async / await は単なる then の糖衣構文ではなく、動作が全く異なるので注意
+  - for 文の中で利用した場合など
+- 余談だが、then() という名前の関数は使わないほうが吉
+
+### AbortSignal
+
+- Promise を命令的に中断する手段
+- AbortSignal というオブジェクトで制御する
+  - 使える場所の例：
+    - fetch() の第 2 引数内
+    - window.addEventListener() の第 3 引数内
+- JavaScript ではなく DOM 仕様の一部
+  - だが Node.js 環境等にも広く移植されている
+- AbortController というオブジェクトを介して AbortSignal を生成する
+- signal により中断された場合、非同期処理の結果は失敗として扱われるのが通常
+  - DOMExeption という例外が発生する
+  - name が `AbortError` である
+
+### AsyncLocalStorage
 
 ## 脆いテスト
 
