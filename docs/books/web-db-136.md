@@ -129,3 +129,21 @@
     - 複数の結合を行っている複雑なクエリ
 - テーブル設計を見直す
   - ダメな設計を SQL でカバーするのは無理
+
+## Intl / 日時・数値のフォーマット、多言語化の最新手法
+
+- Intl / ECMA-402
+- フォーマッター初期化時に全てのオプションを指定しなければならないのが特徴
+
+```ts
+const jpYenFormatter = new Intl.NumberFormat('ja-JP', {
+  style: 'currency',
+  currency: 'JPY',
+});
+
+jpYenFormatter.format(1000); // => "¥1,000"
+```
+
+- よく使いそうなもの
+  - `Intl.DateTimerFormat()`
+  - `Intl.NumberFormat()`
