@@ -311,4 +311,10 @@ return e
 - ゲートキーパー型 vs ガードレール型
   - ゲートキーパーは承認を挟むので業務が泊まる
   - ガードレールは走り続けられるので業務が止まらない
-- SCP や Permissions Boundary という仕組みを使って、段階的に予防的ガードレールを設定していく
+- 予防的ガードレールの作り方
+  - 以下のようなものを使う
+    - Service Control Policy (SCP)
+      - IAM ユーザー単位ではなく、Organizations のアカウントや OU 単位で権限を一元管理する
+    - Permissions Boundary
+      - IAM ユーザーやロール単位で権限を一元管理する
+      - 難しいらしい
