@@ -212,6 +212,34 @@
 - Runbook の整備
   - システムの概要、運用手順、対応方法、エスカレーション方法、緊急対応手順などを書く
 
+## Cloudflare Workers
+
+- Faas であり、Lambda 等の仲間
+- 0 ミリ秒でコールドスタートできる
+- 利用できるのは JavaScript と WebAssembly(Rust ほか)
+  - 余談だけど、もともと WebAssembly はブラウザで動くように設計されたものだったが、最近は可搬性の高いバイナリフォーマットとして、ブラウザ以外での注目が増している
+- gzip 後のサイズが 1MB を超えないほうがパフォーマンスが良い
+- Workers から利用可能な他の Cloudflare サービス
+  - R2
+    - S3 互換のオブジェクトストレージ
+    - Egress 料金が衝撃の無料
+  - KV
+    - 結果整合のキーバリューストア
+    - 全世界から読み取られる前提の動的に変化する値に最適
+  - Cache API
+    - Web 標準の Cache API に則っている
+    - 1 オブジェクト 512MB、1 リクエスト 5GB まで
+    - 各ロケーションごとにキャッシュしておきたいものに最適
+  - D1 (Open Beta)
+    - SQLite ベースの RDB
+    - リードレプリカが各ロケーションに自動で作成される
+  - Cloudflare Queues (Open Beta)
+    - キューイングのサービス
+    - 処理の非同期化に使える
+    - キューを送信する Producer Worker と 受信する Consumer Worker で構成する、簡単に書ける
+- AWS 等を使わなくても Cloudflare 単体でアプリを構築できる
+- かなりの低価格で利用できる
+
 ## Amazon CloudWatch
 
 ### CloudWatch メトリクス
