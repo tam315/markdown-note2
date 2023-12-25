@@ -1,11 +1,73 @@
 # Type challenges
 
-## 雑多メモ
+## キホンのキ
 
-- 左辺の`extends`は、受け取れる型の定義に使う
-- 右辺の`extends`は、型の検査(===や!==に近いイメージ)に使う
-  - ここで Union 型を使った場合は、総当りで処理されるイメージになる(詳細は`Exclude`を参照)
-- オブジェクトの key 名部分では`[P in ***]`のような表記ができる。この`P`は右辺でそのまま使える。
+[こちらの記事](https://creators.bengo4.com/entry/2023/12/22/000000)が参考になる
+
+### Narrowing
+
+型引数に対して`extends`を使うと、受け取れる型を狭めることができる
+
+```ts
+// valueはstringかnumberのどちらかしか受け取れない
+type Sample<T extends string | number> = { value: T };
+```
+
+### Conditional Types / 条件付き型
+
+- `extends`を右辺で使うことで、もし T が U なら X,そうでなければ Y を返す、というような処理ができる
+- `T extends U ? X : Y`
+
+#### Distributive Conditional Types / ユニオン型の分配法則
+
+- Conditional Types の T が Union 型だった場合には、総当りで処理され、結果が再びユニオンとして結合される
+
+#### never
+
+- Conditional Types と併用して、型を返したくない時に使う
+
+Distributive Conditional Types と never を使うと、以下のようなことができる
+
+```ts
+type MyExclude<T, U> = T extends U ? never : T;
+
+type Sample = MyExclude<
+  string | number | bigint | object | boolean | Function,
+  number | boolean
+>;
+// => string | bigint | object | Function
+```
+
+#### infer
+
+- Conditional Types 内で型変数を抽出できる
+- 型引数(`<>`)が与えられてが計算が完了している型から、もとの型変数を取り出すのに使える
+
+```ts
+type ExtractType<T> = T extends Array<infer U> ? U : never;
+
+type Sample = ExtractType<Array<string>>; // string
+```
+
+### Map Types
+
+- 既存の型を操作し新しい型を生成する機能
+- 既存の型の各プロパティを変更、追加、削除できる
+
+```ts
+type Person = {
+  name: string;
+  age: number;
+};
+
+// すべてのプロパティをオプショナルにする
+type PartialPerson = {
+  [K in keyof Person]?: Person[K];
+};
+```
+
+### その他
+
 - `SomeArr[number]`で、配列型を Union 型に変換できる
 
   ```ts
