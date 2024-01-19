@@ -10,6 +10,7 @@
 
 - 変数
   - 不変 `let x=5`
+    - ちなみに rust では「値 5 を x に拘束する」という表現をする
   - 可変 `let mut x=5`
   - 命名規則は小文字のスネークケース
 - 定数
@@ -84,6 +85,26 @@ let b: &[i32] = &a;
 let guess: u32 = "42".parse().expect("Not a number!");
 ```
 
+## リテラル
+
+リテラルとは「見たままのもの」、つまり**数値や文字などの値そのもの**のこと。
+
+- 数値リテラル
+  - `123`
+  - `12345u32` 末尾に型をつけることもできる
+  - `12_345_u32` アンダースコアで区切ることもできる
+  - `0xffff`
+  - `1.23` など
+- 文字リテラル
+  - `"Hello, world!"`
+  - 「ダブルクォーテーションで囲まれた文字の連続」のこと
+  - 文字列型**ではない**
+    - なお Rust には文字列型は**ない**かわりに String というライブラリで表現される
+- char 型リテラル
+  - `'a'`, `'あ'` など
+- bool 型リテラル
+  - `true` 又は `false`
+
 ## 文と式
 
 - 文 / Statement
@@ -116,15 +137,56 @@ fn plus_one(x: i32) -> i32 {
 
 ## フロー制御
 
-- if
-  - 式なので代入できる
+### if
 
 ```rust
-let condition = false;
-let num = if condition { 5 } else { 6 };
+if age >= 35 {
+    println!("大人");
+} else if age >= 18 {
+    println!("若者");
+} else {
+    println!("子供");
+}
 ```
 
-- loop
+式なので代入もできる。その際はセミコロンを省略すること。
+
+```rust
+let num = if true {
+    5
+} else {
+    6
+};
+```
+
+### match
+
+パターンマッチングが行える。詳細後述。
+
+```rust
+let letter = 'A';
+let str = match letter {
+    'A' => "Aです",
+    'B' | 'C' | 'D' => "B、C、Dのいずれかです",
+    '0'..='9' | 'A'..='F' => "16進数でつかえます",
+    _ => "いずれでもない文字です",
+};
+println!("{}は{}です。", letter, str);
+```
+
+### for
+
+- 初期化、条件、繰り返し前処理のような構文はない
+- `break` が使える
+
+```rust
+let numbers = [10, 20, 30, 40, 50];
+for thisNumber in numbers.iter() {
+    println!("the value is: {}", thisNumber);
+}
+```
+
+### loop
 
 ```rust
 loop {
@@ -132,7 +194,18 @@ loop {
 }
 ```
 
-- while
+- `break`が使える
+  - 唯一、`break` 時に値を返すこともできる。返さなくてもいい。
+
+```rust
+let number = loop {
+    break 100
+}
+```
+
+### while
+
+- `break` が使える
 
 ```rust
 while number != 0 {
@@ -140,16 +213,7 @@ while number != 0 {
 }
 ```
 
-- for
-
-```rust
-let a = [10, 20, 30, 40, 50];
-for element in a.iter() {
-    println!("the value is: {}", element);
-}
-```
-
-- range
+### range
 
 ```rust
 for number in (1..4) {
