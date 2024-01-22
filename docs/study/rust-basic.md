@@ -59,5 +59,3 @@ cargo run --release
 
 - ビルド成果は `target/(debug|release)` フォルダに出力される
   - ここでは`hello_world`というバイナリが生成されている
-
-## 変数、データ型
