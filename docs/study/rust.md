@@ -179,6 +179,21 @@ fn say_hello(num: i32) {
     println!("number is {}", num)
 }
 
+// 引き数あり(値を書き換えてから関数内で利用したい場合)
+// - 変更した値はスコープ内でのみ有効で、呼び出し元には反映されない
+// - mutの位置に注意
+fn mutate_number(mut y: i32) {
+    y - 1;
+    println!("{}", y)
+}
+
+// 引き数あり(呼び出し元の値を書き換えたい場合)
+// - mutの位置に注意
+// - `&`に注意
+fn mutate_number(y: &mut i32) {
+    *y = 64;
+}
+
 // 戻り値あり（returnを使う場合）
 fn say_hello() -> i32 {
     return 32;
@@ -187,18 +202,6 @@ fn say_hello() -> i32 {
 // 戻り値あり（式を使う場合）
 fn say_hello2() -> i32 {
     32
-}
-```
-
-```rust
-fn main() {
-    let x = plus_one(5);
-
-    println!("The value of x is: {}", x);
-}
-
-fn plus_one(x: i32) -> i32 {
-    x + 1
 }
 ```
 
