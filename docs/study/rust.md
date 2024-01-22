@@ -353,34 +353,37 @@ let numbers_slice: &[i32] = &numbers[1..3];
 println!("{:?}", numbers_slice); // -> [2, 3]
 ```
 
-## 構造体
+## Struct / 構造体
 
 ```rust
-// 構造体
 struct User {
     username: String,
-    email: String,
-    sign_in_count: u64,
-    active: bool,
+    sign_in_count: u32,
 }
 
-// Tuple構造体
-struct Color(i32, i32, i32);
-
-// ユニット構造体
-struct UnitBook;
+const shota = User {
+    username: String::from("shota"),
+    sign_in_count: 23,
+}
 ```
 
-構造体をプリントする方法
+TS でおなじみの省略記法も使える
 
 ```rust
-// deriveを記述する
+let default_user = User { /* 省略 */ };
+let user = User {
+    username, // プロパティ名と設定したい変数名が同じ場合は省略できる
+    ..default_user, // デフォルト値を使いたい場合はこうする
+}
+```
+
+構造体をプリントするには Debug トレイトを実装する必要がある
+
+```rust
 #[derive(Debug)]
-struct Rectangle {}
+struct User { /* */ }
 
-let rect = Rectangle {};
-
-// `:?`が大事
+let user = Rectangle { /* */ };
 println!("rect is {:?}", rect);
 ```
 
@@ -403,25 +406,62 @@ impl Rectangle {
 }
 ```
 
-## Enum
+### 特殊な構造体
+
+- Tuple 構造体
+  - 構造体のフィールド名自体にはさほど意味がないようなときに使う
 
 ```rust
-// 基本形
-enum IpAddrKind {
-  V4,
-  V6,
-}
-let four = IpAddrKind::V4;
-let six = IpAddrKind::V6;
+struct Ipv4(u8, u8, u8, u8);
+let address = Ipv4(192, 168, 1, 100);
+```
 
-// 発展形（値を持たせることができる）
-enum Message {
-    Quit,
-    Move { x: i32, y: i32 },
-    Write(String),
-    ChangeColor(i32, i32, i32),
+- Unit-like 構造体
+  - 構造体に値がまったくないときやトレイトの実装で役立つ？詳細不明
+
+## Enum
+
+基本
+
+```rust
+// 定義
+enum IpAddrKind {
+    V4,
+    V6,
 }
-let m = Message::Move { x: 1, y: 2 };
+
+// 代入
+let maybe_ip_v4 = IpAddrKind::V4;
+
+// 活用例
+match maybe_ip_v4 {
+    IpAddrKind::V4 => println!("v4です"),
+    IpAddrKind::V6 => println!("v6です"),
+}
+```
+
+値を持たせたり、メソッドを実装することができる。
+
+```rust
+enum SampleStruct {
+    Quit,
+    Position { x: i32, y: i32 },
+    Message(String),
+    Color(i32, i32, i32),
+}
+
+impl SampleStruct {
+    fn output_message(self: &Self) -> String {
+        match self {
+            SampleStruct::Message(str) => "Message is: ".to_string() + str,
+            _ => "other".to_string(),
+        }
+    }
+}
+
+let s = SampleStruct::Message("hello!".to_string());
+
+println!("{}", s.output_message()) // -> `Message is hello!`
 ```
 
 ### Option 型
