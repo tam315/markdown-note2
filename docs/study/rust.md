@@ -61,7 +61,7 @@ let five_hundred = x.0;
 
 ### Array 型(複合型)
 
-```rs
+```rust
 let a = [1, 2, 3, 4, 5];
 
 // 添字を使ったアクセス
@@ -99,7 +99,7 @@ let guess: u32 = "42".parse().expect("Not a number!");
   - `"Hello, world!"`
   - 型は`&str`
     - 実体はバイト列の Slice `&[u8]`
-    - リテラルは静的領域に格納され、そこへの参照が変数にセットされる
+    - 文字列リテラルだけは静的領域に格納され、そこへの参照が変数にセットされる
   - 文字列型**ではない**
     - なお Rust には文字列型は**ない**かわりに String というライブラリで表現される
   - 文字列に関するごちゃごちゃの分かりやすい説明 -> https://qiita.com/k-yaina60/items/4c8e3562fe6d22f845a9
@@ -134,7 +134,7 @@ let guess: u32 = "42".parse().expect("Not a number!");
 - 遅いけど制約は緩い
 - ここに格納されるもの
   - String、Vector、Box 等
-    - ただしこれらの見出しは Stack memory に格納される
+    - ただし、これらの本体は Heap に保存されるが、見出しだけは Stack に格納される
   - 上記を含む Tuple や Array
 
 ### Array・Vector・Slice とメモリの関係
@@ -443,23 +443,23 @@ match maybe_ip_v4 {
 値を持たせたり、メソッドを実装することができる。
 
 ```rust
-enum SampleStruct {
+enum SampleEnum {
     Quit,
     Position { x: i32, y: i32 },
     Message(String),
     Color(i32, i32, i32),
 }
 
-impl SampleStruct {
+impl SampleEnum {
     fn output_message(self: &Self) -> String {
         match self {
-            SampleStruct::Message(str) => "Message is: ".to_string() + str,
+            SampleEnum::Message(str) => "Message is: ".to_string() + str,
             _ => "other".to_string(),
         }
     }
 }
 
-let s = SampleStruct::Message("hello!".to_string());
+let s = SampleEnum::Message("hello!".to_string());
 
 println!("{}", s.output_message()) // -> `Message is hello!`
 ```
