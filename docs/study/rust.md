@@ -580,7 +580,7 @@ if let Coin::Quarter(state) = coin {
   - Public --- コードの外でも使える
   - Private --- コードの外では使えない
 
-```rs
+```rust
 mod front_of_house {
     mod hosting {
         fn add_to_waitlist() {}
@@ -624,7 +624,7 @@ crate(暗黙的に命名される)
     - 子モジュールやその内部は Private。パブリックにするには`pub mod`や`pub fn`などが必要。
     - 親モジュールは Public
 
-```rs
+```rust
 mod front_of_house {
     pub mod hosting {
         pub fn add_to_waitlist() {}
@@ -642,7 +642,7 @@ pub fn eat_at_restaurant() {
 
 `super`を使うと親モジュールにアクセスできる
 
-```rs
+```rust
 fn serve_order() {}
 
 mod back_of_house {
@@ -657,7 +657,7 @@ mod back_of_house {
 
 struct の要素はデフォルトで非公開
 
-```rs
+```rust
 mod back_of_house {
     pub struct Breakfast {
         pub toast: String,
@@ -687,7 +687,7 @@ pub fn eat_at_restaurant() {
 
 一方、enum の要素はデフォルトで公開
 
-```rs
+```rust
 mod back_of_house {
     pub enum Appetizer {
         Soup,
@@ -705,7 +705,7 @@ pub fn eat_at_restaurant() {
 
 下記のようにすると、他のモジュールを接頭詞無しでつかえる。
 
-```rs
+```rust
 use crate::front_of_house::hosting;
 
 // - 絶対パスでも相対パスでもOK
@@ -714,21 +714,21 @@ use crate::front_of_house::hosting;
 
 慣例として、関数はひとつ上のモジュールを読み込む。これは、関数がローカルのものではないことを明確にするため。
 
-```rs
+```rust
 use crate::front_of_house::hosting;
 hosting::add_to_waitlist();
 ```
 
 慣例として、Enum の場合はそれ自身を読み込む。特に理由はない。
 
-```rs
+```rust
 use std::collections::HashMap;
 let mut map = HashMap::new();
 ```
 
 例外として、名前が重複する場合はそのひとつ上のモジュールから読み込む。
 
-```rs
+```rust
 use std::fmt;
 use std::io;
 
@@ -738,13 +738,13 @@ fn function2() -> io::Result {...}
 
 もしくは下記のように別名をつける。
 
-```rs
+```rust
 use std::io::Result as IoResult;
 ```
 
 `pub use`とすると再エクスポートできる。
 
-```rs
+```rust
 // 外部のコードから`hosting`を呼び出せるようになる
 pub use crate::front_of_house::hosting;
 ```
@@ -756,7 +756,7 @@ pub use crate::front_of_house::hosting;
 rand = "0.8.3"
 ```
 
-```rs
+```rust
 // TODO: traitってなに？？ Rng.***ではないのか？
 use rand::Rng;
 let rng = rand::thread_rng()
@@ -764,7 +764,7 @@ let rng = rand::thread_rng()
 
 省略記法
 
-```rs
+```rust
 use std::io;
 use std::io::Write;
 use std::io::Read;
@@ -775,7 +775,7 @@ use std::io::{self, Write, Read}
 
 glob operator も使えるが、基本的にテストでのみ使用すること。見通しが悪くなるため。
 
-```rs
+```rust
 use std::collections::*;
 ```
 
@@ -783,14 +783,14 @@ use std::collections::*;
 
 `mod`のあとにファイル名を記載することで、そのファイル内のモジュールを呼び出せる。
 
-```rs
+```rust
 // src/front_of_house.rs
 pub mod hosting {
   pub fn add_to_waitlist() {}
 }
 ```
 
-```rs
+```rust
 // src/lib.rs
 mod front_of_house;
 front_of_house::hosting::add_to_waitlist();
@@ -809,7 +809,7 @@ front_of_house::hosting::add_to_waitlist();
 - 可変長である
 - `Vec<T>`
 
-```rs
+```rust
 // 初期値がない場合
 let v: Vec<i32> = Vec::new();
 
@@ -819,7 +819,7 @@ let v = vec![1, 2, 3];
 
 値の追加
 
-```rs
+```rust
 let mut v = Vec::new();
 
 v.push(5);
@@ -830,7 +830,7 @@ v.push(8);
 
 値の取得には２種類の方法がある。いずれも参照を取得する。
 
-```rs
+```rust
 // 結果を&Tとして受け取る
 // 存在しなければパニックになる
 let third = &v[2];
@@ -842,7 +842,7 @@ let third = v.get(2);
 
 反復処理
 
-```rs
+```rust
 // 参照のみ
 let v = vec![1,2,3];
 for i in &v {
@@ -859,7 +859,7 @@ for i in &mut v {
 
 異なる型を Vector に保存したい場合は、予め Enum として作成しておくことで対応する。
 
-```rs
+```rust
 enum SpreadsheetCell {
     Int(i32),
     Float(f64),
@@ -888,14 +888,14 @@ rust の世界で'String'と言った場合、String type 又は String slice �
 
 String の作り方
 
-```rs
+```rust
 let s = "aaa".to_string();
 let s = String::from("aaa");
 ```
 
 末尾に文字列を追加する。なお、`push_str()`は参照(string literal)を引数として取るので、所有権の移転は発生しない。
 
-```rs
+```rust
 let mut s = String::from("foo");
 s.push_str("bar");
 ```
@@ -905,7 +905,7 @@ s.push_str("bar");
 - `s1`の所有権は s に移る。再利用されるということ。少し効率的。
 - `+`に与えることができるのは`&str`型。なお、`&String`は自動的に変換される。deref coercion という。
 
-```rs
+```rust
 let s1 = String::from("tic");
 let s2 = String::from("tac");
 let s3 = String::from("toe");
@@ -917,7 +917,7 @@ let s = s1 + "-" + &s2 + "-" + &s3;
 
 - この場合は所有権の移転は一切発生しない。
 
-```rs
+```rust
 let s = format!("{}-{}-{}", s1, s2, s3);
 ```
 
@@ -925,7 +925,7 @@ UTF−8 の話
 
 - rust の内部では文字列は byte(`vec<u8>`)でとして保持されている
 
-```rs
+```rust
 // 表現したい文字列
 "नमस्ते"
 
@@ -941,14 +941,14 @@ UTF−8 の話
 
 どうしても必要ならインデックスを使うことも可能ではあるが、あまりいいアイデアではない。なお、中途半端な位置で切るとパニックになるので要注意。
 
-```rs
+```rust
 let s1 = "こんちわ".to_string();
 let s = &s1[0..3]; // sは&strになる("こ")
 ```
 
 繰り返し
 
-```rs
+```rust
 // Unicodeスカラ値として取り出して繰り返す
 for c in "नमस्ते".chars() {}
 
@@ -962,7 +962,7 @@ for b in "नमस्ते".bytes() {}
 
 作成
 
-```rs
+```rust
 use std::collections::HashMap;
 
 let mut scores = HashMap::new();
@@ -973,7 +973,7 @@ scores.insert(String::from("Yellow"), 50);
 
 複数の vector を zip して作成することもできる
 
-```rs
+```rust
 let teams = vec![
   String::from("Blue"),
   String::from("Yellow")
@@ -988,19 +988,19 @@ let scores: HashMap<_, _> =
 
 値の取得(Option 型が得られる)
 
-```rs
+```rust
 let score = scores.get("Blue");
 ```
 
 イテレーション
 
-```rs
+```rust
 for (key, value) in &scores {}
 ```
 
 値の更新
 
-```rs
+```rust
 let mut scores = HashMap::new();
 scores.insert(String::from("Blue"), 10);
 
@@ -1046,7 +1046,7 @@ RUST_BACKTRACE=1 cargo run
 - プログラムを止めるまでもないエラーの場合、`Result`型が使われる。
 - `Result`, `Ok`, `Err`は prelude により用意されるので、接頭子をつけずに使える。
 
-```rs
+```rust
 // Result型の定義
 enum Reeult<T, E> {
   Ok(T),
@@ -1056,7 +1056,7 @@ enum Reeult<T, E> {
 
 処理結果を確認して、以降の処理を分岐する方法
 
-```rs
+```rust
 use std::fs::File;
 let f = File::open("hello.txt");
 
@@ -1068,7 +1068,7 @@ let f = match f {
 
 「成功した場合は値を取得し、失敗した場合はパニックする」という処理は定型的であるため、`unwrap()`や`expect()`という関数を使って短縮できるようになっている。
 
-```rs
+```rust
 let f = File::open("hello.txt").unwrap();
 
 // expectはunwrapと同じだが、わかりやすいメッセージを表示することができる
@@ -1078,7 +1078,7 @@ let f = File::open("hello.txt").expect("Failed to open hello.txt");
 
 より複雑な場合分けにはマッチガードを使う
 
-```rs
+```rust
 let f = match f {
   Ok(file) => file,
   // if... の部分がマッチガード
@@ -1097,14 +1097,14 @@ let f = match f {
 
 Tips: 型を調べたいときは、全然違う型に代入して意図的にエラーを起こし、エラーメッセージで確認する
 
-```rs
+```rust
 let f: u32 = File::open("hello.txt");
 // メッセージ => found enum `Result<File, std::io::Error>`
 ```
 
 エラーの処理を関数の呼び出し元にまかせる（**エラーの委譲**）には、関数の返り値の型を Result にする。
 
-```rs
+```rust
 use std::io;
 use std::io::Read;
 use std::fs::File;
@@ -1130,7 +1130,7 @@ fn read_username_from_file() -> Result<String, io::Error> {
 
 「成功した場合は値を取得し、失敗したときは呼び出し元にエラー処理を委譲する」ことは定型的な処理であるため、`?`演算子を使って簡潔に記載できる様になっている。
 
-```rs
+```rust
 fn read_username_from_file() -> Result<String, io::Error> {
     let mut s = String::new();
 
@@ -1153,7 +1153,7 @@ fn read_username_from_file() -> Result<String, io::Error> {
     - 意図が明確になるため。テストコードを適切に失敗させるため。
   - 開発者がコンパイラよりも情報を持っており、正しさを確信できる場合
     - 例えば、下記は常に正しいので panic してよい。
-      ```rs
+      ```rust
       let home: IpAddr = "127.0.0.1".parse().unwrap();
       ```
     - 逆に、IP アドレスがユーザ入力等で与えられる場合は Result を使って処理する。
@@ -1170,7 +1170,7 @@ fn read_username_from_file() -> Result<String, io::Error> {
 
 型を使って値が正しいことを保証するには、下記のような Constructor と Getter を使う。下記では値が 1 から 100 の間であることを保証している。
 
-```rs
+```rust
 pub struct Guess {
     // この値は基本的に非公開。モジュールとして呼び出される場合。
     value: u32,
