@@ -110,32 +110,40 @@ let guess: u32 = "42".parse().expect("Not a number!");
 
 ## メモリの種類と変数の格納場所
 
+- 参考
+  - https://web.mit.edu/rust-lang_v1.25/arch/amd64_ubuntu1404/share/doc/rust/html/book/first-edition/the-stack-and-the-heap.html
+  - https://qiita.com/k-yaina60/items/26bf1d2e372042eff022
+
 ### Static memory / 静的メモリ
 
 - 生成された実行バイナリに含まれる
 - プログラムの開始から終了までずっと存在し続ける
 - 静的領域/ static memory / rodata (read-only data) segment などと呼ばれる
 - スタックメモリでもヒープメモリでもない特殊な領域
-- ここに格納されるもの
+- 格納対象
   - 文字列リテラル
   - `static`をつけて宣言した値
     - e.g. `static FOO: usize = 42;`
 
 ### Stack memory / スタックメモリ
 
-- 速いけど制約は多い
+- 🟢 速い
+- 🔴 呼び出し元はローカル（単一の関数内）に限られる
+- 🔴 サイズに上限がある
+- Stack Frame とも呼ばれる
 - rust の値はデフォルトでここに保持される
-- ここに格納されるもの
+- 格納対象
   - 整数型、浮動小数点型、論理値型、参照(含む Slice)
-  - 上記から成る Tuple や Array
+  - 上記から成る Tuple や Array や Struct の見出しおよび本体？
 
 ### Heap memory / ヒープメモリ
 
-- 遅いけど制約は緩い
-- ここに格納されるもの
-  - String、Vector、Box 等
-    - ただし、これらの本体は Heap に保存されるが、見出しだけは Stack に格納される
-  - 上記を含む Tuple や Array
+- 🔴 遅い
+- 🟢 グローバルに利用できる
+- 🟢 サイズに上限がない
+- 格納対象
+  - String、Vector、Box の本体（見出しは Stack に格納される）
+  - 上記を含む Tuple や Array や Struct の本体（見出しは Stack に格納される）？
 
 ### Array・Vector・Slice とメモリの関係
 
@@ -145,8 +153,6 @@ let guess: u32 = "42".parse().expect("Not a number!");
   - 型は`Vec<要素の型>`
 - Slice
   - 型は`&[要素の型]`、可変なら`&mut [要素の型]`
-
-参考: https://qiita.com/k-yaina60/items/26bf1d2e372042eff022
 
 ## 文と式
 
