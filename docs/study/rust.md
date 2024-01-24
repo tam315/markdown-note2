@@ -111,7 +111,7 @@ let guess: u32 = "42".parse().expect("Not a number!");
 ## メモリの種類と変数の格納場所
 
 - 参考
-  - https://web.mit.edu/rust-lang_v1.25/arch/amd64_ubuntu1404/share/doc/rust/html/book/first-edition/the-stack-and-the-heap.html
+  - https://doc.rust-lang.org/1.30.0/book/first-edition/the-stack-and-the-heap.html (なぜか現行版では消されている)
   - https://qiita.com/k-yaina60/items/26bf1d2e372042eff022
 
 ### Static memory / 静的メモリ
@@ -134,7 +134,9 @@ let guess: u32 = "42".parse().expect("Not a number!");
 - rust の値はデフォルトでここに保持される
 - 格納対象
   - 整数型、浮動小数点型、論理値型、参照(含む Slice)
-  - 上記から成る Tuple や Array や Struct の見出しおよび本体？
+  - Tuple や Array や Struct
+    - メタデータ(ptr, len, cap)もデータ本体もどちらも Stack に格納される
+      - データ本体はその種類によって、実際の値か、もしくは pointer になる
 
 ### Heap memory / ヒープメモリ
 
@@ -142,8 +144,9 @@ let guess: u32 = "42".parse().expect("Not a number!");
 - 🟢 グローバルに利用できる
 - 🟢 サイズに上限がない
 - 格納対象
-  - String、Vector、Box の本体（見出しは Stack に格納される）
-  - 上記を含む Tuple や Array や Struct の本体（見出しは Stack に格納される）？
+  - `Box<T>`, `Vec<T>`, `String` のデータ本体
+    - メタデータ(ptr, len, cap)については Stack に格納され、変数とバインドされ、所有権管理に利用される
+    - 変数が破棄されれば[Drop trait](https://doc.rust-lang.org/1.30.0/book/first-edition/drop.html)の働きによりヒープメモリも破棄される
 
 ### Array・Vector・Slice とメモリの関係
 
@@ -310,7 +313,7 @@ for number in (1..4) {
 
 Stack memory または Static memory 上に実体がある型（Copy トレイトをもつ型）は、代入時や関数呼び出し時に値がメモリ上でコピーされたうえ、所有権もそれぞれに設定されるため、どちらも引き続き利用ができる。
 
-(たとえ一部でも) Heap Memory 上に実体がある型（Copy トレイトをもたない型）は、代入時や関数呼び出し時にメモリ上の値はコピーされずに、所有権のみが新たな変数・引数に移動したうえ、古い所有者は無効になり使えなくなる。
+(たとえ配列のうちの一部などでも) Heap Memory 上に実体がある型（Copy トレイトをもたない型）は、代入時や関数呼び出し時にメモリ上の値はコピーされずに、所有権のみが新たな変数・引数に移動したうえ、古い所有者は無効になり使えなくなる。
 
 ### 参照と借用
 
