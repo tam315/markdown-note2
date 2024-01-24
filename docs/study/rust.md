@@ -108,55 +108,6 @@ let guess: u32 = "42".parse().expect("Not a number!");
 - bool 型リテラル
   - `true` 又は `false`
 
-## メモリの種類と変数の格納場所
-
-- 参考
-  - https://doc.rust-lang.org/1.30.0/book/first-edition/the-stack-and-the-heap.html (なぜか現行版では消されている)
-  - https://qiita.com/k-yaina60/items/26bf1d2e372042eff022
-
-### Static memory / 静的メモリ
-
-- 生成された実行バイナリに含まれる
-- プログラムの開始から終了までずっと存在し続ける
-- 静的領域/ static memory / rodata (read-only data) segment などと呼ばれる
-- スタックメモリでもヒープメモリでもない特殊な領域
-- 格納対象
-  - 文字列リテラル
-  - `static`をつけて宣言した値
-    - e.g. `static FOO: usize = 42;`
-
-### Stack memory / スタックメモリ
-
-- 🟢 速い
-- 🔴 呼び出し元はローカル（単一の関数内）に限られる
-- 🔴 サイズに上限がある
-- Stack Frame とも呼ばれる
-- rust の値はデフォルトでここに保持される
-- 格納対象
-  - 整数型、浮動小数点型、論理値型、参照(含む Slice)
-  - Tuple や Array や Struct
-    - メタデータ(ptr, len, cap)もデータ本体もどちらも Stack に格納される
-      - データ本体はその種類によって、実際の値か、もしくは pointer になる
-
-### Heap memory / ヒープメモリ
-
-- 🔴 遅い
-- 🟢 グローバルに利用できる
-- 🟢 サイズに上限がない
-- 格納対象
-  - `Box<T>`, `Vec<T>`, `String` のデータ本体
-    - メタデータ(ptr, len, cap)については Stack に格納され、変数とバインドされ、所有権管理に利用される
-    - 変数が破棄されれば[Drop trait](https://doc.rust-lang.org/1.30.0/book/first-edition/drop.html)の働きによりヒープメモリも破棄される
-
-### Array・Vector・Slice とメモリの関係
-
-- Array
-  - 型は`[要素の型; 要素数]`
-- Vector
-  - 型は`Vec<要素の型>`
-- Slice
-  - 型は`&[要素の型]`、可変なら`&mut [要素の型]`
-
 ## 文と式
 
 - 文 / Statement
@@ -299,6 +250,56 @@ for number in (1..4) {
     // do something
 }
 ```
+
+## メモリの種類と変数の格納場所
+
+- 参考
+  - https://doc.rust-lang.org/1.30.0/book/first-edition/the-stack-and-the-heap.html (なぜか現行版では消されている)
+  - https://qiita.com/k-yaina60/items/26bf1d2e372042eff022
+
+### Static memory / 静的メモリ
+
+- 生成された実行バイナリに含まれる
+- プログラムの開始から終了までずっと存在し続ける
+- 静的領域/ static memory / rodata (read-only data) segment などと呼ばれる
+- スタックメモリでもヒープメモリでもない特殊な領域
+- 格納対象
+  - 文字列リテラル
+  - `static`をつけて宣言した値
+    - e.g. `static FOO: usize = 42;`
+
+### Stack memory / スタックメモリ
+
+- 🟢 速い
+- 🔴 呼び出し元はローカル（単一の関数内）に限られる
+- 🔴 サイズに上限がある
+- Stack Frame とも呼ばれる
+- rust の値はデフォルトでここに保持される
+- 格納対象
+  - 整数型、浮動小数点型、論理値型、参照(含む Slice)
+  - Tuple や Array や Struct
+    - メタデータ(ptr, len, cap)もデータ本体もどちらも Stack に格納される
+      - データ本体はその種類によって、実際の値か、もしくは pointer になる
+
+### Heap memory / ヒープメモリ
+
+- 🔴 遅い
+- 🟢 グローバルに利用できる
+- 🟢 サイズに上限がない
+- 格納対象
+  - `Box<T>`, `Vec<T>`, `String` のデータ本体
+    - メタデータ(ptr, len, cap)については Stack に格納され、変数とバインドされ、所有権管理に利用される
+    - 変数が破棄されれば[Drop trait](https://doc.rust-lang.org/1.30.0/book/first-edition/drop.html)の働きによりヒープメモリも破棄される
+
+### Array・Vector・Slice とメモリの関係
+
+- Array
+  - 型は`[要素の型; 要素数]`
+- Vector
+  - 型は`Vec<要素の型>`
+- Slice
+  - 型は`&[要素の型]`、可変なら`&mut [要素の型]`
+  -
 
 ## 所有権
 
