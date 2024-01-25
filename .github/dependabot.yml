@@ -5,4 +5,12 @@ updates:
     schedule:
       interval: 'daily'
       time: '23:00'
-    open-pull-requests-limit: 20
+
+    # セットでアップデートすべきライブラリ群
+    groups:
+      docusaurus:
+        patterns:
+          - '@docusaurus/core'
+          - '@docusaurus/module-type-aliases'
+          - '@docusaurus/plugin-google-gtag'
+          - '@docusaurus/preset-classic'
