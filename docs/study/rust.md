@@ -251,11 +251,13 @@ for number in (1..4) {
 }
 ```
 
-## メモリの種類と変数の格納場所
+## メモリのはなし
 
 - 参考
   - https://doc.rust-lang.org/1.30.0/book/first-edition/the-stack-and-the-heap.html (なぜか現行版では消されている)
   - https://qiita.com/k-yaina60/items/26bf1d2e372042eff022
+  - https://cipepser.hatenablog.com/entry/rust-memory
+  - https://doc.rust-lang.org/std/primitive.slice.html
 
 ### Static memory / 静的メモリ
 
@@ -276,10 +278,10 @@ for number in (1..4) {
 - Stack Frame とも呼ばれる
 - rust の値はデフォルトでここに保持される
 - 格納対象
-  - 整数型、浮動小数点型、論理値型、参照(含む Slice)
-  - Tuple や Array や Struct
-    - メタデータ(ptr, len, cap)もデータ本体もどちらも Stack に格納される
-      - データ本体はその種類によって、実際の値か、もしくは pointer になる
+  - 整数型、浮動小数点型、論理値型、参照
+  - Tuple、Array、Slice、Struct
+    - これらが参照する先の値が最終的にヒープメモリに存在するとしても、これらが直接保持する値はすべてスタックメモリ上にある
+    - e.g. Array が Vec を内包するとしても Array は Vec のメタデータしか持たず、そのメタデータはスタックメモリ上にある
 
 ### Heap memory / ヒープメモリ
 
@@ -291,15 +293,46 @@ for number in (1..4) {
     - メタデータ(ptr, len, cap)については Stack に格納され、変数とバインドされ、所有権管理に利用される
     - 変数が破棄されれば[Drop trait](https://doc.rust-lang.org/1.30.0/book/first-edition/drop.html)の働きによりヒープメモリも破棄される
 
-### Array・Vector・Slice とメモリの関係
+### Vector | Array | Slice とメモリの関係
 
-- Array
-  - 型は`[要素の型; 要素数]`
 - Vector
   - 型は`Vec<要素の型>`
+- Array
+  - 型は`[要素の型; 要素数]`
 - Slice
   - 型は`&[要素の型]`、可変なら`&mut [要素の型]`
-  -
+
+メモリ使用量は以下の通り
+
+```rust
+// プリミティブな型のバイト数 (あたりまえ)
+assert_eq!(1, std::mem::size_of::<i8>());
+assert_eq!(4, std::mem::size_of::<i32>());
+assert_eq!(8, std::mem::size_of::<i64>());
+
+// 前提として、64bitアーキテクチャだとメモリの単位は8byte
+let pointer_size = std::mem::size_of::<usize>();
+assert_eq!(pointer_size, 8);
+
+// Vectorのメタデータのメモリ専有量は常に8*3byte (ptr,len,cap)
+// なお実データのメモリ専有量は要素の大きさによる
+assert_eq!(pointer_size * 3, std::mem::size_of::<Vec<u8>>());
+assert_eq!(pointer_size * 3, std::mem::size_of::<Vec<i32>>());
+assert_eq!(pointer_size * 3, std::mem::size_of::<Vec<String>>());
+
+// Arrayのメモリ専有量は単に内容物の大きさ
+// なおメタデータは存在しない
+assert_eq!(1 * 10, std::mem::size_of::<[i8; 10]>());
+assert_eq!(4 * 10, std::mem::size_of::<[i32; 10]>());
+assert_eq!(pointer_size * 3 * 10, std::mem::size_of::<[Vec<i32>; 10]>());
+
+// Sliceのメモリ専有量は常に8*2byte (ptr,len)
+// Sliceの型は配列から作ろうがVecから作ろうが常に`&[T]`になる点に留意せよ
+assert_eq!(pointer_size * 2, std::mem::size_of::<&[i8]>());
+assert_eq!(pointer_size * 2, std::mem::size_of::<&[i32]>());
+assert_eq!(pointer_size * 2, std::mem::size_of::<&str>());
+assert_eq!(pointer_size * 2, std::mem::size_of::<&[String]>());
+```
 
 ## 所有権
 
