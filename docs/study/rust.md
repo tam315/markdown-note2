@@ -281,7 +281,7 @@ for number in (1..4) {
   - 整数型、浮動小数点型、論理値型、参照
   - Tuple、Array、Slice、Struct
     - これらが参照する先の値が最終的にヒープメモリに存在するとしても、これらが直接保持する値はすべてスタックメモリ上にある
-    - e.g. Array が Vec を内包するとしても Array は Vec のメタデータしか持たず、そのメタデータはスタックメモリ上にある
+    - e.g. Array が Vec を内包するとしても Array は Vec のメタデータしか持たない。また、そのメタデータ群はスタックメモリ上に一直線に隙間なく並んでいる
 
 ### Heap memory / ヒープメモリ
 
@@ -314,19 +314,19 @@ assert_eq!(8, std::mem::size_of::<i64>());
 let pointer_size = std::mem::size_of::<usize>();
 assert_eq!(pointer_size, 8);
 
-// Vectorのメタデータのメモリ専有量は常に8*3byte (ptr,len,cap)
-// なお実データのメモリ専有量は要素の大きさによる
+// Vectorのメタデータ部分のメモリ占有量は常に8*3byte (ptr,len,cap)
+// なおデータ部分のメモリ占有量は内包する要素の種類と数によって定まるが、ここでは割愛
 assert_eq!(pointer_size * 3, std::mem::size_of::<Vec<u8>>());
 assert_eq!(pointer_size * 3, std::mem::size_of::<Vec<i32>>());
 assert_eq!(pointer_size * 3, std::mem::size_of::<Vec<String>>());
 
-// Arrayのメモリ専有量は単に内容物の大きさ
-// なおメタデータは存在しない
+// Arrayのメモリ占有量は単に内容物の大きさ
+// なおArrayにメタデータは存在しない
 assert_eq!(1 * 10, std::mem::size_of::<[i8; 10]>());
 assert_eq!(4 * 10, std::mem::size_of::<[i32; 10]>());
 assert_eq!(pointer_size * 3 * 10, std::mem::size_of::<[Vec<i32>; 10]>());
 
-// Sliceのメモリ専有量は常に8*2byte (ptr,len)
+// Sliceのメモリ占有量は常に8*2byte (ptr,len)
 // Sliceの型は配列から作ろうがVecから作ろうが常に`&[T]`になる点に留意せよ
 assert_eq!(pointer_size * 2, std::mem::size_of::<&[i8]>());
 assert_eq!(pointer_size * 2, std::mem::size_of::<&[i32]>());
