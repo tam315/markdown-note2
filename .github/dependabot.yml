@@ -14,4 +14,9 @@ updates:
           - '@docusaurus/module-type-aliases'
           - '@docusaurus/plugin-google-gtag'
           - '@docusaurus/preset-classic'
-          - '@docusaurus/tsconfig''
+          - '@docusaurus/tsconfig'
+
+    ignore:
+      # docusaurus側でバージョンが指定されているため
+      - dependency-name: 'rehype-katex'
+      - dependency-name: 'remark-math'
