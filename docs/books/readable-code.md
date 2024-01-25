@@ -159,8 +159,8 @@ const untrustedUrl = 'http://danger.com';
 - 長くて非直感的な式は、説明変数や要約変数で読みやすくする
 - ドモルガンの法則を使う
   - not を(分配|くくりだし)して and/or を反転する
-  - not (a or b or c) <=> (not a) or (not b) or (not c)
-  - not (a and b and c) <=> (not a) or (not b) or (not c)
+  - not (a or b or c) \<=\> (not a) or (not b) or (not c)
+  - not (a and b and c) \<=\> (not a) or (not b) or (not c)
 - 短絡評価を悪用しない。利用によりコードが簡潔になる場合に留める。
 - 複雑なロジックになってしまった場合は「反対から考えてみる」ことでひらめきが得られることもある
   - 配列を逆順に処理してみる

@@ -14,3 +14,4 @@ updates:
           - '@docusaurus/module-type-aliases'
           - '@docusaurus/plugin-google-gtag'
           - '@docusaurus/preset-classic'
+          - '@docusaurus/tsconfig''
