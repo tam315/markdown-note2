@@ -1077,27 +1077,20 @@ rust には 2 種類のエラーがある。他の言語ではこれらは区別
 
 ### panic!
 
-- [コラム] バイナリサイズを可能な限り小さくしたい場合は`Unwinding`を`abort`に変更する([参考](https://doc.rust-lang.org/book/ch09-01-unrecoverable-errors-with-panic.html#unwinding-the-stack-or-aborting-in-response-to-a-panic))
-
-```toml
-[profile] # リリース環境ならprofile.release
-panic = 'abort'
-```
-
-- Backtrace を取得するには以下のようにする。
+panic の発生時に Backtrace を取得するには、下記のように実行する。
 
 ```sh
 RUST_BACKTRACE=1 cargo run
+RUST_BACKTRACE=ful cargo run # かなり詳細に見たいとき
 ```
 
 ### Result
 
 - プログラムを止めるまでもないエラーの場合、`Result`型が使われる。
-- `Result`, `Ok`, `Err`は prelude により用意されるので、接頭子をつけずに使える。
+- `Result`, `Ok`, `Err`は接頭子をつけずに使える。
 
 ```rust
-// Result型の定義
-enum Reeult<T, E> {
+enum Result<T, E> {
   Ok(T),
   Err(E),
 }
@@ -1106,9 +1099,12 @@ enum Reeult<T, E> {
 手動で Result の中身を取り出す方法
 
 ```rust
-let f: Result<File, Error> = File::open("hello.txt");
+use std::fs::File;
+use std::io::Error;
 
-//　中身を取り出す。失敗した場合はpanicにする。
+// シャドーイングしながら中身を取り出す。
+// なお型注釈はなくてもいい。
+let f: Result<File, Error> = File::open("hello.txt");
 let f = match f {
   Ok(file) => file,
   Err(error) => panic!("{:?}", error),
@@ -1118,94 +1114,66 @@ let f = match f {
 自動で Result の中身を取り出す方法 (前述の省略記法)
 
 ```rust
-let f = File::open("hello.txt").unwrap();
 // expect は unwrap とほぼ同じだが、わかりやすいメッセージを表示することができる点で異なる
+let f = File::open("hello.txt").unwrap();
 let f = File::open("hello.txt").expect("Failed to open hello.txt");
 ```
 
 より複雑な場合分けにはマッチガードを使う
 
 ```rust
+// 存在すればそのファイルを、存在しない場合は作成したファイルを返す例
+let f = File::open("hello.txt");
 let f = match f {
-  Ok(file) => file,
-  // if... の部分がマッチガード
-  // refの意味はようわからん
-  Err(ref error) if error.kind() == ErrorKind::NotFound => match File::create("hello.txt") {
-    Ok(fc) => fc,
-    Err(e) => {
-      panic!("Tried to create file but there was a problem: {:?}", e)
+    Ok(existingFile) => existingFile,
+    // `ref`は所有権を奪わないためのおまじない
+    Err(ref error) if error.kind() == ErrorKind::NotFound => match File::create("hello.txt") {
+        Ok(newFile) => newFile,
+        Err(e) => {
+            panic!("Tried to create file but there was a problem: {:?}", e)
+        }
+    },
+    Err(error) => {
+        panic!("There was a problem opening the file: {:?}", error)
     }
-  },
-  Err(error) => {
-    panic!("There was a problem opening the file: {:?}", error)
-  }
 };
 ```
 
-Tips: 型を調べたいときは、全然違う型に代入して意図的にエラーを起こし、エラーメッセージで確認する
+エラーの処理を関数の呼び出し元にまかせるには、関数の返り値の型を Result にする。これを**エラーの委譲**という。
 
 ```rust
-let f: u32 = File::open("hello.txt");
-// メッセージ => found enum `Result<File, std::io::Error>`
-```
-
-エラーの処理を関数の呼び出し元にまかせる（**エラーの委譲**）には、関数の返り値の型を Result にする。
-
-```rust
-use std::io;
-use std::io::Read;
-use std::fs::File;
-
-fn read_username_from_file() -> Result<String, io::Error> {
-    let f = File::open("hello.txt");
-
-    let mut f = match f {
-        Ok(file) => file,
-        // エラーを呼び出し元に返す
+fn open_file() -> Result<File, Error> {
+    match File::open("hello.txt") {
+        Ok(file) => return Ok(file),
         Err(e) => return Err(e),
     };
-
-    let mut s = String::new();
-
-    match f.read_to_string(&mut s) {
-        Ok(_) => Ok(s),
-        // エラーを呼び出し元に返す
-        Err(e) => Err(e),
-    }
 }
 ```
 
-「成功した場合は値を取得し、失敗したときは呼び出し元にエラー処理を委譲する」ことは定型的な処理であるため、`?`演算子を使って簡潔に記載できる様になっている。
+エラーの委譲は`?`演算子を使って簡潔に記載できる様になっている。
 
 ```rust
-fn read_username_from_file() -> Result<String, io::Error> {
-    let mut s = String::new();
-
-    // ?と書くだけでエラーの委譲を行える
-    let mut f = File::open("hello.txt")?;
-    f.read_to_string(&mut s)?;
-
-    // 又は連結して一文で書くことも可能
-    File::open("hello.txt")?.read_to_string(&mut s)?;
-
-    Ok(s)
+fn open_file() -> Result<File, Error> {
+    let f = File::open("hello.txt")?;
+    Ok(f)
 }
 ```
 
 ### panic と Result の使い分け方
 
-- ユースケースごとの使い分け
-  - サンプルコード、プロトタイプコード、テストコードの場合
-    - panic(unwrap, expect) が最適。
-    - 意図が明確になるため。テストコードを適切に失敗させるため。
-  - 開発者がコンパイラよりも情報を持っており、正しさを確信できる場合
-    - 例えば、下記は常に正しいので panic してよい。
-      ```rust
-      let home: IpAddr = "127.0.0.1".parse().unwrap();
-      ```
-    - 逆に、IP アドレスがユーザ入力等で与えられる場合は Result を使って処理する。
+#### ユースケースごとの使い分け
 
-エラー処理のガイドライン
+- サンプルコード、プロトタイプコード、テストコードの場合
+  - panic(unwrap, expect) が最適。
+  - 意図が明確になるため。テストコードを適切に失敗させるため。
+- 開発者がコンパイラよりも情報を持っており、正しさを確信できる場合
+  - 例えば、下記は常に正しいので panic してよい。
+    ```rust
+    let home: IpAddr = "127.0.0.1".parse().unwrap();
+    ```
+  - 逆に、IP アドレスがユーザ入力等で与えられる場合は Result を使って処理する。
+
+#### エラー処理のガイドライン
 
 - パニックが最適
   - 悪い状態(前提、保証、契約、不変性が破られた状態)である、かつ以下のいずれかを満たす場合
@@ -1215,11 +1183,13 @@ fn read_username_from_file() -> Result<String, io::Error> {
 - Result が最適
   - 失敗が予想されるとき(HTTP リクエストなど)
 
-型を使って値が正しいことを保証するには、下記のような Constructor と Getter を使う。下記では値が 1 から 100 の間であることを保証している。
+#### panic の使用例 (検証のための独自型)
+
+下記では値が 1 から 100 の間であることを保証している。
 
 ```rust
-pub struct Guess {
-    // この値は基本的に非公開。モジュールとして呼び出される場合。
+struct Guess {
+    // この値は基本的に非公開
     value: u32,
 }
 
@@ -1238,4 +1208,7 @@ impl Guess {
         self.value
     }
 }
+
+let g = crate::Guess::new(0);
+println!("{}", g.value);
 ```
