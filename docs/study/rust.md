@@ -346,9 +346,20 @@ assert_eq!(pointer_size * 2, std::mem::size_of::<&[String]>());
 
 ### コピーかムーブか、それが問題だ
 
-Stack memory または Static memory 上に実体がある型（Copy トレイトをもつ型）は、代入時や関数呼び出し時に値がメモリ上でコピーされたうえ、所有権もそれぞれに設定されるため、どちらも引き続き利用ができる。
-
-(たとえ配列のうちの一部などでも) Heap Memory 上に実体がある型（Copy トレイトをもたない型）は、代入時や関数呼び出し時にメモリ上の値はコピーされずに、所有権のみが新たな変数・引数に移動したうえ、古い所有者は無効になり使えなくなる。
+- Copy Trait があるものは所有権が移転しない
+  - 対象
+    - 不変参照 (`&T`)
+    - プリミティブな値
+    - (Copy Trait を持つ型のみを含む) Tuple
+    - (Copy Trait を持つ型の) Array
+    - (Copy Trait が明示的に実装された) Struct
+- Copy Trait がないものは所有権が移転する
+  - 対象
+    - 可変参照 (`&mut T`)
+    - Vec, Box, String
+    - (Copy Trait を持たない型を含む) Tuple
+    - (Copy Trait を持たない型の) Array
+    - (デフォルトの) Struct
 
 ### 参照と借用
 
@@ -1092,26 +1103,24 @@ enum Reeult<T, E> {
 }
 ```
 
-処理結果を確認して、以降の処理を分岐する方法
+手動で Result の中身を取り出す方法
 
 ```rust
-use std::fs::File;
-let f = File::open("hello.txt");
+let f: Result<File, Error> = File::open("hello.txt");
 
+//　中身を取り出す。失敗した場合はpanicにする。
 let f = match f {
   Ok(file) => file,
   Err(error) => panic!("{:?}", error),
 };
 ```
 
-「成功した場合は値を取得し、失敗した場合はパニックする」という処理は定型的であるため、`unwrap()`や`expect()`という関数を使って短縮できるようになっている。
+自動で Result の中身を取り出す方法 (前述の省略記法)
 
 ```rust
 let f = File::open("hello.txt").unwrap();
-
-// expectはunwrapと同じだが、わかりやすいメッセージを表示することができる
+// expect は unwrap とほぼ同じだが、わかりやすいメッセージを表示することができる点で異なる
 let f = File::open("hello.txt").expect("Failed to open hello.txt");
-
 ```
 
 より複雑な場合分けにはマッチガードを使う
