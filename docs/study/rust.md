@@ -394,26 +394,10 @@ fn count_string(string_to_count: &str) -> usize {
 }
 ```
 
-参照は常に有効な変数に対応していなければならない。もし本体の変数の所有権がほかに移った場合、その参照はもはや使えずエラーになる。
-
-可変参照を変数に代入して使う場合、そのスコープ内においては別の参照を使うことはできないという制約がある。不変参照にはそのような制約はない。
-
-```rust
-fn main(){
-    let mut value = "hello".to_string();
-
-    // ① ここで可変参照にバインドされた`mutable_value_ref`変数が誕生する
-    let mutable_value_ref = &mut value;
-
-    // ③ その利用スコープ内で新たに参照を使おうとするとエラーになる
-    &value;
-    // or
-    &mut value;
-
-    println!("{}", mutable_value_ref);
-    // ② ここで可変参照にバインドされた`mutable_value_ref`変数が破棄される
-}
-```
+- 参照先の変数が所有権を失った場合、その参照はもはや使えずエラーになる
+- 可変参照の制約
+  - 不変参照 (`&`) と可変参照 (`&mut`) は同時に存在することができない
+  - 可変参照 (`&mut`) は同時に 1 つしか存在することができない
 
 ## Slice
 
@@ -466,9 +450,17 @@ let user = Rectangle { /* */ };
 println!("rect is {:?}", rect);
 ```
 
-### メソッド(instance メソッド)と関連関数(≒static メソッド)
+### メソッドと関連関数
+
+- メソッド / Methods
+- 関連関数 / Associated functions
 
 ```rust
+struct Rectangle {
+  width: u32,
+  height: u32,
+}
+
 impl Rectangle {
   // メソッド(selfをとる)
   fn can_hold(&self, other: &Rectangle) -> bool {
@@ -476,10 +468,10 @@ impl Rectangle {
   }
 
   // 関連関数(selfを取らない)
-  fn square(size: isize) -> Rectangle {
+  fn new() -> Rectangle {
     Rectangle {
-      width: size,
-      height: size,
+      width: 10,
+      height: 10,
     }
   }
 }
@@ -500,7 +492,9 @@ let address = Ipv4(192, 168, 1, 100);
 
 ## Enum
 
-基本
+- 列挙した値を列挙子 （Variant）とよぶ
+- 構造体はフィールドの集合に対して AND の関係であり、列挙型は OR の関係である
+- 列挙子ごとに型と値を持つことができる
 
 ```rust
 // 定義
@@ -545,7 +539,9 @@ println!("{}", s.output_message()) // -> `Message is hello!`
 
 ### Option 型
 
-Null になりうる値は Option 型として使う必要がある。Option, Some 及び None は標準ライブラリに定義されているため、接頭子なしで使用できる。
+- Null になりうる値は Option 型として使う必要がある。
+- 値を取り出すにはパターンマッチングか unwrap メソッドなどを使う
+- Option, Some 及び None は接頭子なしで使用できる。
 
 ```rust
 // Option型の定義
@@ -559,6 +555,10 @@ let mut maybe_number: Option<i32>;
 maybe_number = None;
 maybe_number = Some(5);
 ```
+
+### Result 型
+
+詳細後述
 
 ## match
 
@@ -607,19 +607,384 @@ let none = plus_one(None);
 ```rust
 let mut count = 0;
 match coin {
-    // {:?}州のクォーターコイン
     Coin::Quarter(state) => println!("State quarter from {:?}!", state),
-    _ => count += 1,
+    _ => (), // 何もしない
 }
 
-// これは下記のようにも書ける
+// これは下記のように書ける
 
 let mut count = 0;
 if let Coin::Quarter(state) = coin {
     println!("State quarter from {:?}!", state);
-} else {
-    count += 1;
 }
+```
+
+## エラー
+
+rust には 2 種類のエラーがある。他の言語ではこれらは区別されないことが多い。
+
+- recoverable なエラー
+  - `Result<T, E>`型
+  - 例）ファイルが見つからなかった場合
+- unrecoverable なエラー
+  - `panic!`マクロ
+  - 例）Array の範囲外にアクセスした場合
+
+### panic!
+
+panic の発生時に Backtrace を取得するには、下記のように実行する。
+
+```sh
+RUST_BACKTRACE=1 cargo run
+RUST_BACKTRACE=ful cargo run # かなり詳細に見たいとき
+```
+
+### Result
+
+- プログラムを止めるまでもないエラーの場合、`Result`型が使われる。
+- `Result`, `Ok`, `Err`は接頭子をつけずに使える。
+
+```rust
+enum Result<T, E> {
+  Ok(T),
+  Err(E),
+}
+```
+
+手動で Result の中身を取り出す方法
+
+```rust
+use std::fs::File;
+use std::io::Error;
+
+// シャドーイングしながら中身を取り出す。
+// なお型注釈はなくてもいい。
+let f: Result<File, Error> = File::open("hello.txt");
+let f = match f {
+  Ok(file) => file,
+  Err(error) => panic!("{:?}", error),
+};
+```
+
+自動で Result の中身を取り出す方法 (前述の省略記法)
+
+```rust
+// expect は unwrap とほぼ同じだが、わかりやすいメッセージを表示することができる点で異なる
+let f = File::open("hello.txt").unwrap();
+let f = File::open("hello.txt").expect("Failed to open hello.txt");
+```
+
+より複雑な場合分けにはマッチガードを使う
+
+```rust
+// 存在すればそのファイルを、存在しない場合は作成したファイルを返す例
+let f = File::open("hello.txt");
+let f = match f {
+    Ok(existingFile) => existingFile,
+    // `ref`は所有権を奪わないためのおまじない
+    Err(ref error) if error.kind() == ErrorKind::NotFound => match File::create("hello.txt") {
+        Ok(newFile) => newFile,
+        Err(e) => {
+            panic!("Tried to create file but there was a problem: {:?}", e)
+        }
+    },
+    Err(error) => {
+        panic!("There was a problem opening the file: {:?}", error)
+    }
+};
+```
+
+エラーの処理を関数の呼び出し元にまかせるには、関数の返り値の型を Result にする。これを**エラーの委譲**という。
+
+```rust
+fn open_file() -> Result<File, Error> {
+    match File::open("hello.txt") {
+        Ok(file) => return Ok(file),
+        Err(e) => return Err(e),
+    };
+}
+```
+
+エラーの委譲は`?`演算子を使って簡潔に記載できる様になっている。
+
+```rust
+fn open_file() -> Result<File, Error> {
+    let f = File::open("hello.txt")?;
+    Ok(f)
+}
+```
+
+### panic と Result の使い分け方
+
+#### ユースケースごとの使い分け
+
+- サンプルコード、プロトタイプコード、テストコードの場合
+  - panic(unwrap, expect) が最適。
+  - 意図が明確になるため。テストコードを適切に失敗させるため。
+- 開発者がコンパイラよりも情報を持っており、正しさを確信できる場合
+  - 例えば、下記は常に正しいので panic してよい。
+    ```rust
+    let home: IpAddr = "127.0.0.1".parse().unwrap();
+    ```
+  - 逆に、IP アドレスがユーザ入力等で与えられる場合は Result を使って処理する。
+
+#### エラー処理のガイドライン
+
+- パニックが最適
+  - 悪い状態(前提、保証、契約、不変性が破られた状態)である、かつ以下のいずれかを満たす場合
+    - その悪い状態が絶対に起きてはならないことである
+    - その時点以降、良い状態であることを前提にコードが書かれている
+    - 型を使って問題の発生を防ぐ方法がない
+- Result が最適
+  - 失敗が予想されるとき(HTTP リクエストなど)
+
+#### panic の使用例 (検証のための独自型)
+
+下記では値が 1 から 100 の間であることを保証している。
+
+```rust
+struct Guess {
+    // この値は基本的に非公開
+    value: u32,
+}
+
+impl Guess {
+    pub fn new(value: u32) -> Guess {
+        if value < 1 || value > 100 {
+            panic!("Value must be between 1 and 100, got {}.", value);
+        }
+
+        Guess {
+            value
+        }
+    }
+
+    pub fn value(&self) -> u32 {
+        self.value
+    }
+}
+
+let g = crate::Guess::new(0);
+println!("{}", g.value);
+```
+
+## Collections
+
+- 予め用意されている便利なデータ構造のこと
+- 複数の値を保持できるのが特徴
+- Array や Tuple と異なり、ヒープメモリに保持されるため、コンパイル時にサイズを確定させなくてもいい
+
+### Vector
+
+- 単一型である
+- 複数の値を保持できる
+- 可変長である
+- `Vec<T>`
+
+```rust
+// 初期値がない場合
+let v: Vec<i32> = Vec::new();
+
+// 初期値がある場合（マクロを使って初期化できる）
+let v = vec![1, 2, 3];
+```
+
+値の追加
+
+```rust
+let mut v = Vec::new();
+
+v.push(5);
+v.push(6);
+v.push(7);
+v.push(8);
+```
+
+値の取得には２種類の方法がある。いずれも参照を取得する。
+
+```rust
+// 結果を&Tとして受け取る
+// 存在しなければパニックになる
+let third = &v[2];
+
+// 結果をOption<&T>として受け取る
+// 存在しなければNoneを返し、存在すればSome(&T)を返す。
+let third = v.get(2);
+```
+
+反復処理
+
+```rust
+// 参照のみ
+let v = vec![1,2,3];
+for i in &v {
+  println!("{}", i);
+}
+
+// 変更あり
+let mut v = vec![1,2,3];
+for i in &mut v {
+  // Dereference operatorを使う
+  *i += 50;
+}
+```
+
+異なる型を Vector に保存したい場合は、予め Enum として作成しておくことで対応する。
+
+```rust
+enum SpreadsheetCell {
+    Int(i32),
+    Float(f64),
+    Text(String),
+}
+
+let row = vec![
+    SpreadsheetCell::Int(3),
+    SpreadsheetCell::Text(String::from("blue")),
+    SpreadsheetCell::Float(10.12),
+];
+```
+
+### String
+
+String とは？
+
+- String literal(`str`)
+  - rust で唯一の組み込みの文字列型
+  - string slice(`&str`)として使用される。なぜなら、文字列自体はバイナリに組み込まれる完全に変更不可能なものであり、String literal はそこへの参照としてしか存在できないから。
+- String type(`String`)
+  - ライブラリにより提供される
+  - 拡張、変更、所有が可能
+
+rust の世界で'String'と言った場合、String type 又は String slice を指すことが多い。どちらも UTF-8。
+
+String の作り方
+
+```rust
+let s = "aaa".to_string();
+let s = String::from("aaa");
+```
+
+末尾に文字列を追加する。なお、`push_str()`は参照(string literal)を引数として取るので、所有権の移転は発生しない。
+
+```rust
+let mut s = String::from("foo");
+s.push_str("bar");
+```
+
+文字列の結合(+を使う方法)
+
+- `s1`の所有権は s に移る。再利用されるということ。少し効率的。
+- `+`に与えることができるのは`&str`型。なお、`&String`は自動的に変換される。deref coercion という。
+
+```rust
+let s1 = String::from("tic");
+let s2 = String::from("tac");
+let s3 = String::from("toe");
+
+let s = s1 + "-" + &s2 + "-" + &s3;
+```
+
+文字列の結合(`format!`を使う方法)
+
+- この場合は所有権の移転は一切発生しない。
+
+```rust
+let s = format!("{}-{}-{}", s1, s2, s3);
+```
+
+UTF−8 の話
+
+- rust の内部では文字列は byte(`vec<u8>`)でとして保持されている
+
+```rust
+// 表現したい文字列
+"नमस्ते"
+
+// byteで表す
+[224, 164, 168, 224, 164, 174, 224, 164, 184, 224, 165, 141, 224, 164, 164, 224, 165, 135]
+
+// Unicode scalar value(コードポイント)で表す
+['न', 'म', 'स', '्', 'त', 'े']
+
+// grapheme clusters(人間が目にする文字)で表す
+["न", "म", "स्", "ते"]
+```
+
+どうしても必要ならインデックスを使うことも可能ではあるが、あまりいいアイデアではない。なお、中途半端な位置で切るとパニックになるので要注意。
+
+```rust
+let s1 = "こんちわ".to_string();
+let s = &s1[0..3]; // sは&strになる("こ")
+```
+
+繰り返し
+
+```rust
+// Unicodeスカラ値として取り出して繰り返す
+for c in "नमस्ते".chars() {}
+
+// byteとして取り出して繰り返す
+for b in "नमस्ते".bytes() {}
+
+// graphene clustersで取り出して繰り返すには外部ライブラリが必要
+```
+
+### Hash Map
+
+作成
+
+```rust
+use std::collections::HashMap;
+
+let mut scores = HashMap::new();
+
+scores.insert(String::from("Blue"), 10);
+scores.insert(String::from("Yellow"), 50);
+```
+
+複数の vector を zip して作成することもできる
+
+```rust
+let teams = vec![
+  String::from("Blue"),
+  String::from("Yellow")
+];
+let initial_scores = vec![
+  10,
+  50,
+];
+let scores: HashMap<_, _> =
+    teams.into_iter().zip(initial_scores.into_iter()).collect();
+```
+
+値の取得(Option 型が得られる)
+
+```rust
+let score = scores.get("Blue");
+```
+
+イテレーション
+
+```rust
+for (key, value) in &scores {}
+```
+
+値の更新
+
+```rust
+let mut scores = HashMap::new();
+scores.insert(String::from("Blue"), 10);
+
+// 上書き
+scores.insert(String::from("Blue"), 25);
+
+// 既存のデータを使って上書き
+let count = scores.entry("Blue").or_insert(0);
+*count += 1;
+
+// 値がなければ挿入、あれば何もしない
+scores.entry(String::from("Blue")).or_insert(50);
 ```
 
 ## Packages, Crates, and Modules
@@ -867,372 +1232,4 @@ pub mod hosting {
 // src/lib.rs
 mod front_of_house;
 front_of_house::hosting::add_to_waitlist();
-```
-
-## Collections
-
-- 予め用意されている便利なデータ構造のこと
-- 複数の値を保持できるのが特徴
-- Array や Tuple と異なり、ヒープメモリに保持されるため、コンパイル時にサイズを確定させなくてもいい
-
-### Vector
-
-- 単一型である
-- 複数の値を保持できる
-- 可変長である
-- `Vec<T>`
-
-```rust
-// 初期値がない場合
-let v: Vec<i32> = Vec::new();
-
-// 初期値がある場合（マクロを使って初期化できる）
-let v = vec![1, 2, 3];
-```
-
-値の追加
-
-```rust
-let mut v = Vec::new();
-
-v.push(5);
-v.push(6);
-v.push(7);
-v.push(8);
-```
-
-値の取得には２種類の方法がある。いずれも参照を取得する。
-
-```rust
-// 結果を&Tとして受け取る
-// 存在しなければパニックになる
-let third = &v[2];
-
-// 結果をOption<&T>として受け取る
-// 存在しなければNoneを返し、存在すればSome(&T)を返す。
-let third = v.get(2);
-```
-
-反復処理
-
-```rust
-// 参照のみ
-let v = vec![1,2,3];
-for i in &v {
-  println!("{}", i);
-}
-
-// 変更あり
-let mut v = vec![1,2,3];
-for i in &mut v {
-  // Dereference operatorを使う
-  *i += 50;
-}
-```
-
-異なる型を Vector に保存したい場合は、予め Enum として作成しておくことで対応する。
-
-```rust
-enum SpreadsheetCell {
-    Int(i32),
-    Float(f64),
-    Text(String),
-}
-
-let row = vec![
-    SpreadsheetCell::Int(3),
-    SpreadsheetCell::Text(String::from("blue")),
-    SpreadsheetCell::Float(10.12),
-];
-```
-
-### String
-
-String とは？
-
-- String literal(`str`)
-  - rust で唯一の組み込みの文字列型
-  - string slice(`&str`)として使用される。なぜなら、文字列自体はバイナリに組み込まれる完全に変更不可能なものであり、String literal はそこへの参照としてしか存在できないから。
-- String type(`String`)
-  - ライブラリにより提供される
-  - 拡張、変更、所有が可能
-
-rust の世界で'String'と言った場合、String type 又は String slice を指すことが多い。どちらも UTF-8。
-
-String の作り方
-
-```rust
-let s = "aaa".to_string();
-let s = String::from("aaa");
-```
-
-末尾に文字列を追加する。なお、`push_str()`は参照(string literal)を引数として取るので、所有権の移転は発生しない。
-
-```rust
-let mut s = String::from("foo");
-s.push_str("bar");
-```
-
-文字列の結合(+を使う方法)
-
-- `s1`の所有権は s に移る。再利用されるということ。少し効率的。
-- `+`に与えることができるのは`&str`型。なお、`&String`は自動的に変換される。deref coercion という。
-
-```rust
-let s1 = String::from("tic");
-let s2 = String::from("tac");
-let s3 = String::from("toe");
-
-let s = s1 + "-" + &s2 + "-" + &s3;
-```
-
-文字列の結合(`format!`を使う方法)
-
-- この場合は所有権の移転は一切発生しない。
-
-```rust
-let s = format!("{}-{}-{}", s1, s2, s3);
-```
-
-UTF−8 の話
-
-- rust の内部では文字列は byte(`vec<u8>`)でとして保持されている
-
-```rust
-// 表現したい文字列
-"नमस्ते"
-
-// byteで表す
-[224, 164, 168, 224, 164, 174, 224, 164, 184, 224, 165, 141, 224, 164, 164, 224, 165, 135]
-
-// Unicode scalar value(コードポイント)で表す
-['न', 'म', 'स', '्', 'त', 'े']
-
-// grapheme clusters(人間が目にする文字)で表す
-["न", "म", "स्", "ते"]
-```
-
-どうしても必要ならインデックスを使うことも可能ではあるが、あまりいいアイデアではない。なお、中途半端な位置で切るとパニックになるので要注意。
-
-```rust
-let s1 = "こんちわ".to_string();
-let s = &s1[0..3]; // sは&strになる("こ")
-```
-
-繰り返し
-
-```rust
-// Unicodeスカラ値として取り出して繰り返す
-for c in "नमस्ते".chars() {}
-
-// byteとして取り出して繰り返す
-for b in "नमस्ते".bytes() {}
-
-// graphene clustersで取り出して繰り返すには外部ライブラリが必要
-```
-
-### Hash Map
-
-作成
-
-```rust
-use std::collections::HashMap;
-
-let mut scores = HashMap::new();
-
-scores.insert(String::from("Blue"), 10);
-scores.insert(String::from("Yellow"), 50);
-```
-
-複数の vector を zip して作成することもできる
-
-```rust
-let teams = vec![
-  String::from("Blue"),
-  String::from("Yellow")
-];
-let initial_scores = vec![
-  10,
-  50,
-];
-let scores: HashMap<_, _> =
-    teams.into_iter().zip(initial_scores.into_iter()).collect();
-```
-
-値の取得(Option 型が得られる)
-
-```rust
-let score = scores.get("Blue");
-```
-
-イテレーション
-
-```rust
-for (key, value) in &scores {}
-```
-
-値の更新
-
-```rust
-let mut scores = HashMap::new();
-scores.insert(String::from("Blue"), 10);
-
-// 上書き
-scores.insert(String::from("Blue"), 25);
-
-// 既存のデータを使って上書き
-let count = scores.entry("Blue").or_insert(0);
-*count += 1;
-
-// 値がなければ挿入、あれば何もしない
-scores.entry(String::from("Blue")).or_insert(50);
-```
-
-## エラー
-
-rust には 2 種類のエラーがある。他の言語ではこれらは区別されないことが多い。
-
-- recoverable なエラー
-  - `Result<T, E>`型
-  - 例）ファイルが見つからなかった場合
-- unrecoverable なエラー
-  - `panic!`マクロ
-  - 例）Array の範囲外にアクセスした場合
-
-### panic!
-
-panic の発生時に Backtrace を取得するには、下記のように実行する。
-
-```sh
-RUST_BACKTRACE=1 cargo run
-RUST_BACKTRACE=ful cargo run # かなり詳細に見たいとき
-```
-
-### Result
-
-- プログラムを止めるまでもないエラーの場合、`Result`型が使われる。
-- `Result`, `Ok`, `Err`は接頭子をつけずに使える。
-
-```rust
-enum Result<T, E> {
-  Ok(T),
-  Err(E),
-}
-```
-
-手動で Result の中身を取り出す方法
-
-```rust
-use std::fs::File;
-use std::io::Error;
-
-// シャドーイングしながら中身を取り出す。
-// なお型注釈はなくてもいい。
-let f: Result<File, Error> = File::open("hello.txt");
-let f = match f {
-  Ok(file) => file,
-  Err(error) => panic!("{:?}", error),
-};
-```
-
-自動で Result の中身を取り出す方法 (前述の省略記法)
-
-```rust
-// expect は unwrap とほぼ同じだが、わかりやすいメッセージを表示することができる点で異なる
-let f = File::open("hello.txt").unwrap();
-let f = File::open("hello.txt").expect("Failed to open hello.txt");
-```
-
-より複雑な場合分けにはマッチガードを使う
-
-```rust
-// 存在すればそのファイルを、存在しない場合は作成したファイルを返す例
-let f = File::open("hello.txt");
-let f = match f {
-    Ok(existingFile) => existingFile,
-    // `ref`は所有権を奪わないためのおまじない
-    Err(ref error) if error.kind() == ErrorKind::NotFound => match File::create("hello.txt") {
-        Ok(newFile) => newFile,
-        Err(e) => {
-            panic!("Tried to create file but there was a problem: {:?}", e)
-        }
-    },
-    Err(error) => {
-        panic!("There was a problem opening the file: {:?}", error)
-    }
-};
-```
-
-エラーの処理を関数の呼び出し元にまかせるには、関数の返り値の型を Result にする。これを**エラーの委譲**という。
-
-```rust
-fn open_file() -> Result<File, Error> {
-    match File::open("hello.txt") {
-        Ok(file) => return Ok(file),
-        Err(e) => return Err(e),
-    };
-}
-```
-
-エラーの委譲は`?`演算子を使って簡潔に記載できる様になっている。
-
-```rust
-fn open_file() -> Result<File, Error> {
-    let f = File::open("hello.txt")?;
-    Ok(f)
-}
-```
-
-### panic と Result の使い分け方
-
-#### ユースケースごとの使い分け
-
-- サンプルコード、プロトタイプコード、テストコードの場合
-  - panic(unwrap, expect) が最適。
-  - 意図が明確になるため。テストコードを適切に失敗させるため。
-- 開発者がコンパイラよりも情報を持っており、正しさを確信できる場合
-  - 例えば、下記は常に正しいので panic してよい。
-    ```rust
-    let home: IpAddr = "127.0.0.1".parse().unwrap();
-    ```
-  - 逆に、IP アドレスがユーザ入力等で与えられる場合は Result を使って処理する。
-
-#### エラー処理のガイドライン
-
-- パニックが最適
-  - 悪い状態(前提、保証、契約、不変性が破られた状態)である、かつ以下のいずれかを満たす場合
-    - その悪い状態が絶対に起きてはならないことである
-    - その時点以降、良い状態であることを前提にコードが書かれている
-    - 型を使って問題の発生を防ぐ方法がない
-- Result が最適
-  - 失敗が予想されるとき(HTTP リクエストなど)
-
-#### panic の使用例 (検証のための独自型)
-
-下記では値が 1 から 100 の間であることを保証している。
-
-```rust
-struct Guess {
-    // この値は基本的に非公開
-    value: u32,
-}
-
-impl Guess {
-    pub fn new(value: u32) -> Guess {
-        if value < 1 || value > 100 {
-            panic!("Value must be between 1 and 100, got {}.", value);
-        }
-
-        Guess {
-            value
-        }
-    }
-
-    pub fn value(&self) -> u32 {
-        self.value
-    }
-}
-
-let g = crate::Guess::new(0);
-println!("{}", g.value);
 ```
