@@ -994,33 +994,26 @@ https://zenn.dev/mebiusbox/books/22d4c1ed9b0003/viewer/c12c17
 
 ### Crates
 
-- crate
-  - Rust プログラムの基本的なコンパイル単位
-  - 実行可能なバイナリを作る Binary Crate と 再利用可能なライブラリを作る Library Crate の 2 種類がある
-- crate root
-  - コンパイラがコンパイルを開始するファイル
+Crate とは Rust プログラムの基本的なコンパイル単位である。実行可能なバイナリを作る Binary Crate と 再利用可能なライブラリを作る Library Crate の 2 種類がある。
 
-#### 実行可能なバイナリを生成したい場合
+Crate root とは、コンパイラがコンパイルを開始する起点となる Crate のことである。
 
-- Binary Crate として`src/main.rs` を作成する。これが Crate Root となる。
-- 複数の Binary Crate を作成したい場合は`src/bin/**.rs`を作成する。数に制限はない。
+実行可能なバイナリを生成したい場合は、Binary Crate として`src/main.rs` を作成する。これが Crate Root となる。複数の Binary Crate を作成したい場合は`src/bin/**.rs`を作成する。Binary Crate の数に制限はない。
 
-#### 再利用可能なライブラリを作成したい場合
-
-- Library Crate として`src/lib.rs` を作成する。これが Crate Root となる。
-- Library Crate は 1 つだけしか作れない
+再利用可能なライブラリを作成したい場合は、Library Crate として`src/lib.rs` を作成する。これが Crate Root となる。
+Library Crate は 1 つだけしか作れない。
 
 ### Packages
 
-- package
-  - 一つ以上の crate で構成され、なんらかのまとまった機能を提供する
-  - `cargo.toml`を含み、ここには crate のビルド方法が書かれている
+Package は一つ以上の crate で構成され、なんらかのまとまった機能を提供する。`cargo.toml`を含み、ここには crate のビルド方法が書かれている。
 
-### Struct | Enum の公開範囲
+### Modules
+
+#### Struct | Enum の公開範囲
 
 モジュールの中にある struct の要素はデフォルトで非公開。一方、enum の要素はデフォルトで公開。
 
-### use
+#### モジュールの利用 (use)
 
 下記のようにすると、他のモジュールを利用できる。
 
