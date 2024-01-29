@@ -9,7 +9,7 @@ export default function Home(): JSX.Element {
 
   useEffect(() => {
     // トップページは基本的に見せない
-    history.push('/about');
+    history.replace('/about');
   }, []);
 
   return <Layout description={siteConfig.tagline}></Layout>;
