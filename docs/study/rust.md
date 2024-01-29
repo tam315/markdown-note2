@@ -1068,8 +1068,9 @@ pub use crate::M1::M2;
 rand = "0.8.3"
 ```
 
+例えば以下のようにすることで、Rng トレイトに含まれる`thread_rng`メソッドを使えるようになる。
+
 ```rust
-// TODO: traitってなに？？ Rng.***ではないのか？
 use rand::Rng;
 let rng = rand::thread_rng()
 ```
