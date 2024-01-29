@@ -989,172 +989,53 @@ scores.entry(String::from("Blue")).or_insert(50);
 
 ## Packages, Crates, and Modules
 
-### Packages, Crates
+以下が分かりやすい。以降、このドキュメントに記載がない事柄だけを記載した。
+https://zenn.dev/mebiusbox/books/22d4c1ed9b0003/viewer/c12c17
+
+### Crates
+
+- crate
+  - Rust プログラムの基本的なコンパイル単位
+  - 実行可能なバイナリを作る Binary Crate と 再利用可能なライブラリを作る Library Crate の 2 種類がある
+- crate root
+  - コンパイラがコンパイルを開始するファイル
+
+#### 実行可能なバイナリを生成したい場合
+
+- Binary Crate として`src/main.rs` を作成する。これが Crate Root となる。
+- 複数の Binary Crate を作成したい場合は`src/bin/**.rs`を作成する。数に制限はない。
+
+#### 再利用可能なライブラリを作成したい場合
+
+- Library Crate として`src/lib.rs` を作成する。これが Crate Root となる。
+- Library Crate は 1 つだけしか作れない
+
+### Packages
 
 - package
-  - 一つ以上の crate で構成される。crate の数の要件は以下の通り。
-    - 少なくとも１つ以上の crate が必要
-    - library crate は 0 または 1 つだけ
-    - binary crate はいくつでも
-  - なんらかのまとまった機能を提供する
-  - `cargo.toml`を含む。ここには crate のビルド方法が書かれている
-- crate
-  - library crate 又は binary crate のこと
-- crate root
-  - 下記のいずれか
-    - `src/lib.rs`(library crate)
-      - パッケージ名が crate 名になる
-    - `src/main.rs`(binary crate)
-      - パッケージ名が crate 名になる
-    - `src/bin/**.rs`(binary crate)
-  - その crate の root module になる
-  - コンパイラが読み込みをスタートする地点
+  - 一つ以上の crate で構成され、なんらかのまとまった機能を提供する
+  - `cargo.toml`を含み、ここには crate のビルド方法が書かれている
 
-### Modules
+### Struct | Enum の公開範囲
 
-- クレート内でコードをグルーピングするために使う
-- 可読性と再利用可能性を向上させるために使う
-- プライバシーを管理するために使う
-  - Public --- コードの外でも使える
-  - Private --- コードの外では使えない
-
-```rust
-mod front_of_house {
-    mod hosting {
-        fn add_to_waitlist() {}
-
-        fn seat_at_table() {}
-    }
-
-    mod serving {
-        fn take_order() {}
-
-        fn serve_order() {}
-
-        fn take_payment() {}
-    }
-}
-```
-
-上記のようなコードを crate root に定義した場合、モジュールツリーは以下のようになる
-
-```
-crate(暗黙的に命名される)
- └── front_of_house
-     ├── hosting
-     │   ├── add_to_waitlist
-     │   └── seat_at_table
-     └── serving
-         ├── take_order
-         ├── serve_order
-         └── take_payment
-```
-
-### Path
-
-- パスの種類
-  - Absolute path --- crate name 又は`crate`のリテラルから始まる
-  - Relative path --- `self`、`super`又は同一レベルにあるモジュール名から始まる
-- `::`で区切る
-- Private と Public の管理
-  - デフォルトでは：
-    - 呼び出した関数と同一レベルにあるモジュールには`pub`なしでアクセス可能
-    - 子モジュールやその内部は Private。パブリックにするには`pub mod`や`pub fn`などが必要。
-    - 親モジュールは Public
-
-```rust
-mod front_of_house {
-    pub mod hosting {
-        pub fn add_to_waitlist() {}
-    }
-}
-
-pub fn eat_at_restaurant() {
-    // Absolute path
-    crate::front_of_house::hosting::add_to_waitlist();
-
-    // Relative path
-    front_of_house::hosting::add_to_waitlist();
-}
-```
-
-`super`を使うと親モジュールにアクセスできる
-
-```rust
-fn serve_order() {}
-
-mod back_of_house {
-    fn fix_incorrect_order() {
-        cook_order();
-        super::serve_order();
-    }
-
-    fn cook_order() {}
-}
-```
-
-struct の要素はデフォルトで非公開
-
-```rust
-mod back_of_house {
-    pub struct Breakfast {
-        pub toast: String,
-        seasonal_fruit: String,
-    }
-
-    impl Breakfast {
-        // この関数なしではBreakfastは初期化すらできない
-        pub fn summer(toast: &str) -> Breakfast {
-            Breakfast {
-                toast: String::from(toast),
-                seasonal_fruit: String::from("peaches"),
-            }
-        }
-    }
-}
-
-pub fn eat_at_restaurant() {
-    let mut meal = back_of_house::Breakfast::summer("Rye");
-    // 変更可能
-    meal.toast = String::from("Wheat");
-
-    // 以下のコードはコンパイル不可
-    meal.seasonal_fruit = String::from("blueberries");
-}
-```
-
-一方、enum の要素はデフォルトで公開
-
-```rust
-mod back_of_house {
-    pub enum Appetizer {
-        Soup,
-        Salad,
-    }
-}
-
-pub fn eat_at_restaurant() {
-    let order1 = back_of_house::Appetizer::Soup;
-    let order2 = back_of_house::Appetizer::Salad;
-}
-```
+モジュールの中にある struct の要素はデフォルトで非公開。一方、enum の要素はデフォルトで公開。
 
 ### use
 
-下記のようにすると、他のモジュールを接頭詞無しでつかえる。
+下記のようにすると、他のモジュールを利用できる。
 
 ```rust
-use crate::front_of_house::hosting;
+use crate::M1::M2;
 
 // - 絶対パスでも相対パスでもOK
-// - 以降、`hosting::***`のように使える
+// - 以降、`M2::***`のように使える
 ```
 
 慣例として、関数はひとつ上のモジュールを読み込む。これは、関数がローカルのものではないことを明確にするため。
 
 ```rust
-use crate::front_of_house::hosting;
-hosting::add_to_waitlist();
+use crate::M1::M2;
+M2::add_to_waitlist();
 ```
 
 慣例として、Enum の場合はそれ自身を読み込む。特に理由はない。
@@ -1164,7 +1045,7 @@ use std::collections::HashMap;
 let mut map = HashMap::new();
 ```
 
-例外として、名前が重複する場合はそのひとつ上のモジュールから読み込む。
+名前が重複する場合はそのひとつ上のモジュールから読み込む。
 
 ```rust
 use std::fmt;
@@ -1180,11 +1061,11 @@ fn function2() -> io::Result {...}
 use std::io::Result as IoResult;
 ```
 
-`pub use`とすると再エクスポートできる。
+`pub use`とすると再エクスポートできる。これをモジュールの再公開という。
 
 ```rust
-// 外部のコードから`hosting`を呼び出せるようになる
-pub use crate::front_of_house::hosting;
+// 外部のコードから`M2`を呼び出せるようになる
+pub use crate::M1::M2;
 ```
 
 外部ライブラリを使いたいときは、`Cargo.toml`に記載したうえで`use`する。
@@ -1215,21 +1096,4 @@ glob operator も使えるが、基本的にテストでのみ使用すること
 
 ```rust
 use std::collections::*;
-```
-
-### モジュールをファイルに切り出す
-
-`mod`のあとにファイル名を記載することで、そのファイル内のモジュールを呼び出せる。
-
-```rust
-// src/front_of_house.rs
-pub mod hosting {
-  pub fn add_to_waitlist() {}
-}
-```
-
-```rust
-// src/lib.rs
-mod front_of_house;
-front_of_house::hosting::add_to_waitlist();
 ```
