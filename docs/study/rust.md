@@ -275,7 +275,7 @@ for number in (1..4) {
 
 - 生成された実行バイナリに含まれる
 - プログラムの開始から終了までずっと存在し続ける
-- 静的領域/ static memory / rodata (read-only data) segment などと呼ばれる
+- 静的領域 / static memory / rodata (read-only data) segment などと呼ばれる
 - スタックメモリでもヒープメモリでもない特殊な領域
 - 格納対象
   - 文字列リテラル
@@ -358,20 +358,18 @@ assert_eq!(pointer_size * 2, std::mem::size_of::<&[String]>());
 
 ### コピーかムーブか、それが問題だ
 
-- Copy Trait があるものは所有権が移転しない
-  - 対象
-    - 不変参照 (`&T`)
-    - プリミティブな値
-    - (Copy Trait を持つ型のみを含む) Tuple
-    - (Copy Trait を持つ型の) Array
-    - (Copy Trait が明示的に実装された) Struct
-- Copy Trait がないものは所有権が移転する
-  - 対象
-    - 可変参照 (`&mut T`)
-    - Vec, Box, String
-    - (Copy Trait を持たない型を含む) Tuple
-    - (Copy Trait を持たない型の) Array
-    - (デフォルトの) Struct
+- Copy Trait があるものは所有権が移転しない。対象は以下の通り。
+  - 不変参照 (`&T`)
+  - プリミティブな値
+  - (Copy Trait を持つ型のみを含む) Tuple
+  - (Copy Trait を持つ型の) Array
+  - (Copy Trait が明示的に実装された) Struct
+- Copy Trait がないものは所有権が移転する。対象は以下の通り。
+  - 可変参照 (`&mut T`)
+  - Vec, Box, String
+  - (Copy Trait を持たない型を含む) Tuple
+  - (Copy Trait を持たない型の) Array
+  - (デフォルトの) Struct
 
 ### 参照と借用
 
@@ -770,37 +768,24 @@ println!("{}", g.value);
 
 ## Collections
 
-- 予め用意されている便利なデータ構造のこと
-- 複数の値を保持できるのが特徴
-- Array や Tuple と異なり、ヒープメモリに保持されるため、コンパイル時にサイズを確定させなくてもいい
+Collections とは、複数の値を可変長で保持できる型である。Array や Tuple と異なりヒープメモリに保持されるため、コンパイル時にサイズを確定させなくてもよい。
 
 ### Vector
 
-- 単一型である
-- 複数の値を保持できる
-- 可変長である
-- `Vec<T>`
+Vector は同じデータ型の値を複数持つことのできるコレクションで、型は`Vec<T>`である。異なるデータ型を混在させることはできない。また、値の順序が維持される。
 
 ```rust
-// 初期値がない場合
+// 初期値がない場合は型注釈が必要
 let v: Vec<i32> = Vec::new();
 
-// 初期値がある場合（マクロを使って初期化できる）
+// マクロを使って初期値が設定できる
+// この場合は型注釈は不要
 let v = vec![1, 2, 3];
 ```
 
-値の追加
+値の追加には`push`メソッドを使う。
 
-```rust
-let mut v = Vec::new();
-
-v.push(5);
-v.push(6);
-v.push(7);
-v.push(8);
-```
-
-値の取得には２種類の方法がある。いずれも参照を取得する。
+値の取得には`[]`を使う方法と`get`メソッドを使う２種類の方法があり、いずれも最終的には参照を取得する。
 
 ```rust
 // 結果を&Tとして受け取る
@@ -812,16 +797,16 @@ let third = &v[2];
 let third = v.get(2);
 ```
 
-反復処理
+反復処理を行う際は参照(`&Vec<T>`)を使ってループする。参照にしないと Vector の所有権が失われるので注意。
 
 ```rust
-// 参照のみ
+// 不変参照ですむ場合
 let v = vec![1,2,3];
 for i in &v {
   println!("{}", i);
 }
 
-// 変更あり
+// 可変参照にしたい場合
 let mut v = vec![1,2,3];
 for i in &mut v {
   // Dereference operatorを使う
@@ -847,16 +832,13 @@ let row = vec![
 
 ### String
 
-String とは？
+Rust の文字列は 2 種類ある。
 
-- String literal(`str`)
-  - rust で唯一の組み込みの文字列型
-  - string slice(`&str`)として使用される。なぜなら、文字列自体はバイナリに組み込まれる完全に変更不可能なものであり、String literal はそこへの参照としてしか存在できないから。
-- String type(`String`)
-  - ライブラリにより提供される
-  - 拡張、変更、所有が可能
+まず、**String literal**(`str`)がある。これは、Rust で唯一の組み込みの文字列型であり、つまり言語の核心部分に統合されている。String literal はバイナリに組み込まれる完全に変更不可能なものであり、String literal はそこへの参照としてしか存在できない性質があるため、実際のコードでは **String slice**(`&str`)として使用される。
 
-rust の世界で'String'と言った場合、String type 又は String slice を指すことが多い。どちらも UTF-8。
+つぎに、`String`型がある。これはライブラリにより提供されており、拡張、変更、所有が可能である。
+
+rust の世界で'String'と言った場合、String 型または String slice を指すことが多い。どちらも UTF-8 で制御される。
 
 String の作り方
 
@@ -932,10 +914,10 @@ for b in "नमस्ते".bytes() {}
 
 ### Hash Map
 
-作成
+Hash Map の作り方は以下の通り。
 
 ```rust
-use std::collections::HashMap;
+use std::collections::HashMap; // 明示的にインポートする必要がある
 
 let mut scores = HashMap::new();
 
@@ -943,7 +925,7 @@ scores.insert(String::from("Blue"), 10);
 scores.insert(String::from("Yellow"), 50);
 ```
 
-複数の vector を zip して作成することもできる
+複数の vector を zip して作成することもできる。この場合、双方の型に Eq トレイトと Hash トレイトが実装されている必要がある。`<_, _>`は型推論を意味する。`zip()`もまたイテレータを返すので、`collect()`で HashMap に変換できる。
 
 ```rust
 let teams = vec![
@@ -958,19 +940,19 @@ let scores: HashMap<_, _> =
     teams.into_iter().zip(initial_scores.into_iter()).collect();
 ```
 
-値の取得(Option 型が得られる)
+値の取得は以下のようにする。`Option<T>`型が得られる。
 
 ```rust
 let score = scores.get("Blue");
 ```
 
-イテレーション
+イテレーションは以下のようにする。参照にしないと Hash Map の所有権が移動してしまうので注意。
 
 ```rust
 for (key, value) in &scores {}
 ```
 
-値の更新
+値の更新は以下のようにする。
 
 ```rust
 let mut scores = HashMap::new();
@@ -985,6 +967,60 @@ let count = scores.entry("Blue").or_insert(0);
 
 // 値がなければ挿入、あれば何もしない
 scores.entry(String::from("Blue")).or_insert(50);
+```
+
+## Generics / ジェネリクス
+
+**ジェネリクス**とは、単一のコードで異なるデータ型の処理を可能にする便利な仕組みのこと。
+
+**型パラメーター**とは以下のように`<>`で囲まれた識別子のことで、ジェネリクスにおいて型を指定するときに指定されるパラメーターのこと。なお、言語によっては「型引数」と「型パラメーター」を用語として区別することがあるが、rust では区別しない。
+
+```rust
+Vec<i32> // i32型のVector
+HashMap<i32, String> // i32型のキーとString型の値を持つHashMap
+```
+
+ジェネリクスにより定義された型のことを**ジェネリック型**と呼び、例えば`Vec<i32>`がそれにあたる。
+
+ジェネリクスの具体的な書き方は以下の通り。
+
+```rust
+//  構造体
+struct Point<T> {
+    x: T,
+    y: T,
+}
+
+// 列挙型
+enum Option<T> {
+    Some(T),
+    None,
+}
+
+// 関数
+fn average<T>(list: &[T]) -> T {
+    // ここで平均を計算して返す
+}
+```
+
+構造体のメソッドにジェネリクスを使う場合は以下のようにする。
+
+```rust
+impl<T> Point<T> {
+    fn just_get_x_ref(&self) -> &T {
+        &self.x
+    }
+}
+```
+
+ジェネリクス型が特定のトレイトを実装していることを前提とする制限を設けることを**トレイト境界**といい、`<T: Trait>`のように書く。トレイトによって線引きをしているためそのように呼ぶ。以下は、メソッドに対してトレイト境界を作る一例。
+
+```rust
+impl<T: Display> Point<T> {
+    fn pretty_output(&self) {
+        println!("Hi! value is x:{} y:{}!", self.x, self.y);
+    }
+}
 ```
 
 ## Packages, Crates, and Modules
@@ -1091,3 +1127,45 @@ glob operator も使えるが、基本的にテストでのみ使用すること
 ```rust
 use std::collections::*;
 ```
+
+## Trait
+
+Trait とは特性や特質のこと。複数の型にまたがって共通の振る舞いを定義するための仕組みである。Java のインターフェースと似たようなもの。
+
+Trait は以下のように定義する。
+
+```rust
+pub trait Summary {
+    fn summarize(&self) -> String;
+}
+```
+
+Trait を構造体に実装するには以下のようにする。
+
+```rust
+struct Position {
+    x: f64,
+    y: f64,
+}
+
+impl Summary for Position {
+    fn summarize(&self) -> String {
+        format!("x: {}, y: {}", self.x, self.y)
+    }
+}
+```
+
+Trait を持つ構造体をなんでも受け取る関数を定義するには以下のようにする。
+
+```rust
+fn notify(item: impl Summary) {
+    println!("Breaking news! {}", item.summarize());
+}
+```
+
+### 代表的な Trait
+
+- Display trait
+  - ある型の値をユーザーフレンドリーな文字列形式で出力するためのもの。`println!`の`{}`で表示することができる。
+- Debug trait
+  - ある型の値をデバッグ用の文字列形式で出力するためのもの。`println!`の`{:?}`や`{:#?}`で表示することができる。後者はより見やすい形式で表示する。
