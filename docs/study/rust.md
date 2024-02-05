@@ -1017,7 +1017,7 @@ impl<T: Display> Point<T> {
 }
 ```
 
-## Packages, Crates, and Modules
+## プロジェクト構造とパッケージ管理
 
 以下が分かりやすい。以降、このドキュメントに記載がない事柄だけを記載した。
 https://zenn.dev/mebiusbox/books/22d4c1ed9b0003/viewer/c12c17
@@ -1128,6 +1128,28 @@ glob operator も使えるが、基本的にテストでのみ使用すること
 ```rust
 use std::collections::*;
 ```
+
+### Workspaces
+
+複数のパッケージにまたがるプロジェクトを管理するための仕組み。yarn の workspaces と同じようなもの。Cargo.toml に以下のように記載したのち、サブフォルダにそれぞれのプロジェクトを作成していく。成果物はルートの `target` フォルダにまとめられる。
+
+```toml
+[workspace]
+members = [
+    "my_tools",
+    "my_libs",
+]
+```
+
+サブフォルダにあるプロジェクト間でコードを利用するときは、サブフォルダの Cargo.toml に以下のように記載することで、`my_libs::hoge`のような書き方で使えるようになる。なお、以前は`extern crate my_libs`という記述が必要だったが、現在は不要である。
+
+```toml
+[dependencies]
+my_libs = { path = "../my_libs" }
+```
+
+(詳細は必要になったときに以下を読む)
+https://atmarkit.itmedia.co.jp/ait/articles/2207/22/news002.html
 
 ## Trait
 
