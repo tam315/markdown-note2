@@ -1192,3 +1192,91 @@ fn notify(item: impl Summary) {
   - ある型の値をユーザーフレンドリーな文字列形式で出力するためのもの。`println!`の`{}`で表示することができる。
 - Debug trait
   - ある型の値をデバッグ用の文字列形式で出力するためのもの。`println!`の`{:?}`や`{:#?}`で表示することができる。後者はより見やすい形式で表示する。
+
+## テスト
+
+前提として、テストの対象とする関数やメソッドは、通常はライブラリクレートとして独立させておく必要があるらしい（このあたりちょっとよくわかってない）。
+
+### ユニットテスト
+
+ユニットテストは`cargo test`で実行される。
+
+ユニットテストの関数には`#[test]`属性をつける。
+
+```rust
+#[test]
+fn it_works() {
+    assert_eq!(2 + 2, 4);
+}
+```
+
+テストコードはテスト時のみコンパイルされるよう、`#[cfg(test)]`を付与したモジュール内にテスト関数を書くことが多い。
+
+```rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn it_works() {
+        assert_eq!(2 + 2, 4);
+    }
+}
+```
+
+アサーションには以下のようなものがある。
+
+```rust
+assert!(2 == 2);
+assert_eq!(2 + 2, 4);
+assert_ne!(2 + 2, 5);
+```
+
+パニックが発生することを期待したテストを書くときは`#[should_panic]`属性を使う。
+
+```rust
+#[test]
+#[should_panic]
+fn it_works() {
+    panic!();
+}
+```
+
+### 統合テスト
+
+src フォルダと同じ階層に、テスト実行時にのみ参照される特別なフォルダである`tests`フォルダを作成し、その中にテストファイルを作成する。このファイルもまた`cargo test`で実行される。
+
+```rust
+// tests/my_integration_test.rs
+
+// lib.tsに定義および公開した関数
+use my_package_name::adder;
+
+#[test] // #[cfg(test)]は不要
+fn add_success() {
+    assert_eq!(adder(5, 4), 9)
+}
+```
+
+### Doc テスト
+
+ドキュメント内に記載したコードをテストできる。`cargo test (--doc)`で実行される。ドキュメントと実装の乖離を防ぐためにも有用。
+
+`````rust
+
+````rust
+/// 与えられた二つの数値を足し合わせて返す
+///
+/// # Arguments
+/// * `a` - 1st number
+/// * `b` - 2nd number
+///
+/// # Examples
+///
+/// ```
+/// let a = 5;
+/// let b = 4;
+/// assert_eq!(9, my_project_name::adder(a, b));
+/// ```
+pub fn adder(x: i32, y: i32) -> i32 {
+    x + y
+}
+`````
