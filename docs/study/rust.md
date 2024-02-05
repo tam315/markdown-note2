@@ -1186,7 +1186,7 @@ fn notify(item: impl Summary) {
 }
 ```
 
-### 代表的な Trait
+代表的な Trait には以下のようなものがある。
 
 - Display trait
   - ある型の値をユーザーフレンドリーな文字列形式で出力するためのもの。`println!`の`{}`で表示することができる。
