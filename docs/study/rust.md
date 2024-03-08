@@ -294,9 +294,14 @@ for number in (1..4) {
 - rust の値はデフォルトでここに保持される
 - 格納対象
   - 整数型、浮動小数点型、論理値型、参照
-  - Tuple、Array、Slice、Struct
-    - これらが参照する先の値が最終的にヒープメモリに存在するとしても、これらが直接保持する値はすべてスタックメモリ上にある
-    - e.g. Array が Vec を内包するとしても Array は Vec のメタデータしか持たない。また、そのメタデータ群はスタックメモリ上に一直線に隙間なく並んでいる
+  - Array、Tuple、Struct
+    - ただし、参照先はヒープメモリ上に存在する可能性がある
+      - Array が Vec を内包する場合、Array は Vec のメタデータ群を持つことになり、そのメタデータ群はスタックメモリ上に一直線に隙間なく並んでいる。
+  - `&T`スライス (ptr,len)
+    - ただし、参照先はヒープメモリ上に存在する可能性がある
+  - `Box<T>`, `Vec<T>`, `String` のメタデータ(ptr, len, cap)
+    - メタデータは変数とバインドされ、所有権管理に利用される
+    - 変数が破棄されれば[Drop trait](https://doc.rust-lang.org/1.30.0/book/first-edition/drop.html)の働きによりヒープメモリも破棄される
 
 ### Heap memory / ヒープメモリ
 
@@ -305,8 +310,6 @@ for number in (1..4) {
 - 🟢 サイズに上限がない
 - 格納対象
   - `Box<T>`, `Vec<T>`, `String` のデータ本体
-    - メタデータ(ptr, len, cap)については Stack に格納され、変数とバインドされ、所有権管理に利用される
-    - 変数が破棄されれば[Drop trait](https://doc.rust-lang.org/1.30.0/book/first-edition/drop.html)の働きによりヒープメモリも破棄される
 
 ### Vector | Array | Slice とメモリの関係
 
@@ -320,34 +323,37 @@ for number in (1..4) {
 メモリ使用量は以下の通り
 
 ```rust
-// プリミティブな型のバイト数 (あたりまえ)
-assert_eq!(1, std::mem::size_of::<i8>());
-assert_eq!(4, std::mem::size_of::<i32>());
-assert_eq!(8, std::mem::size_of::<i64>());
+// プリミティブな型のバイト数は、そのサイズになる。当たり前。
+assert_eq!(std::mem::size_of::<i8>(), 1);
+assert_eq!(std::mem::size_of::<i32>(), 4);
+assert_eq!(std::mem::size_of::<i64>(), 8);
 
-// 前提として、64bitアーキテクチャだとメモリの単位は8byte
+// 前提として、64bitアーキテクチャだとメモリの単位は8バイトである。
 let pointer_size = std::mem::size_of::<usize>();
 assert_eq!(pointer_size, 8);
 
-// Vectorのメタデータ部分のメモリ占有量は常に8*3byte (ptr,len,cap)
-// なおデータ部分のメモリ占有量は内包する要素の種類と数によって定まるが、ここでは割愛
-assert_eq!(pointer_size * 3, std::mem::size_of::<Vec<u8>>());
-assert_eq!(pointer_size * 3, std::mem::size_of::<Vec<i32>>());
-assert_eq!(pointer_size * 3, std::mem::size_of::<Vec<String>>());
+// Arrayのメモリ占有量は内容物の総計になる。メタデータは存在しない。
+assert_eq!(std::mem::size_of::<[i8; 10]>(), 1 * 10);
+assert_eq!(std::mem::size_of::<[i32; 10]>(), 4 * 10);
+assert_eq!(std::mem::size_of::<[Vec<i32>; 10]>(), pointer_size * 3 * 10);
 
-// Arrayのメモリ占有量は単に内容物の総計
-// なおArrayにメタデータは存在しない
-// TupleやStructも考え方はほぼ同じ。AlignmentやPaddingの話があるのできっちり合計値とはならない場合もあるが。
-assert_eq!(1 * 10, std::mem::size_of::<[i8; 10]>());
-assert_eq!(4 * 10, std::mem::size_of::<[i32; 10]>());
-assert_eq!(pointer_size * 3 * 10, std::mem::size_of::<[Vec<i32>; 10]>());
+// Tuple,Structのメモリ占有量も、基本的に内容物の総計になる。メタデータは存在しない。
+// AlignmentやPaddingが発生するので、きっちり合計値とはならないこともある。
+  assert_eq!(std::mem::size_of::<(Vec<String>, i64)>(), 32);
+  assert_eq!(std::mem::size_of::<(Vec<String>, i64, i8, i8)>(), 40); // padding発生
 
-// Sliceのメモリ占有量は常に8*2byte (ptr,len)
-// Sliceの型は配列から作ろうがVecから作ろうが常に`&[T]`になる点に留意せよ
-assert_eq!(pointer_size * 2, std::mem::size_of::<&[i8]>());
-assert_eq!(pointer_size * 2, std::mem::size_of::<&[i32]>());
-assert_eq!(pointer_size * 2, std::mem::size_of::<&str>());
-assert_eq!(pointer_size * 2, std::mem::size_of::<&[String]>());
+// Sliceのメモリ占有量は常に8*2byte (ptr,len)になる。
+// Sliceの型は配列から作ろうがVecから作ろうが`&[T]`になる点に留意せよ。
+assert_eq!(std::mem::size_of::<&[i8]>(), pointer_size * 2);
+assert_eq!(std::mem::size_of::<&[i32]>(), pointer_size * 2);
+assert_eq!(std::mem::size_of::<&str>(), pointer_size * 2);
+assert_eq!(std::mem::size_of::<&[String]>(), pointer_size * 2);
+
+// Vectorのメタデータ部分のメモリ占有量は常に8*3byte (ptr,len,cap)になる。
+// なおデータ部分のメモリ占有量は内包する要素の種類と数によって定まるが、ここでは割愛する。
+assert_eq!(std::mem::size_of::<Vec<u8>>(), pointer_size * 3);
+assert_eq!(std::mem::size_of::<Vec<i32>>(), pointer_size * 3);
+assert_eq!(std::mem::size_of::<Vec<String>>(), pointer_size * 3);
 ```
 
 ## 所有権
