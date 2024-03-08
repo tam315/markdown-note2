@@ -301,10 +301,10 @@ for number in (1..4) {
     - ただし、参照先はヒープメモリ上に存在する可能性がある
       - Array が Vec を内包する場合、Array は Vec のメタデータ群を持つことになり、そのメタデータ群はスタックメモリ上に一直線に隙間なく並んでいる。
   - スライス/`&[T]`
-    - 実体は{ptr,len}をもつメタデータである
+    - 実体は(ptr,len)をもつメタデータである
     - ただし、参照先はヒープメモリ上に存在する可能性がある
   - Box/`Box<T>`, Vector/`Vec<T>`, String/`String`
-    - 実体は{ptr, len, cap}をもつメタデータである
+    - 実体は(ptr, len, cap)をもつメタデータである
     - メタデータは変数とバインドされ、所有権管理に利用される
     - 変数が破棄されれば[Drop trait](https://doc.rust-lang.org/1.30.0/book/first-edition/drop.html)の働きにより参照先のデータも破棄される
 
