@@ -648,8 +648,7 @@ RUST_BACKTRACE=ful cargo run # かなり詳細に見たいとき
 
 ### Result
 
-- プログラムを止めるまでもないエラーの場合、`Result`型が使われる。
-- `Result`, `Ok`, `Err`は接頭子をつけずに使える。
+プログラムを止めるまでもないエラーの場合、`Result`型が使われる。なお、`Result`, `Ok`, `Err`は接頭子をつけずに使える。
 
 ```rust
 enum Result<T, E> {
@@ -658,36 +657,43 @@ enum Result<T, E> {
 }
 ```
 
-手動で Result の中身を取り出す方法
+Result の中身を取り出す方法は以下の通り。
 
 ```rust
 use std::fs::File;
 use std::io::Error;
 
-// シャドーイングしながら中身を取り出す。
-// なお型注釈はなくてもいい。
-let f: Result<File, Error> = File::open("hello.txt");
-let f = match f {
+let result = File::open("hello.txt");
+
+// 値が必要、かつ失敗した場合の処理は書きたくないとき
+let f = File::open("hello.txt")? // 自身の呼び出し元に「エラーの委譲」を行う
+let f = File::open("hello.txt").unwrap(); // 失敗したら panic する
+let f = File::open("hello.txt").expect("Failed to open hello.txt"); // 失敗したら panic する (メッセージを添えて)
+
+// 値が必要、かつ失敗した場合の処理を書きたいとき 1
+let f = match result {
   Ok(file) => file,
-  Err(error) => panic!("{:?}", error),
+  Err(e) => panic!("{:?}", e),
+};
+
+// 値が必要、かつ失敗した場合の処理を書きたいとき 2
+let f = result.unwrap_or_else(|e| {
+  panic!("{:?}", e)
+});
+
+// 値は不要、かつ失敗した場合の処理を書きたいとき
+if let Err(e) = result {
+  panic!("{:?}", e)
 };
 ```
 
-自動で Result の中身を取り出す方法 (前述の省略記法)
-
-```rust
-// expect は unwrap とほぼ同じだが、わかりやすいメッセージを表示することができる点で異なる
-let f = File::open("hello.txt").unwrap();
-let f = File::open("hello.txt").expect("Failed to open hello.txt");
-```
-
-より複雑な場合分けにはマッチガードを使う
+より複雑な場合分けにはマッチガードを使う。
 
 ```rust
 // 存在すればそのファイルを、存在しない場合は作成したファイルを返す例
-let f = File::open("hello.txt");
-let f = match f {
-    Ok(existingFile) => existingFile,
+let f = match result {
+    Ok(existing_file) => existing_file,
+
     // `ref`は所有権を奪わないためのおまじない
     Err(ref error) if error.kind() == ErrorKind::NotFound => match File::create("hello.txt") {
         Ok(newFile) => newFile,
@@ -695,30 +701,11 @@ let f = match f {
             panic!("Tried to create file but there was a problem: {:?}", e)
         }
     },
+
     Err(error) => {
         panic!("There was a problem opening the file: {:?}", error)
     }
 };
-```
-
-エラーの処理を関数の呼び出し元にまかせるには、関数の返り値の型を Result にする。これを**エラーの委譲**という。
-
-```rust
-fn open_file() -> Result<File, Error> {
-    match File::open("hello.txt") {
-        Ok(file) => return Ok(file),
-        Err(e) => return Err(e),
-    };
-}
-```
-
-エラーの委譲は`?`演算子を使って簡潔に記載できる様になっている。
-
-```rust
-fn open_file() -> Result<File, Error> {
-    let f = File::open("hello.txt")?;
-    Ok(f)
-}
 ```
 
 ### panic と Result の使い分け方
