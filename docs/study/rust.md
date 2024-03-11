@@ -6,7 +6,18 @@
 - `///`を使うと[ドキュメンテーションコメント](https://doc.rust-lang.org/rust-by-example/meta/doc.html)になる
   - マークダウンで書いたコメントが HTML ドキュメントになる
 
+## Cargo
+
+cargo は以下の全てをこなす、何でもできるひと。
+
+- Package manager (like npm)
+- Build system (like `make`)
+- Test runner
+- Docs generator
+
 ## 変数と可変性
+
+Rust では変数はデフォルトで不変である。これは、安全、並列性、スピードのためである。
 
 - 変数
   - 不変 `let x=5`
@@ -24,7 +35,7 @@
 
 - 前に定義した変数と同じ名前の変数を新しく宣言して上書きすること
 - ブロック内で使用した場合はブロック内でのみ有効
-- `mut`はあくまで同じ型だが、シャドーイングは型を変更できる
+- シャドーイングは型を変更できるという点で、`mut`とは異なる。
 - うまく使うとコードを可読性を向上させたり、凡ミスの可能性を減らしたりできる
 
 ```rust
@@ -40,7 +51,7 @@ let v = 3;
 
 ## データ型
 
-大きくわけてスカラー型と複合型がある。
+大きくわけてスカラー型と複合型(Tuple, Array)がある。
 
 ### スカラー型
 
@@ -49,9 +60,13 @@ let v = 3;
 - 整数
   - `i8`, `u8`, `i16`, `u16`, `i32`, `u32`, `i64`, `u64`, `isize`, `usize`
   - 基準型は`i32`
+  - `usize`はプラットフォームに依存する。プロセスで使用するメモリアドレスをどこでも表せる。
+  - `isize`もプラットフォームに依存する。Array の上限数と等しい。メモリアドレス間の差分を表すのに使ったりする。
+  - 一部しかサポートしないプラットフォームもあるので注意
 - 浮動小数点数
   - `f32`(単精度浮動小数点数), `f64`(倍精度浮動小数点数)
   - 基準型は`f64`
+  - 一部のプラットフォームでは f64 はマジで遅くなるので注意
 - 論理値型
 - 文字型
   - `char` 型
@@ -61,8 +76,11 @@ let v = 3;
     - 最大 21-bit なので、キャストするときはそれ以上の型でないと表現しきれない点に注意
     - https://lets-emoji.com/emojilist/emojilist-1/
   - よって世間一般的な「文字」とは離れた性質のものも含まれる(e.g. ゼロ幅スペース)
+  - ほとんどの場所では UTF-8(≒ 文字列)を使うので、あまり使うことはない
 
-### Tuple 型（複合型）
+### Tuple
+
+アリティ（Tuple の要素数）は最大で 12 までで、それを超えると機能が制限される。
 
 ```rust
 let tup: (i32, f64, u8) = (500, 6.4, 1);
@@ -76,10 +94,13 @@ let (x, y, z) = tup;
 let five_hundred = x.0;
 ```
 
-### Array 型(複合型)
+### Array
+
+要素数は最大で 32 までで、それを超えると機能が制限される。
 
 ```rust
 let a = [1, 2, 3, 4, 5];
+let a = [123, 3]; // 123を3つ
 
 // 添字を使ったアクセス
 let first = a[0];
@@ -94,7 +115,7 @@ let b: &[i32] = &a;
 - 可変長が必要な場合はコレクションライブラリ（e.g. Vector 型）を使う必要がある
 - Array の終端を超えたアクセスはパニックになる
 
-### 型推論
+## 型推論
 
 複数の型が推論される可能性がある場合、型注釈が必須。
 
@@ -139,9 +160,9 @@ let guess: u32 = "42".parse().expect("Not a number!");
 
 ## 関数
 
-- 命名規則は小文字のスネークケース
-- `expected hogehoge, found "()"` というエラーは、return しわすれたときによく出る
-  - if 式や while 式自体が空の Tuple`()`を返すことに起因している
+関数は小文字のスネークケースで命名する。可変長の引数はサポートされない（マクロでは利用可能）。
+
+Tips として、`expected hogehoge, found "()"` というエラーは、return しわすれたときによく出るので覚えておくと良い。これは、if 式や while 式自体が空の Tuple`()`を返すことに起因している。
 
 ```rust
 // シンプルな関数
@@ -182,6 +203,8 @@ fn say_hello2() -> i32 {
 
 ## フロー制御
 
+Rust では条件式を`()`で囲む必要はない。 `{`までの間にある記述が条件式として扱われる。
+
 ### if
 
 ```rust
@@ -194,7 +217,7 @@ if age >= 35 {
 }
 ```
 
-式なので代入もできる。その際はセミコロンを省略すること。
+if は式なので代入もできる。その際はセミコロンを省略すること。return は使えない、全てのブロックで同じ型を返さなければならない点に注意。
 
 ```rust
 let num = if true {
@@ -221,14 +244,16 @@ println!("{}は{}です。", letter, str);
 
 ### for
 
-- 初期化、条件、繰り返し前処理のような構文はない
-- `break` が使える
+for 文には従来の言語のような初期化、条件、繰り返し前処理のような構文はない。`break` が使える。
+
+`iter()` はイテレータを返す。配列のように順番があるものは順番通りに、Map のようなものは順番がないものはランダムに取り出される。
 
 ```rust
-let numbers = [10, 20, 30, 40, 50];
-for thisNumber in numbers.iter() {
+for thisNumber in [10, 20, 30, 40, 50].iter() {
     println!("the value is: {}", thisNumber);
 }
+for thisNumber in 0..50 {} // 0から49まで
+for thisNumber in 0..=50 {} // 0から50まで
 ```
 
 ### loop
@@ -239,8 +264,7 @@ loop {
 }
 ```
 
-- `break`が使える
-  - 唯一、`break` 時に値を返すこともできる。返さなくてもいい。
+loop では`break`や`continue`が使える。入れ子のループからそれらを行うときは、識別のために[tick identifier](https://dhghomon.github.io/easy_rust/Chapter_26.html)が使える。また、`break` 時に値を返すこともできる。
 
 ```rust
 let number = loop {
@@ -250,7 +274,7 @@ let number = loop {
 
 ### while
 
-- `break` が使える
+基本的な動きは loop と同じ。
 
 ```rust
 while number != 0 {
@@ -363,11 +387,11 @@ assert_eq!(std::mem::size_of::<Vec<String>>(), pointer_size * 3);
 
 ## 所有権
 
-所有権は、Rust がガベージコレクションを使用せずにメモリ安全性を保証する方法のこと。所有権のルールは以下の通り。
+所有権は、Rust がガベージコレクションを使用せずにメモリ安全性を保証する方法のこと。所有権のルールは以下の 3 つ。
 
-- 各値は、その値の所有者という一つの変数を持つ
-- ある時点で所有権を持つことができるのは一つの変数のみ
-- 所有者がスコープから外れると、値は破棄される
+1. 値はその値の所有者を持つ。所有者のいないメモリ上のデータは無意味であり、存在しないのと同じである。
+2. ある時点で所有権を持つことができるのは一つの変数のみである。代入したり関数に渡したりすると、元の変数は即時に無効化され使えなくなる。
+3. 所有者がスコープから外れると、値は破棄される。具体的には、もしあればデストラクタが実行され、ヒープメモリは開放され、スタックメモリはポップされる。
 
 ### 所有権の移動 / Move
 
@@ -391,22 +415,22 @@ Copy Trait がないものは所有権が移転する。対象は以下の通り
 
 ### 参照と借用
 
-所有権を移動せずに値を使いたい場合には、変数そのものではなく変数への(可変|不変)参照を与えることで、所有権ではなくアクセス権だけを与えることができる。この仕組みを借用という。
+所有権を移動せずに値を使いたい場合には、変数そのものではなく変数への(可変|不変)参照を与えることで、所有権は渡さずに、アクセス権だけを渡すことができる。この仕組みを借用という。
+
+`.`を使う場合は自動で参照外しが行われるので、明示的に`*`を使う必要はない。ただし、値を丸ごと書き換える場合などには必要となる。
 
 ```rust
 fn main() {
-    let greeting = "hello".to_string();
-    let length = count_string(&greeting);
-    println!("{}の長さは{}です", greeting, length);
+    let mut greeting = "hello".to_string();
+    add_world(&mut greeting);
+    println!("{}", greeting); // hello world
 }
 
-fn count_string(string_to_count: &str) -> usize {
-  // ここで新たに生まれた`string_to_count`に、`&str`がバインドされる
+fn add_world(original_string: &mut String) {
+    original_string.push_str(" world");
 
-  return string_to_count.len();
-
-  // `string_to_count`はここで破棄されるが、
-  // しょせん参照にすぎないのでもとの値に影響はない。
+    // 上書きなど`.`を使わないときには明示的な参照外しが必要
+    *original_string = "hello world".to_string();
 }
 ```
 
@@ -446,7 +470,7 @@ let numbers = [1, 2, 3, 4, 5];
 let numbers_slice: &[i32] = &numbers[1..3]; // -> [2, 3]
 ```
 
-## Struct / 構造体
+## Struct
 
 ```rust
 struct User {
@@ -482,8 +506,11 @@ println!("rect is {:?}", rect);
 
 ### メソッドと関連関数
 
-- メソッド / Methods
-- 関連関数 / Associated functions
+メソッド / Methods は self を引数にとる。インスタンスメソッドのようなもの。
+
+関連関数 / Associated functions は self を引数にとらない。クラスメソッドのようなもの。
+
+構造体にはクラスのような「継承」の概念はない。なぜなら、トレイトを使うほうが優れていると判断したからだ。
 
 ```rust
 struct Rectangle {
@@ -492,17 +519,17 @@ struct Rectangle {
 }
 
 impl Rectangle {
-  // メソッド(selfをとる)
-  fn can_hold(&self, other: &Rectangle) -> bool {
-    self.width > other.width && self.height > other.height
-  }
-
-  // 関連関数(selfを取らない)
-  fn new() -> Rectangle {
-    Rectangle {
+  // 関連関数
+  fn new() -> Self {
+    Self {
       width: 10,
       height: 10,
     }
+  }
+
+  // メソッド
+  fn can_hold(&self, other: &Rectangle) -> bool {
+    self.width > other.width && self.height > other.height
   }
 }
 ```
@@ -519,6 +546,61 @@ let address = Ipv4(192, 168, 1, 100);
 
 - Unit-like 構造体
   - 構造体に値がまったくないときやトレイトの実装で役立つ？詳細不明
+
+## Trait
+
+Trait とは特性や特質のこと。複数の型にまたがって共通の振る舞いを定義するための仕組みである。Composition over Inheritance という考え方に基づいている。なお、Trait は構造体のみならず組み込み型に対しても実装できる。
+
+```rust
+struct Position {
+    x: f64,
+    y: f64,
+}
+
+pub trait Summary {
+    fn summarize(&self) -> String;
+}
+
+impl Summary for Position {
+    fn summarize(&self) -> String {
+        format!("x: {}, y: {}", self.x, self.y)
+    }
+}
+```
+
+直接実装するのと Trait を介して実装することの違いは、Trait を介せばジェネリック関数を活用できるようになるという点である。Trait を持つ構造体をなんでも受け取るジェネリック関数は以下のように定義することができる。
+
+```rust
+fn notify<T: Summary>(item: T) {
+    println!("Breaking news! {}", item.summarize());
+}
+// 以下のようにも書ける
+fn notify(item: impl Summary) {
+    println!("Breaking news! {}", item.summarize());
+}
+```
+
+Trait にはデフォルト実装を持たせることもできる。
+
+```rust
+pub trait Summary {
+    fn summarize(&self) -> {
+      println!("This is default summary...");
+    }
+}
+impl Summary for Position {} // デフォルト実装を生かしたいときは単に実装を書かなければ良い
+```
+
+構造体は継承関係を持つことができる。Trait A が祖先に Trait B, Trait C を持つ場合には、Trait A を実装した型は、Trait A/B/C のすべてのメソッドを実装する必要がある。
+
+代表的な Trait には以下のようなものがある。
+
+- Copy trait
+  - 代入時などに値のコピーが行われるようにする
+- Display trait
+  - ある型の値をユーザーフレンドリーな文字列形式で出力するためのもの。`println!`の`{}`で表示することができる。
+- Debug trait
+  - ある型の値をデバッグ用の文字列形式で出力するためのもの。`println!`の`{:?}`や`{:#?}`で表示することができる。後者はより見やすい形式で表示する。
 
 ## Enum
 
@@ -849,11 +931,13 @@ let row = vec![
 
 ### String
 
-Rust の文字列は 2 種類ある。
+Rust の文字列にはいくつかの種類ある。
 
-まず、**String literal**(`str`)型がある。これは、Rust で唯一の組み込みの文字列型である。組み込みとは、言語の核心部分に統合されている、という意味である。String literal はバイナリに組み込まれる完全に変更不可能なものであり、実のところ String literal はそこへの参照としてしか存在できない性質があるため、実際のコードでは **String slice**(`&str`)型として使用される。
+まず、**String literal**(`str`)型がある。これは、Rust で唯一の組み込みの文字列型である。組み込みとは、言語の核心部分に統合されている、という意味である。String literal はバイナリに組み込まれる完全に変更不可能なものであり、実のところ String literal はそこへの参照(slice)としてしか存在できない。
 
-つぎに、**String**(`String`)型がある。これはライブラリにより提供されており、拡張、変更、所有が可能である。
+次に、**String slice**(`&str`)型がある。これは String や String literal への参照である。ptr, len をもつ。
+
+最後に、**String**(`String`)型がある。これはライブラリにより提供されており、拡張、変更、所有が可能である。ptr, len, cap をもつ。
 
 rust の世界で String と言った場合、String 型または String slice を指すことが多い。どちらも UTF-8 で制御される。
 
@@ -906,20 +990,13 @@ rust の内部では文字列は byte(`vec<u8>`)でとして保持されてい�
 ["न", "म", "स्", "ते"]
 ```
 
-String へのインデックスを使ったアクセスは可能だが、よいアイディアではないのでやめておいたほうがいい。
+String に対して繰り返し処理をしたい場合は以下のようにする。イテレータとして取り出した後は、for 文で回すことも可能だし、`.nth()`を使ってインデックスでアクセスすることも可能である。String に対して直接インデックスを使ったアクセスをすることは可能ではあるものの、良いアイディアとは言えない。
 
 ```rust
-let s1 = "こんちわ".to_string();
-let s = &s1[0..3]; // sは&strになる("こ")
-```
-
-String に対して繰り返し処理をしたい場合は以下のようにする。
-
-```rust
-// Unicodeスカラ値として取り出して繰り返す
+// Unicodeスカラ値の単位で取り出して繰り返す
 for c in "नमस्ते".chars() {}
 
-// byteとして取り出して繰り返す
+// byte単位で取り出して繰り返す
 for b in "नमस्ते".bytes() {}
 
 // graphene clustersで取り出して繰り返すには外部ライブラリが必要
@@ -1053,6 +1130,21 @@ Binary Crate を作成したい場合は、Crate Root として`src/main.rs` を
 
 Library Crate を作成したい場合は、Crate Root として`src/lib.rs` を作成する。Library Crate は 1 つだけしか作れない。ライブラリなので`cargo run`しても実行はできず、`cargo build`でのコンパイルが必要となる。
 
+`lib.rs`にロジックを書いて、それを`main.rs`から呼び出す構成は、よくあるパターン。
+
+```rust
+// main.rs
+fn main() {
+    // my_crateはCargo.tomlに記載されているパッケージ名を指す
+    my_crate::my_function();
+}
+
+// lib.rs
+pub fn my_function() {
+    println!("Hello, world!");
+}
+```
+
 ### Packages
 
 Package は一つ以上の crate で構成され、なんらかのまとまった機能を提供する。`cargo.toml`を含み、ここには crate のビルド方法が書かれている。
@@ -1169,48 +1261,6 @@ my_libs = { path = "../my_libs" }
 
 (詳細は必要になったときに以下を読む)
 https://atmarkit.itmedia.co.jp/ait/articles/2207/22/news002.html
-
-## Trait
-
-Trait とは特性や特質のこと。複数の型にまたがって共通の振る舞いを定義するための仕組みである。Java のインターフェースと似たようなもの。
-
-Trait は以下のように定義する。
-
-```rust
-pub trait Summary {
-    fn summarize(&self) -> String;
-}
-```
-
-Trait を構造体に実装するには以下のようにする。
-
-```rust
-struct Position {
-    x: f64,
-    y: f64,
-}
-
-impl Summary for Position {
-    fn summarize(&self) -> String {
-        format!("x: {}, y: {}", self.x, self.y)
-    }
-}
-```
-
-Trait を持つ構造体をなんでも受け取る関数を定義するには以下のようにする。
-
-```rust
-fn notify(item: impl Summary) {
-    println!("Breaking news! {}", item.summarize());
-}
-```
-
-代表的な Trait には以下のようなものがある。
-
-- Display trait
-  - ある型の値をユーザーフレンドリーな文字列形式で出力するためのもの。`println!`の`{}`で表示することができる。
-- Debug trait
-  - ある型の値をデバッグ用の文字列形式で出力するためのもの。`println!`の`{:?}`や`{:#?}`で表示することができる。後者はより見やすい形式で表示する。
 
 ## テスト
 
