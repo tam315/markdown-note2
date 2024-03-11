@@ -232,14 +232,23 @@ let num = if true {
 パターンマッチングが行える。詳細後述。
 
 ```rust
-let letter = 'A';
-let str = match letter {
-    'A' => "Aです",
-    'B' | 'C' | 'D' => "B、C、Dのいずれかです",
-    '0'..='9' | 'A'..='F' => "16進数でつかえます",
-    _ => "いずれでもない文字です",
+let number = 1;
+let result = match number {
+    1 => "1です",
+    2 => "2です",
+    _ => "その他です"
 };
-println!("{}は{}です。", letter, str);
+```
+
+アームの左辺に変数を置いたうえで、if 文を使った分岐をすることもできる。
+
+```rust
+let number = 1;
+let result = match number {
+    x if x < 10 => "10より小さい",
+    x if x < 20 => "20より小さい",
+    _ => "20以上"
+};
 ```
 
 ### for
@@ -574,7 +583,7 @@ impl Summary for Position {
 fn notify<T: Summary>(item: T) {
     println!("Breaking news! {}", item.summarize());
 }
-// 以下のようにも書ける
+// 以下のようにも書ける？
 fn notify(item: impl Summary) {
     println!("Breaking news! {}", item.summarize());
 }
@@ -604,56 +613,46 @@ impl Summary for Position {} // デフォルト実装を生かしたいときは
 
 ## Enum
 
-- 列挙した値を列挙子 （Variant）とよぶ
-- 構造体はフィールドの集合に対して AND の関係であり、列挙型は OR の関係である
-- 列挙子ごとに型と値を持つことができる
-
-```rust
-// 定義
-enum IpAddrKind {
-    V4,
-    V6,
-}
-
-// 代入
-let maybe_ip_v4 = IpAddrKind::V4;
-
-// 活用例
-match maybe_ip_v4 {
-    IpAddrKind::V4 => println!("v4です"),
-    IpAddrKind::V6 => println!("v6です"),
-}
-```
-
-値を持たせたり、メソッドを実装することができる。
+列挙した値を列挙子(Variant)とよぶ。構造体はフィールドの集合に対して AND の関係であり、列挙型は OR の関係であるといえる。Rust の Enum はメソッドを持てたり、列挙子ごとに値を持つことができる点で強力である。
 
 ```rust
 enum SampleEnum {
     Quit,
-    Position { x: i32, y: i32 },
-    Message(String),
-    Color(i32, i32, i32),
+    Message(String), // 単一の型
+    Color(String, i32), // 複数の型(Tuple)
+    Position { x: i32, y: i32 }, // 匿名の構造体
 }
 
 impl SampleEnum {
     fn output_message(self: &Self) -> String {
-        match self {
-            SampleEnum::Message(str) => "Message is: ".to_string() + str,
-            _ => "other".to_string(),
-        }
+        "Do something...".to_string()
     }
 }
+```
 
-let s = SampleEnum::Message("hello!".to_string());
+特定の列挙子だった場合にだけ処理をしたいときには、`if let`を使うことができる。
 
-println!("{}", s.output_message()) // -> `Message is hello!`
+```rust
+let maybe_message = SampleEnum::Message("hello".to_string());
+if let SampleEnum::Message(message) = maybe_message {
+    println!("message is {}", message);
+}
+```
+
+複数の列挙子に対して処理を行いたいときには、`match`を使うことができる。
+
+```rust
+let maybe_message = SampleEnum::Message("hello".to_string());
+match maybe_message {
+    SampleEnum::Message(message) => println!("message is {}", message),
+    SampleEnum::Quit => println!("quit"),
+    _ => println!("not a message"),
+}
 ```
 
 ### Option 型
 
-- Null になりうる値は Option 型として使う必要がある。
-- 値を取り出すにはパターンマッチングか unwrap メソッドなどを使う
-- Option, Some 及び None は接頭子なしで使用できる。
+Null になりうる値は Option 型として使う必要がある。値を取り出すにはパターンマッチングか unwrap メソッドなどを使う。Option, Some 及び None は接頭子なしで使用できる。
 
 ```rust
 // Option型の定義
@@ -666,6 +665,10 @@ enum Option<T> {
 let mut maybe_number: Option<i32>;
 maybe_number = None;
 maybe_number = Some(5);
+
+// 便利な関数
+maybe_number.is_some(); // -> bool
+maybe_number.is_none(); // -> bool
 ```
 
 ### Result 型
@@ -770,23 +773,27 @@ use std::io::Error;
 
 let result = File::open("hello.txt");
 
-// 値が必要、かつ失敗した場合の処理は書きたくないとき
-let f = File::open("hello.txt")? // 自身の呼び出し元に「エラーの委譲」を行う
-let f = File::open("hello.txt").unwrap(); // 失敗したら panic する
-let f = File::open("hello.txt").expect("Failed to open hello.txt"); // 失敗したら panic する (メッセージを添えて)
+// あらかじめ成否を判定したいとき
+if result.is_ok() { /* 成功したとき固有の処理 */ }
+if result.is_err() { /* 失敗したとき固有の処理 */ }
 
-// 値が必要、かつ失敗した場合の処理を書きたいとき 1
+// 結果が必要、かつリカバリは不要なとき
+let f = result? // 自身の呼び出し元に「エラーの委譲」を行う
+let f = result.unwrap(); // 失敗したら panic する
+let f = result.expect ("Failed to open hello.txt"); // 失敗したら panic する (メッセージを添えて)
+
+// 結果が必要、かつリカバリが必要なとき 1
 let f = match result {
   Ok(file) => file,
   Err(e) => panic!("{:?}", e),
 };
 
-// 値が必要、かつ失敗した場合の処理を書きたいとき 2
+// 結果が必要、かつリカバリが必要なとき 2
 let f = result.unwrap_or_else(|e| {
   panic!("{:?}", e)
 });
 
-// 値は不要、かつ失敗した場合の処理を書きたいとき
+// 結果は不要、かつリカバリが必要なとき
 if let Err(e) = result {
   panic!("{:?}", e)
 };
@@ -876,12 +883,8 @@ Collections とは、複数の値を可変長で保持できる型である。Ar
 Vector は同じデータ型の値を複数持つことのできるコレクションで、型は`Vec<T>`である。異なるデータ型を混在させることはできない。また、値の順序が維持される。
 
 ```rust
-// 初期値がない場合は型注釈が必要
-let v: Vec<i32> = Vec::new();
-
-// マクロを使って初期値が設定できる
-// この場合は型注釈は不要
-let v = vec![1, 2, 3];
+let v: Vec<i32> = Vec::new(); // 初期値がない場合は型注釈が必要
+let v = vec![1, 2, 3]; // 初期値がある場合は型注釈は不要
 ```
 
 値の追加には`push`メソッドを使う。
@@ -898,15 +901,17 @@ let third = &v[2];
 let third = v.get(2);
 ```
 
-反復処理を行う際は参照(`&Vec<T>`)を使ってループする。for に値をそのまま与えると所有権が移転するため、必要に応じて参照を使う。
+反復処理を行う際は参照(`&Vec<T>`)を使ってループする。for に値をそのまま与えると所有権が移転するため。
 
 ```rust
 let v = vec![1,2,3];
+
+// 不変
 for i in &v {
   println!("{}", i);
 }
 
-// 値の変更をしたい場合はDereference operator(*)を使う
+// 可変
 let mut v = vec![1,2,3];
 for i in &mut v {
   *i += 50;
