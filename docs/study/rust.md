@@ -338,169 +338,6 @@ for number in (1..4) {
 }
 ```
 
-## メモリのはなし
-
-- 参考
-  - https://doc.rust-lang.org/1.30.0/book/first-edition/the-stack-and-the-heap.html (なぜか現行版では消されている)
-  - https://qiita.com/k-yaina60/items/26bf1d2e372042eff022
-  - https://cipepser.hatenablog.com/entry/rust-memory
-  - https://doc.rust-lang.org/std/primitive.slice.html
-
-### Static memory / 静的メモリ
-
-- 生成された実行バイナリに含まれる
-- プログラムの開始から終了までずっと存在し続ける
-- 静的領域 / static memory / rodata (read-only data) segment などと呼ばれる
-- スタックメモリでもヒープメモリでもない特殊な領域
-- 格納対象
-  - 文字列リテラル (`str`)
-  - `static`をつけて宣言した値
-    - e.g. `static FOO: usize = 42;`
-
-### Stack memory / スタックメモリ
-
-- 🟢 速い
-- 🔴 呼び出し元はローカル（単一の関数内）に限られる
-- 🔴 サイズに上限がある
-- Stack Frame とも呼ばれる
-- rust の値はデフォルトでここに保持される
-- 格納対象
-  - 「Box<T>, Vec<T>, String のデータ本体」以外のすべて。具体的には以下の通り。
-    - 整数型、浮動小数点型、論理値型
-    - 参照 / `&T`
-    - Array/`[T]`, Tuple/`()`, Struct
-      - ただし、参照先はヒープメモリ上に存在する可能性がある
-        - Array が Vec を内包する場合、Array は Vec のメタデータ群を持つことになり、そのメタデータ群はスタックメモリ上に一直線に隙間なく並んでいる。
-    - スライス/`&[T]`
-      - 実体は(ptr,len)をもつメタデータである
-      - ただし、参照先はヒープメモリ上に存在する可能性がある
-    - Box/`Box<T>`, Vector/`Vec<T>`, String/`String`
-      - 実体は(ptr, len, cap)をもつメタデータである
-      - メタデータは変数とバインドされ、所有権管理に利用される
-      - 変数が破棄されれば[Drop trait](https://doc.rust-lang.org/1.30.0/book/first-edition/drop.html)の働きにより参照先のデータも破棄される
-
-### Heap memory / ヒープメモリ
-
-- 🔴 遅い
-- 🟢 グローバルに利用できる
-- 🟢 サイズに上限がない
-- 格納対象
-  - `Box<T>`, `Vec<T>`, `String` のデータ本体
-
-### Vector | Array | Slice とメモリの関係
-
-- Vector
-  - 型は`Vec<要素の型>`
-- Array
-  - 型は`[要素の型; 要素数]`
-- Slice
-  - 型は`&[要素の型]`、可変なら`&mut [要素の型]`
-
-メモリ使用量は以下の通り
-
-```rust
-// プリミティブな型のバイト数は、そのサイズになる。当たり前。
-assert_eq!(std::mem::size_of::<i8>(), 1);
-assert_eq!(std::mem::size_of::<i32>(), 4);
-assert_eq!(std::mem::size_of::<i64>(), 8);
-
-// 前提として、64bitアーキテクチャだとメモリの単位は8バイトである。
-let pointer_size = std::mem::size_of::<usize>();
-assert_eq!(pointer_size, 8);
-
-// Arrayのメモリ占有量は内容物の総計になる。メタデータは存在しない。
-assert_eq!(std::mem::size_of::<[i8; 10]>(), 1 * 10);
-assert_eq!(std::mem::size_of::<[i32; 10]>(), 4 * 10);
-assert_eq!(std::mem::size_of::<[Vec<i32>; 10]>(), pointer_size * 3 * 10);
-
-// Tuple,Structのメモリ占有量も、基本的に内容物の総計になる。メタデータは存在しない。
-// AlignmentやPaddingが発生するので、きっちり合計値とはならないこともある。
-  assert_eq!(std::mem::size_of::<(Vec<String>, i64)>(), 32);
-  assert_eq!(std::mem::size_of::<(Vec<String>, i64, i8, i8)>(), 40); // padding発生
-
-// Sliceのメモリ占有量は常に8*2byte (ptr,len)になる。
-// Sliceの型は配列から作ろうがVecから作ろうが`&[T]`になる点に留意せよ。
-assert_eq!(std::mem::size_of::<&[i8]>(), pointer_size * 2);
-assert_eq!(std::mem::size_of::<&[i32]>(), pointer_size * 2);
-assert_eq!(std::mem::size_of::<&str>(), pointer_size * 2);
-assert_eq!(std::mem::size_of::<&[String]>(), pointer_size * 2);
-
-// Vectorのメタデータ部分のメモリ占有量は常に8*3byte (ptr,len,cap)になる。
-// なおデータ部分のメモリ占有量は内包する要素の種類と数によって定まるが、ここでは割愛する。
-assert_eq!(std::mem::size_of::<Vec<u8>>(), pointer_size * 3);
-assert_eq!(std::mem::size_of::<Vec<i32>>(), pointer_size * 3);
-assert_eq!(std::mem::size_of::<Vec<String>>(), pointer_size * 3);
-```
-
-## 所有権
-
-所有権は、Rust がガベージコレクションを使用せずにメモリ安全性を保証する方法のこと。所有権のルールは以下の 3 つ。
-
-1. 値はその値の所有者を持つ。所有者のいないメモリ上のデータは無意味であり、存在しないのと同じである。
-2. ある時点で所有権を持つことができるのは一つの変数のみである。代入したり関数に渡したりすると、元の変数は即時に無効化され使えなくなる。
-3. 所有者がスコープから外れると、値は破棄される。具体的には、もしあればデストラクタが実行され、ヒープメモリは開放され、スタックメモリはポップされる。
-
-### 所有権の移動 / Move
-
-Rust では、値を別の変数に代入すると、デフォルトで所有権の移動が発生する。これは、元の変数から新しい変数へ所有権が移動することを意味する。これにより、元の変数はその値を使用できなくなる。
-
-ただし Copy Trait があるものは所有権が移転しない。対象は以下の通り。
-
-- 不変参照 (`&T`)
-- プリミティブな値
-- (Copy Trait を持つ型のみを含む) Tuple
-- (Copy Trait を持つ型の) Array
-- (Copy Trait が明示的に実装された) Struct
-
-Copy Trait がないものは所有権が移転する。対象は以下の通り。
-
-- 可変参照 (`&mut T`)
-- Vec, Box, String
-- (Copy Trait を持たない型を含む) Tuple
-- (Copy Trait を持たない型の) Array
-- (デフォルトの) Struct
-
-### 参照と借用
-
-所有権を移動せずに値を使いたい場合には、変数そのもの(=所有権+アクセス権)ではなく変数への(可変|不変)参照を使うことで、所有権は渡さずにアクセス権だけを渡すことができる。この仕組みを借用という。
-
-`.`を使う場合は自動で参照外しが行われるので、明示的に`*`を使う必要はない。ただし、値を丸ごと書き換える場合などには必要となる。
-
-```rust
-fn main() {
-    let mut greeting = "hello".to_string();
-    add_world(&mut greeting);
-    println!("{}", greeting); // hello world
-}
-
-fn add_world(original_string: &mut String) {
-    original_string.push_str(" world");
-
-    // 上書きなど`.`を使わないときには明示的な参照外しが必要
-    *original_string = "hello world".to_string();
-}
-```
-
-#### 借用規則
-
-不変参照(`&`)のライフタイムが尽きていない状態で可変参照(`&mut`)は存在することができない。その逆も然りで、可変参照が存在する状態で不変参照は存在することができない。
-
-不変・可変に関わらず、参照が存在する場合は値に**直接**アクセスしてその値を変更することはできない。また、可変の参照が存在するならば、可変の参照を通じてしか変更ができない。
-
-これらの規則により**不変参照の不変性が保証**される。また、値の**変更のインタフェースは常に一つだけ**になることが保証される。
-
-参考: https://blog-mk2.d-yama7.com/2020/12/20201230_rust_lifetime/
-
-#### ライフタイム
-
-参照は、参照先の値のスコープの外で使用されてはならない。なぜならスコープを超えると**ダングリング参照**と呼ばれる無効な参照となるためである。
-
-Rust ではダングリング参照の発生をさせないための仕組みとして、**ライフタイム**という概念がある。ライフタイムは参照の有効期間を表し、Borrow Checker によってチェックされる。
-
-**ライフタイム注釈**とは、参照を受け取って参照を返す関数などにおいて、コンパイラがライフタイムを計算できないケースがあり、そのときは明示的に書いてあげなければいけないということ。コンパイラに怒られたら、追記してあげるくらいの気持ちで OK。
-
-参考: https://zenn.dev/ucwork/articles/6de5c9c2257f2d
-
 ## Slice
 
 Slice には 2 種類ある。
@@ -715,146 +552,6 @@ maybe_number.is_none(); // -> bool
 
 詳細後述
 
-## エラー
-
-rust には 2 種類のエラーがある。他の言語ではこれらは区別されないことが多い。
-
-- recoverable なエラー
-  - `Result<T, E>`型
-  - 例）ファイルが見つからなかった場合
-- unrecoverable なエラー
-  - `panic!`マクロ
-  - 例）Array の範囲外にアクセスした場合
-
-### panic!
-
-panic の発生時に Backtrace を取得するには、下記のように実行する。
-
-```sh
-RUST_BACKTRACE=1 cargo run
-RUST_BACKTRACE=ful cargo run # かなり詳細に見たいとき
-```
-
-### Result
-
-プログラムを止めるまでもないエラーの場合、`Result`型が使われる。なお、`Result`, `Ok`, `Err`は接頭子をつけずに使える。
-
-```rust
-enum Result<T, E> {
-  Ok(T),
-  Err(E),
-}
-```
-
-Result の中身を取り出す方法は以下の通り。
-
-```rust
-use std::fs::File;
-use std::io::Error;
-
-let result = File::open("hello.txt");
-
-// あらかじめ成否を判定したいとき
-if result.is_ok() { /* 成功したとき固有の処理 */ }
-if result.is_err() { /* 失敗したとき固有の処理 */ }
-
-// 結果が必要、かつリカバリは不要なとき
-let f = result? // 自身の呼び出し元に「エラーの委譲」を行う
-let f = result.unwrap(); // 失敗したら panic する
-let f = result.expect ("Failed to open hello.txt"); // 失敗したら panic する (メッセージを添えて)
-
-// 結果が必要、かつリカバリが必要なとき 1
-let f = match result {
-  Ok(file) => file,
-  Err(e) => panic!("{:?}", e),
-};
-
-// 結果が必要、かつリカバリが必要なとき 2
-let f = result.unwrap_or_else(|e| {
-  panic!("{:?}", e)
-});
-
-// 結果は不要、かつリカバリが必要なとき
-if let Err(e) = result {
-  panic!("{:?}", e)
-};
-```
-
-より複雑な場合分けにはマッチガードを使う。
-
-```rust
-// 存在すればそのファイルを、存在しない場合は作成したファイルを返す例
-let f = match result {
-    Ok(existing_file) => existing_file,
-
-    // `ref`は所有権を奪わないためのおまじない
-    Err(ref error) if error.kind() == ErrorKind::NotFound => match File::create("hello.txt") {
-        Ok(newFile) => newFile,
-        Err(e) => {
-            panic!("Tried to create file but there was a problem: {:?}", e)
-        }
-    },
-
-    Err(error) => {
-        panic!("There was a problem opening the file: {:?}", error)
-    }
-};
-```
-
-### panic と Result の使い分け方
-
-#### ユースケースごとの使い分け
-
-- サンプルコード、プロトタイプコード、テストコードの場合
-  - panic(unwrap, expect) が最適。
-  - 意図が明確になるため。テストコードを適切に失敗させるため。
-- 開発者がコンパイラよりも情報を持っており、正しさを確信できる場合
-  - 例えば、下記は常に正しいので panic してよい。
-    ```rust
-    let home: IpAddr = "127.0.0.1".parse().unwrap();
-    ```
-  - 逆に、IP アドレスがユーザ入力等で与えられる場合は Result を使って処理する。
-
-#### エラー処理のガイドライン
-
-- パニックが最適
-  - 悪い状態(前提、保証、契約、不変性が破られた状態)である、かつ以下のいずれかを満たす場合
-    - その悪い状態が絶対に起きてはならないことである
-    - その時点以降、良い状態であることを前提にコードが書かれている
-    - 型を使って問題の発生を防ぐ方法がない
-- Result が最適
-  - 失敗が予想されるとき(HTTP リクエストなど)
-
-#### panic の使用例 (検証のための独自型)
-
-下記では値が 1 から 100 の間であることを保証している。
-
-```rust
-struct Guess {
-    // この値は基本的に非公開
-    value: u32,
-}
-
-impl Guess {
-    pub fn new(value: u32) -> Guess {
-        if value < 1 || value > 100 {
-            panic!("Value must be between 1 and 100, got {}.", value);
-        }
-
-        Guess {
-            value
-        }
-    }
-
-    pub fn value(&self) -> u32 {
-        self.value
-    }
-}
-
-let g = crate::Guess::new(0);
-println!("{}", g.value);
-```
-
 ## Collections
 
 Collections とは、複数の値を可変長で保持できる型である。Array や Tuple と異なりヒープメモリに保持されるため、コンパイル時にサイズを確定させなくてもよい。
@@ -1045,6 +742,146 @@ let count = scores.entry("Blue").or_insert(0);
 scores.entry(String::from("Blue")).or_insert(50);
 ```
 
+## エラー
+
+rust には 2 種類のエラーがある。他の言語ではこれらは区別されないことが多い。
+
+- recoverable なエラー
+  - `Result<T, E>`型
+  - 例）ファイルが見つからなかった場合
+- unrecoverable なエラー
+  - `panic!`マクロ
+  - 例）Array の範囲外にアクセスした場合
+
+### panic!
+
+panic の発生時に Backtrace を取得するには、下記のように実行する。
+
+```sh
+RUST_BACKTRACE=1 cargo run
+RUST_BACKTRACE=ful cargo run # かなり詳細に見たいとき
+```
+
+### Result
+
+プログラムを止めるまでもないエラーの場合、`Result`型が使われる。なお、`Result`, `Ok`, `Err`は接頭子をつけずに使える。
+
+```rust
+enum Result<T, E> {
+  Ok(T),
+  Err(E),
+}
+```
+
+Result の中身を取り出す方法は以下の通り。
+
+```rust
+use std::fs::File;
+use std::io::Error;
+
+let result = File::open("hello.txt");
+
+// あらかじめ成否を判定したいとき
+if result.is_ok() { /* 成功したとき固有の処理 */ }
+if result.is_err() { /* 失敗したとき固有の処理 */ }
+
+// 結果が必要、かつリカバリは不要なとき
+let f = result? // 自身の呼び出し元に「エラーの委譲」を行う
+let f = result.unwrap(); // 失敗したら panic する
+let f = result.expect ("Failed to open hello.txt"); // 失敗したら panic する (メッセージを添えて)
+
+// 結果が必要、かつリカバリが必要なとき 1
+let f = match result {
+  Ok(file) => file,
+  Err(e) => panic!("{:?}", e),
+};
+
+// 結果が必要、かつリカバリが必要なとき 2
+let f = result.unwrap_or_else(|e| {
+  panic!("{:?}", e)
+});
+
+// 結果は不要、かつリカバリが必要なとき
+if let Err(e) = result {
+  panic!("{:?}", e)
+};
+```
+
+より複雑な場合分けにはマッチガードを使う。
+
+```rust
+// 存在すればそのファイルを、存在しない場合は作成したファイルを返す例
+let f = match result {
+    Ok(existing_file) => existing_file,
+
+    // `ref`は所有権を奪わないためのおまじない
+    Err(ref error) if error.kind() == ErrorKind::NotFound => match File::create("hello.txt") {
+        Ok(newFile) => newFile,
+        Err(e) => {
+            panic!("Tried to create file but there was a problem: {:?}", e)
+        }
+    },
+
+    Err(error) => {
+        panic!("There was a problem opening the file: {:?}", error)
+    }
+};
+```
+
+### panic と Result の使い分け方
+
+#### ユースケースごとの使い分け
+
+- サンプルコード、プロトタイプコード、テストコードの場合
+  - panic(unwrap, expect) が最適。
+  - 意図が明確になるため。テストコードを適切に失敗させるため。
+- 開発者がコンパイラよりも情報を持っており、正しさを確信できる場合
+  - 例えば、下記は常に正しいので panic してよい。
+    ```rust
+    let home: IpAddr = "127.0.0.1".parse().unwrap();
+    ```
+  - 逆に、IP アドレスがユーザ入力等で与えられる場合は Result を使って処理する。
+
+#### エラー処理のガイドライン
+
+- パニックが最適
+  - 悪い状態(前提、保証、契約、不変性が破られた状態)である、かつ以下のいずれかを満たす場合
+    - その悪い状態が絶対に起きてはならないことである
+    - その時点以降、良い状態であることを前提にコードが書かれている
+    - 型を使って問題の発生を防ぐ方法がない
+- Result が最適
+  - 失敗が予想されるとき(HTTP リクエストなど)
+
+#### panic の使用例 (検証のための独自型)
+
+下記では値が 1 から 100 の間であることを保証している。
+
+```rust
+struct Guess {
+    // この値は基本的に非公開
+    value: u32,
+}
+
+impl Guess {
+    pub fn new(value: u32) -> Guess {
+        if value < 1 || value > 100 {
+            panic!("Value must be between 1 and 100, got {}.", value);
+        }
+
+        Guess {
+            value
+        }
+    }
+
+    pub fn value(&self) -> u32 {
+        self.value
+    }
+}
+
+let g = crate::Guess::new(0);
+println!("{}", g.value);
+```
+
 ## Generics / ジェネリクス
 
 **ジェネリクス**とは、単一のコードで異なるデータ型の処理を可能にする便利な仕組みのこと。
@@ -1098,6 +935,169 @@ impl<T: Display> Point<T> {
     }
 }
 ```
+
+## メモリのはなし
+
+- 参考
+  - https://doc.rust-lang.org/1.30.0/book/first-edition/the-stack-and-the-heap.html (なぜか現行版では消されている)
+  - https://qiita.com/k-yaina60/items/26bf1d2e372042eff022
+  - https://cipepser.hatenablog.com/entry/rust-memory
+  - https://doc.rust-lang.org/std/primitive.slice.html
+
+### Static memory / 静的メモリ
+
+- 生成された実行バイナリに含まれる
+- プログラムの開始から終了までずっと存在し続ける
+- 静的領域 / static memory / rodata (read-only data) segment などと呼ばれる
+- スタックメモリでもヒープメモリでもない特殊な領域
+- 格納対象
+  - 文字列リテラル (`str`)
+  - `static`をつけて宣言した値
+    - e.g. `static FOO: usize = 42;`
+
+### Stack memory / スタックメモリ
+
+- 🟢 速い
+- 🔴 呼び出し元はローカル（単一の関数内）に限られる
+- 🔴 サイズに上限がある
+- Stack Frame とも呼ばれる
+- rust の値はデフォルトでここに保持される
+- 格納対象
+  - 「Box<T>, Vec<T>, String のデータ本体」以外のすべて。具体的には以下の通り。
+    - 整数型、浮動小数点型、論理値型
+    - 参照 / `&T`
+    - Array/`[T]`, Tuple/`()`, Struct
+      - ただし、参照先はヒープメモリ上に存在する可能性がある
+        - Array が Vec を内包する場合、Array は Vec のメタデータ群を持つことになり、そのメタデータ群はスタックメモリ上に一直線に隙間なく並んでいる。
+    - スライス/`&[T]`
+      - 実体は(ptr,len)をもつメタデータである
+      - ただし、参照先はヒープメモリ上に存在する可能性がある
+    - Box/`Box<T>`, Vector/`Vec<T>`, String/`String`
+      - 実体は(ptr, len, cap)をもつメタデータである
+      - メタデータは変数とバインドされ、所有権管理に利用される
+      - 変数が破棄されれば[Drop trait](https://doc.rust-lang.org/1.30.0/book/first-edition/drop.html)の働きにより参照先のデータも破棄される
+
+### Heap memory / ヒープメモリ
+
+- 🔴 遅い
+- 🟢 グローバルに利用できる
+- 🟢 サイズに上限がない
+- 格納対象
+  - `Box<T>`, `Vec<T>`, `String` のデータ本体
+
+### Vector | Array | Slice とメモリの関係
+
+- Vector
+  - 型は`Vec<要素の型>`
+- Array
+  - 型は`[要素の型; 要素数]`
+- Slice
+  - 型は`&[要素の型]`、可変なら`&mut [要素の型]`
+
+メモリ使用量は以下の通り
+
+```rust
+// プリミティブな型のバイト数は、そのサイズになる。当たり前。
+assert_eq!(std::mem::size_of::<i8>(), 1);
+assert_eq!(std::mem::size_of::<i32>(), 4);
+assert_eq!(std::mem::size_of::<i64>(), 8);
+
+// 前提として、64bitアーキテクチャだとメモリの単位は8バイトである。
+let pointer_size = std::mem::size_of::<usize>();
+assert_eq!(pointer_size, 8);
+
+// Arrayのメモリ占有量は内容物の総計になる。メタデータは存在しない。
+assert_eq!(std::mem::size_of::<[i8; 10]>(), 1 * 10);
+assert_eq!(std::mem::size_of::<[i32; 10]>(), 4 * 10);
+assert_eq!(std::mem::size_of::<[Vec<i32>; 10]>(), pointer_size * 3 * 10);
+
+// Tuple,Structのメモリ占有量も、基本的に内容物の総計になる。メタデータは存在しない。
+// AlignmentやPaddingが発生するので、きっちり合計値とはならないこともある。
+  assert_eq!(std::mem::size_of::<(Vec<String>, i64)>(), 32);
+  assert_eq!(std::mem::size_of::<(Vec<String>, i64, i8, i8)>(), 40); // padding発生
+
+// Sliceのメモリ占有量は常に8*2byte (ptr,len)になる。
+// Sliceの型は配列から作ろうがVecから作ろうが`&[T]`になる点に留意せよ。
+assert_eq!(std::mem::size_of::<&[i8]>(), pointer_size * 2);
+assert_eq!(std::mem::size_of::<&[i32]>(), pointer_size * 2);
+assert_eq!(std::mem::size_of::<&str>(), pointer_size * 2);
+assert_eq!(std::mem::size_of::<&[String]>(), pointer_size * 2);
+
+// Vectorのメタデータ部分のメモリ占有量は常に8*3byte (ptr,len,cap)になる。
+// なおデータ部分のメモリ占有量は内包する要素の種類と数によって定まるが、ここでは割愛する。
+assert_eq!(std::mem::size_of::<Vec<u8>>(), pointer_size * 3);
+assert_eq!(std::mem::size_of::<Vec<i32>>(), pointer_size * 3);
+assert_eq!(std::mem::size_of::<Vec<String>>(), pointer_size * 3);
+```
+
+## 所有権
+
+所有権は、Rust がガベージコレクションを使用せずにメモリ安全性を保証する方法のこと。所有権のルールは以下の 3 つ。
+
+1. 値はその値の所有者を持つ。所有者のいないメモリ上のデータは無意味であり、存在しないのと同じである。
+2. ある時点で所有権を持つことができるのは一つの変数のみである。代入したり関数に渡したりすると、元の変数は即時に無効化され使えなくなる。
+3. 所有者がスコープから外れると、値は破棄される。具体的には、もしあればデストラクタが実行され、ヒープメモリは開放され、スタックメモリはポップされる。
+
+### 所有権の移動 / Move
+
+Rust では、値を別の変数に代入すると、デフォルトで所有権の移動が発生する。これは、元の変数から新しい変数へ所有権が移動することを意味する。これにより、元の変数はその値を使用できなくなる。
+
+ただし Copy Trait があるものは所有権が移転しない。対象は以下の通り。
+
+- 不変参照 (`&T`)
+- プリミティブな値
+- (Copy Trait を持つ型のみを含む) Tuple
+- (Copy Trait を持つ型の) Array
+- (Copy Trait が明示的に実装された) Struct
+
+Copy Trait がないものは所有権が移転する。対象は以下の通り。
+
+- 可変参照 (`&mut T`)
+- Vec, Box, String
+- (Copy Trait を持たない型を含む) Tuple
+- (Copy Trait を持たない型の) Array
+- (デフォルトの) Struct
+
+### 参照と借用
+
+所有権を移動せずに値を使いたい場合には、変数そのもの(=所有権+アクセス権)ではなく変数への(可変|不変)参照を使うことで、所有権は渡さずにアクセス権だけを渡すことができる。この仕組みを借用という。
+
+`.`を使う場合は自動で参照外しが行われるので、明示的に`*`を使う必要はない。ただし、値を丸ごと書き換える場合などには必要となる。
+
+```rust
+fn main() {
+    let mut greeting = "hello".to_string();
+    add_world(&mut greeting);
+    println!("{}", greeting); // hello world
+}
+
+fn add_world(original_string: &mut String) {
+    original_string.push_str(" world");
+
+    // 上書きなど`.`を使わないときには明示的な参照外しが必要
+    *original_string = "hello world".to_string();
+}
+```
+
+#### 借用規則
+
+不変参照(`&`)のライフタイムが尽きていない状態で可変参照(`&mut`)は存在することができない。その逆も然りで、可変参照が存在する状態で不変参照は存在することができない。
+
+不変・可変に関わらず、参照が存在する場合は値に**直接**アクセスしてその値を変更することはできない。また、可変の参照が存在するならば、可変の参照を通じてしか変更ができない。
+
+これらの規則により**不変参照の不変性が保証**される。また、値の**変更のインタフェースは常に一つだけ**になることが保証される。
+
+参考: https://blog-mk2.d-yama7.com/2020/12/20201230_rust_lifetime/
+
+#### ライフタイム
+
+参照は、参照先の値のスコープの外で使用されてはならない。なぜならスコープを超えると**ダングリング参照**と呼ばれる無効な参照となるためである。
+
+Rust ではダングリング参照の発生をさせないための仕組みとして、**ライフタイム**という概念がある。ライフタイムは参照の有効期間を表し、Borrow Checker によってチェックされる。
+
+**ライフタイム注釈**とは、参照を受け取って参照を返す関数などにおいて、コンパイラがライフタイムを計算できないケースがあり、そのときは明示的に書いてあげなければいけないということ。コンパイラに怒られたら、追記してあげるくらいの気持ちで OK。
+
+参考: https://zenn.dev/ucwork/articles/6de5c9c2257f2d
 
 ## プロジェクト構造とパッケージ管理
 
