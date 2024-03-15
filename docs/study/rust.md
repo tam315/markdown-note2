@@ -135,7 +135,7 @@ let guess: u32 = "42".parse().expect("Not a number!");
   - `1.23` など
 - 文字列リテラル
   - `"Hello, world!"`
-  - 型は`&str`、実体はバイト列の Slice `&[u8]`
+  - 型は`str`、実体はバイト列 `[u8]`
   - バイナリに埋め込まれ、実行時には Static Memory に格納されたうえ、そこへの参照が変数にセットされる。
   - 文字列型**ではない**。なお Rust には文字列型は**ない**かわりに String というライブラリで表現される。
   - 文字列に関するごちゃごちゃの分かりやすい説明 -> https://qiita.com/k-yaina60/items/4c8e3562fe6d22f845a9
@@ -229,7 +229,7 @@ let num = if true {
 
 ### match
 
-パターンマッチングが行える。詳細後述。
+パターンマッチングが行える。
 
 ```rust
 let number = 1;
@@ -240,7 +240,7 @@ let result = match number {
 };
 ```
 
-アームの左辺に変数を置いたうえで、if 文を使った分岐をすることもできる。
+アームの左辺に変数を置いたうえで、if 文を使った分岐をすることもできる。この if 文をガードという。
 
 ```rust
 let number = 1;
@@ -250,6 +250,8 @@ let result = match number {
     _ => "20以上"
 };
 ```
+
+Enum と match を組み合わせたときの使い方は[Enum](#enum)の項を参照。
 
 ### for
 
@@ -314,7 +316,7 @@ for number in (1..4) {
 - 静的領域 / static memory / rodata (read-only data) segment などと呼ばれる
 - スタックメモリでもヒープメモリでもない特殊な領域
 - 格納対象
-  - 文字列リテラル (`&str` ≒ `&[u8]`)
+  - 文字列リテラル (`str`)
   - `static`をつけて宣言した値
     - e.g. `static FOO: usize = 42;`
 
@@ -465,7 +467,7 @@ Rust ではダングリング参照の発生をさせないための仕組みと
 
 Slice には 2 種類ある。
 
-まずは String Slice(`&str`)である。これは文字列リテラルそれ自体や、`String`の一部分に対する参照である。
+まずは String Slice(`&str`)である。これは文字列リテラルへの参照や、`String`の一部分に対する参照である。
 
 つぎに Array Slice(`&[T]`)である。これは配列`[T]`の一部分に対する参照か、ベクタ`Vec<T>`の一部分に対する参照である。
 
@@ -630,7 +632,7 @@ impl SampleEnum {
 }
 ```
 
-特定の列挙子だった場合にだけ処理をしたいときには、`if let`を使うことができる。
+単一の列挙子だけを処理をしたいときには、`if let`を使うことができる。
 
 ```rust
 let maybe_message = SampleEnum::Message("hello".to_string());
@@ -674,65 +676,6 @@ maybe_number.is_none(); // -> bool
 ### Result 型
 
 詳細後述
-
-## match
-
-基本形
-
-```rust
-enum Coin {
-  Penny,
-  Nickel,
-  Dime,
-  Quarter(String),
-}
-
-fn value_in_cents(coin: Coin) -> u32 {
-  match coin {
-    Coin::Penny => 1,
-    Coin::Nickel => 5,
-    Coin::Dime => 10,
-    Coin::Quarter(state) => { // 値を持つEnumの場合はこのように取り出せる
-      println!("{}", state);
-      25
-    }
-  }
-}
-```
-
-Option との組み合わせ
-
-```rust
-fn plus_one(x: Option<i32>) -> Option<i32> {
-    match x {
-        None => None,
-        Some(i) => Some(i + 1),
-    }
-}
-
-let five = Some(5);
-let six = plus_one(five);
-let none = plus_one(None);
-```
-
-### if let
-
-`match`で特定のケースだけ取り扱いたい場合は、`if let`を使うことも検討すると良い。
-
-```rust
-let mut count = 0;
-match coin {
-    Coin::Quarter(state) => println!("State quarter from {:?}!", state),
-    _ => (), // 何もしない
-}
-
-// これは下記のように書ける
-
-let mut count = 0;
-if let Coin::Quarter(state) = coin {
-    println!("State quarter from {:?}!", state);
-}
-```
 
 ## エラー
 
@@ -938,9 +881,9 @@ let row = vec![
 
 Rust の文字列にはいくつかの種類ある。
 
-まず、**String literal**(`str`)型がある。これは、Rust で唯一の組み込みの文字列型である。組み込みとは、言語の核心部分に統合されている、という意味である。String literal はバイナリに組み込まれる完全に変更不可能なものであり、実のところ String literal はそこへの参照(slice)としてしか存在できない。
+まず、**String literal**(`str`)型がある。これは、Rust で唯一の組み込みの文字列型である。組み込みとは、言語の核心部分に統合されている、という意味である。String literal はバイナリに組み込まれる完全に変更不可能なものであり、実のところ String literal はそこへの参照(String slice)としてしか存在できない。
 
-次に、**String slice**(`&str`)型がある。これは String や String literal への参照である。ptr, len をもつ。
+次に、**String slice**(`&str`)型がある。これは String literal や String への参照である。ptr, len をもつ。
 
 最後に、**String**(`String`)型がある。これはライブラリにより提供されており、拡張、変更、所有が可能である。ptr, len, cap をもつ。
 
