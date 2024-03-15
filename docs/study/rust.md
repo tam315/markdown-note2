@@ -550,7 +550,48 @@ maybe_number.is_none(); // -> bool
 
 ### Result 型
 
-詳細後述
+プログラムを止めるまでもないエラーの場合に使われる型である。`Result`, `Ok`, `Err`は接頭子をつけずに使える。
+
+```rust
+enum Result<T, E> {
+  Ok(T),
+  Err(E),
+}
+```
+
+Result の中身を取り出す方法は以下の通り。
+
+```rust
+use std::fs::File;
+use std::io::Error;
+
+let result = File::open("hello.txt");
+
+// あらかじめ成否を判定したいとき
+if result.is_ok() { /* 成功したとき固有の処理 */ }
+if result.is_err() { /* 失敗したとき固有の処理 */ }
+
+// 結果が必要、かつリカバリは不要なとき
+let f = result? // 自身の呼び出し元に「エラーの委譲」を行う
+let f = result.unwrap(); // 失敗したら panic する
+let f = result.expect ("Failed to open hello.txt"); // 失敗したら panic する (メッセージを添えて)
+
+// 結果が必要、かつリカバリが必要なとき 1
+let f = match result {
+  Ok(file) => file,
+  Err(e) => panic!("{:?}", e),
+};
+
+// 結果が必要、かつリカバリが必要なとき 2
+let f = result.unwrap_or_else(|e| {
+  panic!("{:?}", e)
+});
+
+// 結果は不要、かつリカバリが必要なとき
+if let Err(e) = result {
+  panic!("{:?}", e)
+};
+```
 
 ## Collections
 
@@ -746,12 +787,9 @@ scores.entry(String::from("Blue")).or_insert(50);
 
 rust には 2 種類のエラーがある。他の言語ではこれらは区別されないことが多い。
 
-- recoverable なエラー
-  - `Result<T, E>`型
-  - 例）ファイルが見つからなかった場合
-- unrecoverable なエラー
-  - `panic!`マクロ
-  - 例）Array の範囲外にアクセスした場合
+リカバリ可能なエラーには`Result<T, E>`型を使う。詳細は前述の通り。例えば、ファイルが見つからなかった場合など。
+
+リカバリ不可能なエラーには`panic!`マクロをつかう。例えば、Array の範囲外にアクセスした場合など。
 
 ### panic!
 
@@ -760,72 +798,6 @@ panic の発生時に Backtrace を取得するには、下記のように実行
 ```sh
 RUST_BACKTRACE=1 cargo run
 RUST_BACKTRACE=ful cargo run # かなり詳細に見たいとき
-```
-
-### Result
-
-プログラムを止めるまでもないエラーの場合、`Result`型が使われる。なお、`Result`, `Ok`, `Err`は接頭子をつけずに使える。
-
-```rust
-enum Result<T, E> {
-  Ok(T),
-  Err(E),
-}
-```
-
-Result の中身を取り出す方法は以下の通り。
-
-```rust
-use std::fs::File;
-use std::io::Error;
-
-let result = File::open("hello.txt");
-
-// あらかじめ成否を判定したいとき
-if result.is_ok() { /* 成功したとき固有の処理 */ }
-if result.is_err() { /* 失敗したとき固有の処理 */ }
-
-// 結果が必要、かつリカバリは不要なとき
-let f = result? // 自身の呼び出し元に「エラーの委譲」を行う
-let f = result.unwrap(); // 失敗したら panic する
-let f = result.expect ("Failed to open hello.txt"); // 失敗したら panic する (メッセージを添えて)
-
-// 結果が必要、かつリカバリが必要なとき 1
-let f = match result {
-  Ok(file) => file,
-  Err(e) => panic!("{:?}", e),
-};
-
-// 結果が必要、かつリカバリが必要なとき 2
-let f = result.unwrap_or_else(|e| {
-  panic!("{:?}", e)
-});
-
-// 結果は不要、かつリカバリが必要なとき
-if let Err(e) = result {
-  panic!("{:?}", e)
-};
-```
-
-より複雑な場合分けにはマッチガードを使う。
-
-```rust
-// 存在すればそのファイルを、存在しない場合は作成したファイルを返す例
-let f = match result {
-    Ok(existing_file) => existing_file,
-
-    // `ref`は所有権を奪わないためのおまじない
-    Err(ref error) if error.kind() == ErrorKind::NotFound => match File::create("hello.txt") {
-        Ok(newFile) => newFile,
-        Err(e) => {
-            panic!("Tried to create file but there was a problem: {:?}", e)
-        }
-    },
-
-    Err(error) => {
-        panic!("There was a problem opening the file: {:?}", error)
-    }
-};
 ```
 
 ### panic と Result の使い分け方
