@@ -783,6 +783,24 @@ let count = scores.entry("Blue").or_insert(0);
 scores.entry(String::from("Blue")).or_insert(50);
 ```
 
+## Threads / スレッド
+
+Rust のスレッドは Mac でも Linux でも Windows でも動作する。スレッドを使うと CPU のコンテキストスイッチ等でオーバーヘッドが発生する点に注意。Disk I/O やネットワーク I/O などの I/O を待つ場合などは、スレッドではなく async / await を使ったほうがずっと効率的である。
+
+```rust
+use std::thread;
+
+fn main() {
+    let handle = thread::spawn(move || {
+        // 子スレッドで何かやる
+    });
+    // 同時にメインスレッドでも何かやる
+
+    // スレッドが完了するのを待ち、結果を受けとる
+    let result = handle.join().unwrap();
+}
+```
+
 ## エラー
 
 rust には 2 種類のエラーがある。他の言語ではこれらは区別されないことが多い。
@@ -935,17 +953,17 @@ impl<T: Display> Point<T> {
 - Stack Frame とも呼ばれる
 - rust の値はデフォルトでここに保持される
 - 格納対象
-  - 「Box<T>, Vec<T>, String のデータ本体」以外のすべて。具体的には以下の通り。
+  - 「Box, Vec, String のデータ本体」以外のすべて。具体的には以下の通り。
     - 整数型、浮動小数点型、論理値型
     - 参照 / `&T`
     - Array/`[T]`, Tuple/`()`, Struct
       - ただし、参照先はヒープメモリ上に存在する可能性がある
         - Array が Vec を内包する場合、Array は Vec のメタデータ群を持つことになり、そのメタデータ群はスタックメモリ上に一直線に隙間なく並んでいる。
     - スライス/`&[T]`
-      - 実体は(ptr,len)をもつメタデータである
+      - (ptr,len)をもつメタデータである
       - ただし、参照先はヒープメモリ上に存在する可能性がある
-    - Box/`Box<T>`, Vector/`Vec<T>`, String/`String`
-      - 実体は(ptr, len, cap)をもつメタデータである
+    - Box/`Box<T>`, Vector/`Vec<T>`, String/`String` のメタデータ部分
+      - (ptr, len, cap)をもつ
       - メタデータは変数とバインドされ、所有権管理に利用される
       - 変数が破棄されれば[Drop trait](https://doc.rust-lang.org/1.30.0/book/first-edition/drop.html)の働きにより参照先のデータも破棄される
 
