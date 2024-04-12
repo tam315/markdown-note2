@@ -370,7 +370,7 @@ const shota = User {
 }
 ```
 
-TS でおなじみの省略記法も使える
+TS でおなじみの省略記法も使える。ドットは２個なので注意。
 
 ```rust
 let default_user = User { /* 省略 */ };

@@ -2,15 +2,17 @@
 
 https://www.udemy.com/course/ultimate-rust-2/
 
-## Ideomatic Code
+## Idiomatic Code
 
-ソフトウェア工学における「Ideomatic」とは、「与えられた文脈における自然な表現様式に従う」という意味。具体的には以下のようなことを指す。「要はバランス」案件なので、原理主義者にならないよう注意すること。
+Idiomatic とは、「〔言葉が〕母語話者が自然に使うような、その言語特有の特徴を見せる」という意味の形容詞。
+
+ソフトウェア工学における「Idiomatic」とは、「与えられた文脈における自然な表現様式に従う」という意味。具体的には以下のようなことを指す。「要はバランス」案件なので、原理主義者にならないよう注意すること。
 
 - 言語の機能を最大限に活用して、コードを簡潔で読みやすくする。ただし、書き方に関する議論に明け暮れてはダメ。
 - コミュニティの標準的なコーディングスタイルに従う。ただし、流行に過度に影響されてはダメ。
 - 公式ドキュメントやライブラリの使用方法に従う。ただし、それが実績あるエンジニアリングのやり方と反する場合には適切に破棄できる程度に尊重する。
 
-### Rust の Ideomatic Code
+### Rust の Idiomatic Code
 
 `cargo fmt`でコードをフォーマットできる。IntelliJ の設定から`rustfmt`で検索し、`Use Rustfmt instead of the built-in formatter`にチェックを入れてたうえで、保存時にフォーマットがかかる設定にしておくと便利。
 
@@ -36,8 +38,6 @@ https://www.udemy.com/course/ultimate-rust-2/
 
 ## Iterator
 
-`IntoIterator`トレイトを実装していれば、`for`ループに与えたときに暗黙的に`.into_iter()`が呼ばれ、イテレータに変換される。
-
 for ループはイテレータを使ったパターンに書き換えられる。
 
 ```rust
@@ -53,15 +53,15 @@ v.into_iter().for_each(|i| {
 });
 ```
 
-このようにするメリットは、速度が速いことと、Iterator Adaptor を使えること。
+このようにするメリットは、Iterator Adaptor を使えることと、わずかに速度が速いこと。
 
 **Iterator Adaptor**は関数型プログラミングの道具の一つ。イテレータを受け取り別のイテレータを返す。その際、値に対して何らかのアクションを行う。例えば、`.map()`や`.filter()`などがある。
 
-**Iterator Consumer**はイテレータを消費する。例えば、`.for_each()`、`.collect()`、`.sum()`、`.collect()`などがある。Iterator Adaptor は Lazy であり、Consumer に到達して初めて実行される。
+**Iterator Consumer**はイテレータを消費する。例えば、`.for_each()`、`.collect()`、`.sum()`などがある。Iterator Adaptor は Lazy であり、Consumer に到達して初めて実行される。
 
-Consumer ではジェネリック型が多用されており、明示的な型指定が必要となる場面が多い。ターボフィッシュ(`::<>`)を使って、`collect::<Vec<_>>()`のようにする。あるいは変数に代入する場合は、`let result: Vec<_> = hogehoge.collect()`のように変数に型注釈を行う。ちなみに`_`は型推論を行わせるためのもので、特に値が複雑な型の場合は超便利である。
+Consumer ではジェネリック型が多用されており、明示的な型指定が必要となる場面が多い。ターボフィッシュ(`::<>`)を使って、`collect::<Vec<_>>()`のようにする。あるいは変数に代入する場合は、`let result: Vec<_> = hogehoge.collect()`のように変数に型注釈を行う。`_`は型推論を行わせるためのもので、特に値が複雑な型の場合は超便利である。
 
-[イテレータのドキュメント](https://doc.rust-lang.org/std/iter/trait.Iterator.html#provided-methods)を見ることで詳細を確認できる。
+[イテレータのドキュメント](https://doc.rust-lang.org/std/iter/trait.Iterator.html#provided-methods)を見ることで、型などの詳細を確認できる。
 
 コレクションをイテレータに変換するメソッドは複数ある。
 
@@ -69,6 +69,7 @@ Consumer ではジェネリック型が多用されており、明示的な型�
   - コレクションを消費して、もはや使えなくする
   - 所有権のある要素群を返す
   - `for _ in v`の糖衣構文
+    - `IntoIterator`トレイトを実装していれば、`for`ループに与えたときに暗黙的に`.into_iter()`が呼ばれ、イテレータに変換される仕組み。
 - `.iter()`
   - 参照群を返す
   - コレクションの値を見たいだけのときに使う
@@ -78,7 +79,7 @@ Consumer ではジェネリック型が多用されており、明示的な型�
   - コレクションの値を変更したいときに使う
   - `for _ in &mut v`の糖衣構文
 
-最後にコーナーケースを紹介する。コレクションを消費することなくコレクションを空にしたり、一部を抜き出したい場合には、`.drain()`が便利。コレクション以外にもハッシュマップ等にも使える。
+コレクションを消費することなくコレクションを空にしたり、一部を抜き出したい場合には、`.drain()`が便利。コレクション以外にもハッシュマップ等にも使える。
 
 ```rust
 let mut v = vec![6, 7, 8, 9, 10];
@@ -87,3 +88,87 @@ let drained: Vec<_> = v.drain(1..4).collect();
 assert_eq!(v, vec![6, 10]);
 assert_eq!(drained, vec![7, 8, 9]);
 ```
+
+## Common Traits
+
+トレイトを実装できるのは、struct, enum, closure, function の 4 つだが、メインは struct と enum である。
+
+### 自動でトレイトを実装する (Derivable Traits)
+
+特定の条件において、開発者がコードを書かずともコンパイラにより自動的に実装されるトレイトのこと。`#[derive(Trait1,Trait2)]`のように書くだけで自動で実装される。Derive ができるかどうかは、そのトレイトのドキュメントに記載されている。
+
+#### Debug
+
+デバッグ用の出力を行うためのトレイト。適用するには対象の Struct や Enum のすべてのフィールドに Debug トレイトが実装されている必要がある。なお、プリミティブ型や多くのライブラリの型には、 Debug トレイトがあらかじめ実装されている。
+
+`println!("{:?}", hogehoge)` 1 行で出力
+`println!("{:#?}", hogehoge)` Pretty に複数行で出力
+
+#### Clone
+
+値を複製するためのトレイト。適用するには対象の Struct や Enum のすべてのフィールドに Clone トレイトが実装されている必要がある。`.clone()`メソッドを実行することで値が複製される。
+
+#### Copy
+
+Clone に関係する特別なマーカートレイト。このトレイトが適用されていると、所有権の移動が発生する状況において代わりにコピーが行われる。
+
+> マーカートレイトとは、メソッドやフィールドを持たないトレイトのこと。これらは型に関する情報をコンパイラに提供し、型の振る舞いを変更するために使われるが、具体的な実装は持たない。
+
+対象の Struct や Enum のすべてのフィールドがスタックに入りきる小さな値（プリミティブ型）の場合に適用できる。ヒープメモリを使う値には適用できない。
+
+Copy は Clone の Subtrait なので、必ずセットでの適用が必要。
+
+### 手動で Trait を実装する方法
+
+1. use 文によりトレイトをスコープに持ってくる
+   - ただし standard prelude に含まれるトレイトは、use 文を書かなくても使える
+2. ボイラープレート文を生成する
+   - IDE の機能に頼るか、ドキュメントの Examples をコピペする
+3. トレイトを実装する
+
+#### Default
+
+derive 可能だが、その場合はゼロ値になってしまうので、多くの場合は手動実装が必要となる。use 文は不要。
+
+```rust
+impl Default for MyStruct {
+    fn default() -> Self {
+        Self {
+            field1: 123,
+            field2: "hello".to_string(),
+        }
+    }
+}
+
+let my_struct = MyStruct {
+    field1: 456,
+    ..Default::default()
+};
+```
+
+`..`の部分を Struct update syntax という。既存の構造体のインスタンスを基にして新しいインスタンスを生成するときに、一部のフィールドだけを更新する便利な方法。Rust ではよく使われる。
+
+new などの関連関数は、パラメータを受け取ったり、複雑な初期化処理を行う場合に使われる。Default はデフォルト値を返すだけという点で役割が異なる。
+
+#### PartialEq / Eq
+
+PartialEq は、2 つの値が等しいかどうかを実際に計算する役割を持つトレイト。比較ロジックは、推移的/transitive, 対照的/symmentric であることが求められる。
+
+Eq は PartialEq の Subtrait かつマーカートレイトである。比較のロジックが反射的/reflexive であることが要件に加えられる。Eq を実装するメリットはあまりないが、ハッシュマップでキーとして使えるようになるなどの利点がある。
+
+> - reflexive とは、`a == a`が常に true であること。当たり前に思えるが、例えば NaN は自分自身と等しくない。
+> - transitive とは、`a == b`かつ`b == c`ならば`a == c`であること。
+> - symmetric とは、`a == b`ならば`b == a`であること。
+
+```rust
+impl PartialEq for MyStruct {
+    // 以下は`(self: &Self, other: &Self)`と等価
+    fn eq(&self, other: &Self) -> bool {
+        self.field1 == other.field1 && self.field2 == other.field2
+    }
+}
+
+impl Eq for MyStruct {} // マーカーなのでこれだけでOK
+```
+
+#### From / Into
