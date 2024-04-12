@@ -172,3 +172,47 @@ impl Eq for MyStruct {} // マーカーなのでこれだけでOK
 ```
 
 #### From / Into
+
+ある型を別の型に変換するためのトレイト。From と Into は視点が違うだけで、単方向の変換を行うことに差はない。From を実装すれば Into も自動的に実装されるので、基本的には From だけを実装すればよい。
+
+```rust
+From<T> for U
+Into<U> for T
+// -> いずれにせよ T から U に変換される
+```
+
+例えば Struct から String に変換したい場合は、String に From トレイトを実装する。
+
+```rust
+// [例1]
+// 所有権を持つ値を受け取ると消費してしまうので、
+// 呼び出し元でStruct全体のcloneが必要となり非効率
+impl From<MyStruct> for String {
+    fn from(my_struct: MyStruct) -> Self {
+        my_struct.name
+    }
+}
+
+// [例2]
+// 参照で受け取って最小限だけcloneするのが一般的
+impl From<&MyStruct> for String {
+    fn from(my_struct: &MyStruct) -> Self {
+        my_struct.name.clone()
+    }
+}
+
+let my_struct = MyStruct::default();
+
+// Fromトレイトを使う場合 (関連関数)
+let s: String = String::from(my_struct);
+// Intoトレイトを使う場合 (メソッド)
+let s: String = my_struct.into();
+```
+
+Into は以下のような使われ方をすることが多い。このようにすると、文字列に変換できるあらゆる型を引数に取ることができる。
+
+```rust
+fn show<T: Into<String>>(arg: T) {
+    println!("{}", arg.into());
+}
+```
