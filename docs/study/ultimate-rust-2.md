@@ -101,8 +101,8 @@ assert_eq!(drained, vec![7, 8, 9]);
 
 デバッグ用の出力を行うためのトレイト。適用するには対象の Struct や Enum のすべてのフィールドに Debug トレイトが実装されている必要がある。なお、プリミティブ型や多くのライブラリの型には、 Debug トレイトがあらかじめ実装されている。
 
-`println!("{:?}", hogehoge)` 1 行で出力
-`println!("{:#?}", hogehoge)` Pretty に複数行で出力
+- `println!("{:?}", hogehoge)` 1 行で出力
+- `println!("{:#?}", hogehoge)` Pretty に複数行で出力
 
 #### Clone
 
