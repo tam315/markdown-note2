@@ -571,26 +571,27 @@ let result = File::open("hello.txt");
 if result.is_ok() { /* 成功したとき固有の処理 */ }
 if result.is_err() { /* 失敗したとき固有の処理 */ }
 
-// 結果が必要、かつリカバリは不要なとき
-let f = result? // 自身の呼び出し元に「エラーの委譲」を行う
-let f = result.unwrap(); // 失敗したら panic する
-let f = result.expect ("Failed to open hello.txt"); // 失敗したら panic する (メッセージを添えて)
+// 結果を取得する(失敗時には呼び出し元にエラーの委譲を行う)
+let f = result?
 
-// 結果が必要、かつリカバリが必要なとき 1
-let f = match result {
+// 結果を取得する(失敗時にはリカバリする)
+let f = result.unwrap_or_else(|e| { /* リカバリ */ });
+
+// 結果を取得する(失敗時にはフォールバック値を設定する)
+let f = result.unwrap_or(12345);
+
+// 結果を取得する(失敗時にはパニックする。基本的に避けるべき。)
+let f = result.unwrap();
+let f = result.expect ("Failed to open hello.txt"); // メッセージを添えたい場合
+
+// 前述のコードの大半は、以下コードの糖衣構文である
+match result {
   Ok(file) => file,
-  Err(e) => panic!("{:?}", e),
+  Err(e) => /* ここでリカバリしたり、パニックしたり、エラーやデフォルト値を返したりしているのと同じ */,
 };
 
-// 結果が必要、かつリカバリが必要なとき 2
-let f = result.unwrap_or_else(|e| {
-  panic!("{:?}", e)
-});
-
-// 結果は不要、かつリカバリが必要なとき
-if let Err(e) = result {
-  panic!("{:?}", e)
-};
+// 結果は不要でリカバリのみを行う場合
+if let Err(e) = result { /* リカバリ */ };
 ```
 
 ## Collections

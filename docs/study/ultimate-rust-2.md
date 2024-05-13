@@ -216,3 +216,112 @@ fn show<T: Into<String>>(arg: T) {
     println!("{}", arg.into());
 }
 ```
+
+## Making Errors
+
+ライブラリを公開する際などにカスタムエラーを定義することがある。その際、以下の原則に従うこと。
+
+原則 1: エラーは Enum であること
+
+Error トレイトを実装してさえいれば、どのような Enum でもエラーとして扱うことができるものの、あくまで Enum のみをエラーとして扱うことが推奨される。
+
+原則 2: エラーをグルーピングすること
+
+似たようなエラーは Enum の列挙子としてグルーピングせよ。たくさんの列挙子が並ぶとしても、それらが関連しているのであれば躊躇する必要はない。
+
+原則 3： あなたのエラーのみを公開せよ
+
+サードパーティーのエラーを「あなたのエラー」として公開してしまうと、無駄に第三者への依存が生じてしまう。結果として、第三者のコード変更によって公開 API が破壊されたり、内部実装を変えただけなのに公開 API を変更する必要性が出てきたりしてしまう。なので、ラップするなどして自前のエラーとして公開することが望ましい。ただし例外として、標準ライブラリのエラーはそのまま公開したほうが理にかなう場合もあるので、それはそのつど判断する。
+
+原則 4: non_exhaustive にする
+
+non_exhaustive 属性を設定すると、利用側のコードで match などを行う際に、デフォルトのアームを追加することが強制される。これにより、単なる列挙子の追加によって既存のコードが壊れることを防ぐことができる。
+
+原則 5: Debug, Display, Error トレイトを（この順で）実装する
+
+Error トレイトは Debug と Display のサブトレイトであるため、この順で実装することが推奨される。Debug は derive が可能。Display と Error は手動実装が必要なものの、Error についてはコードを書くことは不要。
+
+以上をまとめると、以下のようなコードになる。
+
+```rust
+use std::error::Error;
+use std::fmt::{Display, Formatter};
+
+#[derive(Debug)]   // #5: Debugトレイトを実装する
+#[non_exhaustive]  // #4: non_exhaustiveにする
+enum PuzzleError { // #1: Enumにする
+    WontFit(u16),  // #2: グルーピングする
+    MissingPiece,  // #2: グルーピングする
+    WrongPiece,    // #2: グルーピングする
+    // #3: あなたのエラーのみを公開する
+}
+
+// #5: Displayトレイトを実装する
+impl Display for PuzzleError {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        use PuzzleError::*;
+        match self {
+            WontFit(size) => {
+              write!(f, "Piece {} doesn't fit", size)
+            }
+            MissingPiece => write!(f, "Missing a piece"),
+            WrongPiece => write!(f, "Wrong piece"),
+        }
+    }
+}
+
+// #5: Errorトレイトを実装する
+impl Error for PuzzleError {}
+```
+
+原則 5b: thiserror を使う
+
+Display トレイトの手動実装が面倒な場合は、`thiserror`クレートを使うと簡素化できる。特に理由がなければこちらを使うのがオススメ。前述のコードは以下と等価である。
+
+```rust
+use thiserror::Error;
+
+#[derive(Debug, Error)]
+#[non_exhaustive]
+enum PuzzleError {
+    #[error("Piece {0} doesn't fit")]
+    WontFit(u16),
+    #[error("Missing a piece")]
+    MissingPiece,
+    #[error("Wrong piece")]
+    WrongPiece,
+}
+```
+
+## Handling Errors
+
+おさらいとして、失敗する可能性のある処理を行う関数は`Result<T, E>`型を返す必要がある点を思い出そう。`Result`は、成功した場合は`Ok(T)`、失敗した場合は`Err(E)`を返す。
+
+ライブラリ作者は可能な限り panic を避けなければならない。エラーが発生した際は Handle or Return するのが原則。Handle は`if let`や`unrap_or`、`unwrap_or_else`などを使ってエラーを処理すること。Return は`?`演算子を使ってエラーを返すこと。
+
+サードパーティーのエラーの種類が多岐にわたる場合、「あなたのエラーのみを返す」の原則に沿うのは大変だが、どうするか？`Box<dyn Error>`を使う方法もあるものの、デファクトといえる`anyhow`ライブラリを使うほうが良い。メリットは以下の通り。
+
+- 多種多様なエラータイプをまとめることでコードがシンプルになる
+- コンテキストの付与によりデバッグが容易になる
+- エラーが発生するまでのチェーンを分かりやすくたどれる
+
+```rust
+use anyhow::{Result, Context};
+
+fn get_data_from_file(path: &str) -> Result<String> {
+    // anyhowのResultは、Errorトレイトが実装されている値であれば何でも受け取れる
+    std::fs::read_to_string(path)?
+
+    // Contextトレイトをインポートすることで、必要に応じて追加の情報を付与することも可能
+    std::fs::read_to_string(path).with_context(|| format!("failed to read file: {}", path))
+}
+
+fn main() -> Result<()> {
+    let path = "data.txt";
+    let data = get_data_from_file(path)?;
+
+    println!("File content: {}", data);
+
+    Ok(())
+}
+```
