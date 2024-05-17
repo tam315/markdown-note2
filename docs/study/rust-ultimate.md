@@ -308,12 +308,13 @@ enum PuzzleError {
 ```rust
 use anyhow::{Result, Context};
 
+// anyhowのResultは、Errorトレイトが実装されている値であれば何でも受け取れるため、
+// エラーの型を明示的に書く必要がなく、成功時の結果だけを型引数として指定すれば良い。
 fn get_data_from_file(path: &str) -> Result<String> {
-    // anyhowのResultは、Errorトレイトが実装されている値であれば何でも受け取れる
     std::fs::read_to_string(path)?
 
     // Contextトレイトをインポートすることで、必要に応じて追加の情報を付与することも可能
-    std::fs::read_to_string(path).with_context(|| format!("failed to read file: {}", path))
+    // std::fs::read_to_string(path).with_context(|| format!("failed to read file: {}", path))
 }
 
 fn main() -> Result<()> {
