@@ -1244,5 +1244,3 @@ https://atmarkit.itmedia.co.jp/ait/articles/2207/22/news002.html
 ## テスト
 
 [Ultimate Rust 2](./rust-ultimate.md#testing) の方を参照のこと。
-
-なお、前提として、テストの対象とする関数やメソッドは、通常はライブラリクレートとして独立させておく必要があるらしい（このあたりちょっとよくわかってない）。
