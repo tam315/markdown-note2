@@ -1243,49 +1243,6 @@ https://atmarkit.itmedia.co.jp/ait/articles/2207/22/news002.html
 
 ## テスト
 
-前提として、テストの対象とする関数やメソッドは、通常はライブラリクレートとして独立させておく必要があるらしい（このあたりちょっとよくわかってない）。
+[Ultimate Rust 2](./rust-ultimate.md#testing) の方を参照のこと。
 
-### ユニットテスト
-
-[Ultimate Rust 2](./rust-ultimate.md#unit-testing) の方を参照
-
-### 統合テスト
-
-src フォルダと同じ階層に、テスト実行時にのみ参照される特別なフォルダである`tests`フォルダを作成し、その中にテストファイルを作成する。このファイルもまた`cargo test`で実行される。
-
-```rust
-// tests/my_integration_test.rs
-
-// lib.tsに定義および公開した関数
-use my_package_name::adder;
-
-#[test] // #[cfg(test)]は不要
-fn add_success() {
-    assert_eq!(adder(5, 4), 9)
-}
-```
-
-### Doc テスト
-
-ドキュメント内に記載したコードをテストできる。`cargo test (--doc)`で実行される。ドキュメントと実装の乖離を防ぐためにも有用。
-
-`````rust
-
-````rust
-/// 与えられた二つの数値を足し合わせて返す
-///
-/// # Arguments
-/// * `a` - 1st number
-/// * `b` - 2nd number
-///
-/// # Examples
-///
-/// ```
-/// let a = 5;
-/// let b = 4;
-/// assert_eq!(9, my_project_name::adder(a, b));
-/// ```
-pub fn adder(x: i32, y: i32) -> i32 {
-    x + y
-}
-`````
+なお、前提として、テストの対象とする関数やメソッドは、通常はライブラリクレートとして独立させておく必要があるらしい（このあたりちょっとよくわかってない）。
