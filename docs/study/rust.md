@@ -1244,3 +1244,12 @@ https://atmarkit.itmedia.co.jp/ait/articles/2207/22/news002.html
 ## テスト
 
 [Ultimate Rust 2](./rust-ultimate.md#testing) の方を参照のこと。
+
+## クロスコンパイル
+
+[cross](https://github.com/cross-rs/cross)を使うのが一番カンタン。
+
+- `rustup target list` 対象として指定可能なプラットフォームを一覧表示
+- `rustup target add <platform>` プラットフォームを追加して必要なファイルをダウンロード(cross 使うならこの作業は不要)
+- `cross test --target <platform>` プラットフォームを指定してテスト (`cargo`と間違えないように)
+- `cross build --target <platform>` プラットフォームを指定してビルド (`cargo`と間違えないように)
