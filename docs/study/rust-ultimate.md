@@ -423,3 +423,50 @@ fn test_add() {
     assert_eq!(add(1, 2), 3);
 }
 ```
+
+## Benchmark
+
+手順
+
+- `cargo.toml`に所要の設定を追加
+
+```yaml
+[dependencies]
+criterion = "0.5.1" # ベンチマークライブラリを追加
+
+[[bench]]
+name = "my_benchmark" # `benches/my_benchmark.rs`のファイル名を指定する
+harness = false # Rust標準のベンチマーク機能を無効化しておく
+```
+
+- `<rootDir>/benches`という名前のフォルダを作る。統合テストで使う`tests`みたいなもの。
+- 以下の感じでテストを書く。
+
+```rust
+// <rootDir>/benches/my_benchmark.rs
+use criterion::{criterion_group, criterion_main, Criterion};
+use std::hint::black_box;
+
+fn fibonacci(n: u64) -> u64 {
+    /* なんらかの重い処理 */
+    n * 64 * 64
+}
+
+fn benchmark_fibonacci(c: &mut Criterion) {
+    c.bench_function("フィボナッチ数列のベンチマーク", |b| {
+        b.iter(|| {
+            fibonacci(
+                // コンパイラの最適化を無効化するために black_box を使うのを忘れずに
+                black_box(20),
+            )
+        })
+    });
+}
+
+// おまじない
+criterion_group!(benches, benchmark_fibonacci);
+criterion_main!(benches);
+```
+
+- `cargo bench`でベンチマークを実行する
+- コンソール出力や target フォルダに生成される HTML ファイルを見て結果を確認する
