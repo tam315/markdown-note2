@@ -1247,46 +1247,7 @@ https://atmarkit.itmedia.co.jp/ait/articles/2207/22/news002.html
 
 ### ユニットテスト
 
-ユニットテストは`cargo test`で実行される。
-
-ユニットテストの関数には`#[test]`属性をつける。
-
-```rust
-#[test]
-fn it_works() {
-    assert_eq!(2 + 2, 4);
-}
-```
-
-テストコードはテスト時のみコンパイルされるよう、`#[cfg(test)]`を付与したモジュール内にテスト関数を書くことが多い。
-
-```rust
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
-```
-
-アサーションには以下のようなものがある。
-
-```rust
-assert!(2 == 2);
-assert_eq!(2 + 2, 4);
-assert_ne!(2 + 2, 5);
-```
-
-パニックが発生することを期待したテストを書くときは`#[should_panic]`属性を使う。
-
-```rust
-#[test]
-#[should_panic]
-fn it_works() {
-    panic!();
-}
-```
+[Ultimate Rust 2](./rust-ultimate.md#unit-testing) の方を参照
 
 ### 統合テスト
 
