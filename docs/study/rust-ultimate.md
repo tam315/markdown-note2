@@ -470,3 +470,35 @@ criterion_main!(benches);
 
 - `cargo bench`でベンチマークを実行する
 - コンソール出力や target フォルダに生成される HTML ファイルを見て結果を確認する
+
+## Logging
+
+ログの機能は標準ライブラリにはないものの、`log`という公式ライブラリとして別に提供されており、ログ出力機能の土台となっている。
+
+> Rust の標準ライブラリは「永遠に」サポートされる方針のため、採用は非常に慎重である。
+
+すべてのロギングライブラリは、この`log`を使うべきとされている。
+
+```rust
+use log::{debug, error, info, trace, warn};
+error("エラーが発生しました")
+
+// targetを指定することも可能。指定しなければモジュール名が使われる。
+error(target: "俺のすごい関数", "エラーが発生しました")
+
+// printlnのようにテンプレートが使える
+error("エラーが発生しました: {}", 12345)
+```
+
+`log`はインターフェースを用意しているだけ。出力先は stdout/syslog/file/cloud logging service など色々あるだろうが、必要に応じて適切なライブラリを使う。たとえば、標準出力するだけなら`env_logger`という簡素なライブラリがある。
+
+```rust
+use env_logger;
+env_logger::init();
+```
+
+こうしておくだけで、コンソールにログが出力される。ログレベルの指定は`RUST_LOG`環境変数で行う。
+
+```bash
+RUST_LOG=info cargo run
+```
