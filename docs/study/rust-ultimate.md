@@ -594,4 +594,24 @@ fn main() {
         handle.join().unwrap();
     }
 }
+
+// 実行結果↓
+// 🧑‍🍳 Bob: I got an order for sandwich
+// 🧑‍🍳 Alice: I got an order for soup
+// 🧑‍🍳 Carol: I got an order for salad
+// 🥘 Bob: I made a Sandwich
+// 🧑‍🍳 Bob: I got an order for sandwich
+// ✅ Customer got a Sandwich
+// 🥘 Alice: I made a Soup
+// 🧑‍🍳 Alice: I got an order for salad
+// ✅ Customer got a Soup
+// 🥘 Carol: I made a Salad
+// 🧑‍🍳 Carol: I got an order for soup
+// ✅ Customer got a Salad
+// 🥘 Bob: I made a Sandwich
+// ✅ Customer got a Sandwich
+// 🥘 Carol: I made a Soup
+// ✅ Customer got a Soup
+// 🥘 Alice: I made a Salad
+// ✅ Customer got a Salad
 ```
