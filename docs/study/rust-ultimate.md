@@ -65,19 +65,11 @@ Consumer ではジェネリック型が多用されており、明示的な型�
 
 コレクションをイテレータに変換するメソッドは複数ある。
 
-- `.into_iter()`
-  - コレクションを消費して、もはや使えなくする
-  - 所有権のある要素群を返す
-  - `for _ in v`の糖衣構文
-    - `IntoIterator`トレイトを実装していれば、`for`ループに与えたときに暗黙的に`.into_iter()`が呼ばれ、イテレータに変換される仕組み。
-- `.iter()`
-  - 参照群を返す
-  - コレクションの値を見たいだけのときに使う
-  - `for _ in &v`の糖衣構文
-- `.iter_mut()`
-  - 可変参照群を返す
-  - コレクションの値を変更したいときに使う
-  - `for _ in &mut v`の糖衣構文
+| メソッド       | 糖衣構文          | 用途                                 | 値                 |
+| -------------- | ----------------- | ------------------------------------ | ------------------ |
+| `.into_iter()` | `for _ in v`      | コレクションを完全に消費する際に使用 | 所有権のある要素群 |
+| `.iter()`      | `for _ in &v`     | 値を変更せず、読み取りたい場合       | 不変参照群         |
+| `.iter_mut()`  | `for _ in &mut v` | コレクションの値を変更したい場合     | 可変参照群         |
 
 コレクションを消費することなくコレクションを空にしたり、一部を抜き出したい場合には、`.drain()`が便利。コレクション以外にもハッシュマップ等にも使える。
 
@@ -566,28 +558,32 @@ fn setup_cafe_worker(worker_name: &str, order_rx: Receiver<&str>, lunch_tx: Send
 }
 
 fn main() {
-    // 注文をシェフに送るためのチャンネル
+    // 注文のチャンネル
     let (order_tx, order_rx) = channel::unbounded();
-    // できた料理をシェフから受け取るためのチャンネル
+    // 配膳のチャンネル
     let (lunch_tx, lunch_rx) = channel::unbounded();
 
     let workers = vec!["Alice", "Bob", "Carol"];
     let mut handles = vec![];
     for worker in workers {
-        let order_rx = order_rx.clone();
-        let lunch_tx = lunch_tx.clone();
-        let handle = thread::spawn(move || setup_cafe_worker(worker, order_rx, lunch_tx));
+        let order_rx_cloned = order_rx.clone();
+        let lunch_tx_cloned = lunch_tx.clone();
+        let handle =
+            thread::spawn(move || setup_cafe_worker(worker, order_rx_cloned, lunch_tx_cloned));
         handles.push(handle);
     }
+    // 配膳の送信チャンネルはcloneしてスレッドに配り終わっており、クローン元は不要なのでここでドロップしておく。
+    // そうしないとプログラムが永遠に終了しない。
+    // lunch_txもスレッドに渡すようにすればスレッドが終了した時点で自動的にドロップされるものの、
+    // クローンしたほうがコード的にわかりやすいのでそうした。
+    drop(lunch_tx);
 
     let orders = vec!["sandwich", "salad", "soup", "sandwich", "salad", "soup"];
     for order in orders {
         order_tx.send(order).unwrap();
     }
-    // ここより下では送信は行わないのでチャンネルをドロップしておく。
-    // そうしないとプログラムが永遠に終了しない。
+    // これ以降は注文チャンネルに送信することはないのでドロップしておく。そうしないとプログラムが永遠に終了しない。
     drop(order_tx);
-    drop(lunch_tx);
 
     for lunch in lunch_rx {
         println!("✅ Customer got a {:?}", lunch);
