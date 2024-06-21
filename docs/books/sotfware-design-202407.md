@@ -84,10 +84,10 @@
       - metadata: 常に読み取り許可で固定
     - 明示する場合は、contents と packages の両方を列挙しないと書かなかったものは none になるので注意
 - OIDC を用いたクラウドサービス連携
-  - ワークフロー実行時に、GitHub が発行から発行された OIDC トークンをクラウドプロバイダーに投げ、アクセストークンを得る方法
+  - ワークフロー実行時に、GitHub から発行された OIDC トークンをクラウドプロバイダーに投げ、アクセストークンを得る方法
   - クラウド側では OIDC トークンの subject claim を見て、許可を判断する
-  - subject claim の例: `repo:<OWNER>/<REPO>:refs/heads/main`
-  - クラウド側では、あらかじめ以下を設定しておく必要がある
+    - subject claim の例: `repo:<OWNER>/<REPO>:refs/heads/main`
+  - クラウド側では、事前に以下の設定を済ませておく必要がある
     - 受け入れる subject claim の形式(≒ 対象のリポジトリとブランチ)
     - 与える権限
 - セキュリティ対策
