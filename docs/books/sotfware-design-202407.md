@@ -185,3 +185,18 @@ Access-Control-Allow-Origin: https://siteA.com
 
 - `https://www.example.com` (比較対象)
 - `http://sub.example.com:8080` (プロトコルもホストもポートも違うけど、同一サイト)
+
+## ドメイン解体新書 / DNS のプライバシー
+
+もろもろ検討されている技術はあるものの、進捗はあまりよろしくない。
+
+- DNS over (HTTPS|TLS|QUIC)
+  - クライアントとキャッシュサーバ間の通信暗号化、改ざん防止、接続先認証
+- ODoH
+  - oblivious DNS over HTTPS
+  - クライアントとキャッシュサーバの間にプロキシを挟むことで、クライアントの IP アドレスを隠す仕組み
+- HTTPS(TLS)
+  - クライアントとホスティングサーバ間の通信暗号化、改ざん防止、接続先認証
+- ENSI, ECH
+  - Server Name Indication / SNI は、ひとつの IP アドレスに複数のドメインをホストできるようにする通信の仕組み
+  - この情報はダダ漏れだったので、SNI を暗号化する仕組みである Encrypted SNI(ENSI)や、傍受を防ぐ Encrypted Client Hello(ECH)という仕組みが生まれた。
