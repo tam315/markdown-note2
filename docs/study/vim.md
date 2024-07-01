@@ -9,13 +9,24 @@
   - `y`: yank
   - `d`: delete
 - 中身だけか全体か
-  - `a`: an object
+  - `a`: all object
   - `i`: inner object
 - 範囲
   - `w`: word
   - `s`: sentence
   - `p`: paragraph
-  - 各種囲み記号(parenthesis, bracket, brace...)
+  - 各種囲み記号
+    - parenthesis
+    - bracket
+    - brace
+    - tag(`t`の一文字で表される。React で多用しそう)
+    - ほか多数
+
+番外編(vim-surround)
+
+- `ds <消したい囲み記号>`
+- `cs <消したい囲み記号> <新しい囲み記号>`
+- ビジュアルモードで`S`を押して囲み記号の追加
 
 ## 移動
 
