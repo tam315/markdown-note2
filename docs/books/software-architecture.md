@@ -173,6 +173,50 @@ main メソッドしかない巨大な関数なら抽象度は 0 で、逆にイ
 - コード間の距離が遠くなるにつれ、弱いコナーセンスを使用する
 - システムを分割して全体的なコナーセンスを最小に抑える
 
+## 4. アーキテクチャ特性
+
+アーキテクチャ特性(architectural characteristics)とは、ドメイン領域とは直接関連しないがソフトウェアが満たすべき考慮事項のこと。
+非機能要件(non-functional requirement)や品質特性(quality characteristics)という呼び名を改善したもの。
+すべての特性を満たそうとするのではなく、設計の構造に変更を与えうるものや、成功のために不可欠または重要であるものだけを選択することが大事。
+
+特性の定義は曖昧だったり、重複していたり、文脈によって異なる意味を持ったりする。
+また、特性は個々のソフトウェア固有の要因を元に、独自に発明すべきものである。
+とはいえ、ISO/IEC 25010 という ISO が定義している特性のリストが一つの参考になりそう。
+
+https://iso25000.com/index.php/en/iso-25000-standards/iso-25010
+
+以下の 9 つのカテゴリと、配下にサブカテゴリがある。
+
+- Performance efficiency
+  - 時間、リソース、容量の効率
+- Compatibility
+  - 共存可能性や相互運用性
+- Interaction Capability
+  - ユーザビリティのこと。ユーザーが効果的・効率的・満足に利用できるか。
+  - Appropriateness recognizability / Learnability / Operability / Inclusivity ...
+- Reliability
+  - 指定した条件と期間においてシステムが正常に動作し続けるか
+  - Faultlessness / Availability / Fault tolerance / Recoverability
+- Security
+  - 意図的な悪意ある行動に対して、システムが保護された状態にあるか
+  - Confidentiality / Integrity / Non-repudiation / Accountability / Authenticity / Resistance
+- Maintainability
+  - 変更や修正が容易か
+  - Modularity / Reusability / Analyzability / Modifiability / Testability
+- Flexibility
+  - 多様な目的に応じて柔軟に対応できるか
+  - Adaptability / Scalability / Installability / Replaceability
+- Safety
+  - 非意図的あるいは非人為的な行為に起因して、人の生命、健康、財産、または環境が危険にさらされることがないか
+  - Operational constraint / Risk identification / Fail safe / Hazard warning / Safe integration
+- Functional Suitability
+  - ユーザーのニーズを満たしているか
+  - 著者はこれは特性には含まれないと主張している
+
+サポートするアーキテクチャ特性を増やせば増やすだけ複雑さは増し、うまくいかなくなる。
+最初からすべての特性を満たす「最善のアーキテクチャ」を狙ってはいけない。
+「少なくとも最悪ではないアーキテクチャ」からスタートし、必要に応じてイテレーティブに改善していけ。
+
 ## 9. アーキテクチャスタイル
 
 アーキテクチャパターンともいう。
