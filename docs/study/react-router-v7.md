@@ -25,22 +25,21 @@ import {
 } from '@react-router/dev/routes'
 
 export default [
-  // パス未指定のラウトは index で表現
-  // 親（ここの場合root.tsx）のOutletに描写される
+  // indexはパスなし（デフォルト）
   index('./home.tsx'),
 
-  // パスを指定するラウトは route で表現
+  // routeはパスあり
   route('about', './about.tsx'),
 
-  // 共通レイアウトを使うラウトの表現
+  // 共通レイアウトを使うラウト。ネストではない。
   layout('./auth/layout.tsx', [
     route('login', './auth/login.tsx'),
     route('register', './auth/register.tsx'),
   ]),
 
-  // ネストされたラウトの表現
+  // 特定のprefixを持つラウト。ネストではない。
   ...prefix('concerts', [
-    index('./concerts/home.tsx'), // 親（ここの場合root.tsx）のOutletに描写される
+    index('./concerts/home.tsx'),
     route(':city', './concerts/city.tsx'),
     route('trending', './concerts/trending.tsx'),
   ]),
@@ -81,11 +80,12 @@ export default function Dashboard() {
 
 ### Root Route
 
-`routes.ts`に書いた全てのラウトは、`app/root.tsx`という特殊なラウトモジュールの下にネストして配置される。
+`routes.ts`に書いた全てのラウトは、`app/root.tsx`という特殊なラウトモジュールの`<Outlet />`に描写される。
 
 ### Layout Routes
 
-`layout()`はネストを作成するが、パス的には何も加えない。
+`layout()`は共通のレイアウトを使用したい場合に便利。
+コンポーネントのネストを作成するが、パス的には何も加えない。
 
 ```tsx
 layout('./marketing/layout.tsx', [
@@ -100,9 +100,7 @@ export default function ProjectLayout() {
   return (
     <div>
       <aside>Example sidebar</aside>
-      <main>
-        <Outlet />
-      </main>
+      <Outlet />
     </div>
   )
 }
@@ -189,7 +187,7 @@ export default function Component({ loaderData }: Route.ComponentProps) {
 
 ### Root Route Module
 
-`root.tsx`はルートラウトモジュールという特殊なもので、全てのラウトの祖先となる。
+`root.tsx`はルートラウトモジュールという特殊なもので、全てのラウトモジュールの祖先となる。
 
 ### Props
 
@@ -207,17 +205,23 @@ export default function Component({ loaderData }: Route.ComponentProps) {
 コンポーネントがレンダリングされる前に取得したいデータがある場合に使う。
 クライアント上で実行されることはなく、サーバーサイドもしくはプリレンダリング時にのみ実行される。
 
+```tsx
+export async function loader({ params }) {
+  const data = await fetch(`/api/teams/${params.teamId}`)
+  return { someData: data }
+}
+```
+
 ### clientLoader
 
 クライアントでのみ呼ばれるローダー。通常のローダーに加えて、もしくは代わりに使う。
 
 ```tsx
 export async function clientLoader({ serverLoader }) {
-  // 通常のローダーの結果を使いたい場合
-  const serverData = await serverLoader()
-  // クライアントで取得したいデータ
+  // 必要があればサーバー側のローダーを呼び出すことも可能
+  // const serverData = await serverLoader()
   const clientData = getDataFromClient()
-  return { ...serverData, ...clientData }
+  return clientData
 }
 ```
 
@@ -302,3 +306,107 @@ export function headers() {
 ### shouldRevalidate
 
 アクション実行後に再検証したいかどうかを設定する。
+
+## Rendering Strategies
+
+レンダリング戦略は以下の 3 つから選べる。
+Pre-render はビルド時に画面を生成する手法で、対象ラウトは個別に指定できる。
+
+- Client Side Rendering
+- Server Side Rendering
+- Static Pre-rendering
+
+## TypeScript
+
+型の情報は`+types`ディレクトリ？に自動生成されるらしい。
+この`Route`型が魔法のように型情報を集約し配布する。
+ラウトパラメーターも、loader の返り値も、コンポーネントの props も。
+以下のように書けばコンポーネントでは型情報が使える。
+
+```tsx
+// route("products/:pid", "./product.tsx");
+import type { Route } from './+types/product'
+
+export async function loader({ params }: Route.LoaderArgs) {}
+export async function clientLoader({ params }: Route.ClientLoaderArgs) {}
+export async function action({ params }: Route.ActionArgs) {}
+export async function clientAction({ params }: Route.ClientActionArgs) {}
+
+export default function Product({ loaderData }: Route.ComponentProps) {}
+```
+
+## Data Loding
+
+- Client Data Loading
+  - `clientLoader`を使う
+  - `loader`と組み合わせて使うことも可能。その場合は loader->clientLoader の順で実行される
+- Server Data Loading
+  - `loader`を使う
+- Static Data Loading
+  - `loader`を使ったうえで、プリレンダリングするパスを指定する
+
+## Actions
+
+- Client Actions
+  - ブラウザでのみ実行される
+  - 通常の action よりも優先される
+- Server Actions
+  - サーバーでのみ実行される
+  - クライアント側のコードからは削除される
+
+### アクションの呼び出し
+
+宣言的に書くにはフォームを使う。
+
+```tsx
+import { Form } from 'react-router'
+
+function SomeComponent() {
+  return (
+    <Form action="/projects/123" method="post">
+      <input type="text" name="title" />
+      <button type="submit">Submit</button>
+    </Form>
+  )
+}
+```
+
+命令的に書きたい場合は`useSubmit`を使う。
+
+```tsx
+import { useSubmit } from 'react-router'
+// hooksで呼び出して、
+let submit = useSubmit()
+// 何かのイベントハンドラー内などにおいて
+submit({ quizTimedOut: true }, { action: '/end-quiz', method: 'post' })
+```
+
+当該ラウトモジュール以外の Action を叩きたい場合や、ブラウザに履歴を積みたくない場合は`useFetcher`を使う。
+[こちらのページ](https://reactrouter.com/how-to/fetchers)に Action で使う例と Loader で使う例がある。
+
+```tsx
+import { useFetcher } from 'react-router'
+
+function Task() {
+  let fetcher = useFetcher()
+  let busy = fetcher.state !== 'idle'
+
+  return (
+    // 宣言的に書く場合
+    <fetcher.Form
+      method="post"
+      // いまいるラウトモジュール以外の(アクションだけをもつ独立したラウドモジュールの)アクションを叩くことができる
+      action="/update-task/123"
+    >
+      <input type="text" name="title" />
+      <button type="submit">{busy ? 'Saving...' : 'Save'}</button>
+    </fetcher.Form>
+  )
+
+  // 命令的に書く場合 (どこかのイベントハンドラー内などで)
+  // fetcher.submit(
+  //   { title: 'New Title' },
+  //   { action: '/update-task/123', method: 'post' },
+  // )
+}
+```
