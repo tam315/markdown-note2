@@ -354,6 +354,10 @@ export default function Product({ loaderData }: Route.ComponentProps) {}
   - サーバーでのみ実行される
   - クライアント側のコードからは削除される
 
+アクションはコンポーネントと同じファイル内に書くことも可能だし、
+必要に応じて独立したファイルにアクションだけを書くことも可能。
+ローダーもしかり。
+
 ### アクションの呼び出し
 
 宣言的に書くにはフォームを使う。
@@ -408,5 +412,97 @@ function Task() {
   //   { title: 'New Title' },
   //   { action: '/update-task/123', method: 'post' },
   // )
+}
+```
+
+## Navigating
+
+ナビゲーションは以下のいずれかで行う。
+
+- `<Link>` - デフォルトのナビゲーション
+- `<NavLink>` - デフォルトのナビゲーションの進化版。アクティブ時、ペンディング時、トランジション時のスタイルを設定できる機能を加えたもの
+- `<Form>` - 後述
+- `redirect` - action や loader の中で使う。典型的なのはデータ作成後にそのページに遷移するなど。
+- `useNavigate` - hooks 内でナビゲーションしたいときに使うが、ユースケースは限られる。なるべく避けるべき。
+
+### Form
+
+Form に紐づくのが loader の場合、例えば以下の場合、ユーザーは`/search?q=journey`に遷移する。
+
+```tsx
+<Form action="/search" method="get">
+  <input type="text" name="q" />
+</Form>
+```
+
+アクションの場合もページ(以下の場合`/create-post`)に遷移するが、データはサーチパラメータではなく`FormData`として送信される。
+
+```tsx
+<Form action="/create-data" method="post">
+  <input type="text" name="title" />
+</Form>
+```
+
+## Pending UI
+
+loader や action の実行が始まったらすぐにユーザーにフィードバックすべき。
+
+### Global Pending UI
+
+`useNavigation`を`root.tsx`で使うことで、グローバルにローディングスピナーを表示することができる。
+
+```tsx
+import { useNavigation } from 'react-router'
+
+export default function Root() {
+  const navigation = useNavigation()
+  const isNavigating = Boolean(navigation.location)
+
+  return (
+    <html>
+      <body>
+        {isNavigating && <GlobalSpinner />}
+        <Outlet />
+      </body>
+    </html>
+  )
+}
+```
+
+### Local Pending UI
+
+リンクテキストのスタイルを変える方法。
+NavLink の children, className, style props で`isPending`の時にしかるべきスタイルを適用する。
+
+### Pending Form Submission
+
+フォームのサブミット後は速やかにボタンを無効にするなどのフィードバックを行うべき。
+Global UI だと不十分。
+
+`useFetcher`はそれ単体で独立した state を持つため、これを使うのが最も簡単である。
+
+```tsx
+const fetcher = useFetcher()
+// <fetcher.Form>...</fetcher.Form>の中のボタンなどを以下で制御する
+const busy = fetcher.state !== 'idle'
+```
+
+non-fetcher なフォームの場合は、`useNavigation`を使う。
+
+```tsx
+// <Form>...</Form>の中のボタンなどを以下で制御する
+const navigation = useNavigation()
+const busy = navigation.formAction === '/projects/new' // navigationはグローバルなので手動で指定が必要
+```
+
+### Optimistic UI
+
+action 実行時の楽天更新は、`fetcher.formData`を先行して利用することで実現する。
+
+```tsx
+const fetcher = useFetcher()
+let age = 40
+if (fetcher.formData) {
+  age = fetcher.formData.get('age')
 }
 ```
