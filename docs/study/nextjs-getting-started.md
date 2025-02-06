@@ -170,17 +170,16 @@ https://nextjs.org/docs/app/getting-started/css
 
 ## Fetching Data
 
-Next.js のデータ取得はサーバーサイドでの取得が基本。
+Next.js のデータ取得はサーバーサイドでの取得が基本。page, layout, server component 内でデータを取得することができる。
 
 ### ブロッキングなデータ取得
 
 - Server Component のレンダリングプロセス内で Promise を await する方法
 - fetch したり ORM 叩いたりして OK（まじか）
-- データ取得が終わるまでレンダリング全体がブロックされる
-- 必要に応じて`loader.js`を用意する
-  - サーバサイドでデータ取得している間に、別の画面を先行して表示することができる。
-  - 実のところ Suspense で`page`をラップしてるだけ
-  - なくても最上位の Suspense が適用される？
+- 必要に応じて`loading.js`を用意する
+  - サーバサイドでデータ取得している間に、ローディング画面を先行して表示することができる。
+  - これがないとレンダリングが完全にブロックされる
+  - 実のところ Suspense で`page`をラップしてるだけではある
 
 ```tsx
 const data = await fetch('https://api.vercel.app/blog')
@@ -222,3 +221,125 @@ export default function Posts({
   return <div>....</div>
 }
 ```
+
+## Updating Data
+
+https://nextjs.org/docs/app/getting-started/updating-data
+
+データの更新は Server Functions という仕組みで行う。
+クライアントコンポーネントからサーバーサイドの関数を呼び出すことを可能にするための仕組みである。
+定義の仕方は 2 つある。
+
+### Server Functions の定義
+
+- `actions.ts`などの独立したファイルに定義し、Server|Client Component でインポートして使う
+  - この場合はファイルの先頭に`'use server'`と書く
+  - こちらの方法が推奨される
+- Server Component にインラインで定義する
+  - この場合は非同期関数の先頭に`'use server'`と書く
+
+### Server Functions の呼び出し
+
+呼び出し方法は Form による方法とイベントハンドラによる方法の 2 つがある。
+
+まずは Form による方法。
+
+```tsx
+import { createPost } from '@/app/actions'
+// Reactのformは拡張されており、action属性を受け取ることができる
+<form action={createPost}>
+```
+
+アクションでは FormData を受け取ることができる。後のやり方は MDN に聞いてくれ。
+
+```tsx
+'use server'
+export async function createPost(formData: FormData) {}
+```
+
+イベントハンドラによる呼び出しは、普通に関数を呼び出すだけでよく、特記事項はない。
+
+### Pending state
+
+`useActionState`フックを使うと、アクションの実行状態を管理したり、返値を受け取ったりできる。
+
+```tsx
+import { useActionState } from 'react'
+
+// 以下、レンダリングプロセス内で
+const [state, action, pending] = useActionState(createPost, false)
+return (
+  <button onClick={() => action()}>
+    {pending ? <LoadingSpinner /> : 'Create Post'}
+  </button>
+)
+```
+
+### Revalidation
+
+action 実行後の再検証は`revalidatePath`や`revalidateTag`を使う。
+
+```tsx
+'use server'
+import { revalidatePath } from 'next/cache'
+export async function createPost(formData: FormData) {
+  // Update data and ...
+  revalidatePath('/posts')
+}
+```
+
+### Redirecting
+
+`redirect`を使う。
+
+```tsx
+'use server'
+import { redirect } from 'next/navigation'
+export async function createPost(formData: FormData) {
+  // Update data and ...
+  redirect('/posts')
+}
+```
+
+## Handling Expected Errors
+
+### Server Actions
+
+フォームバリデーションエラーなど。
+アクションから普通にエラー情報を整形して返して、クライアント側で`useActionState`を使って煮るなり焼くなりする。
+
+### Server Components
+
+サーバーコンポーネント内でエラーが発生した場合、例えばデータ取得の失敗時などは、Conditional にレンダリングする。
+
+```tsx
+const res = await fetch(`https://...`)
+const data = await res.json()
+
+if (!res.ok) {
+  return 'There was an error.'
+}
+```
+
+### not found
+
+`not-found.js`を定義した上で、page で`notFound()`を呼ぶことで 404 ページを描写する。
+
+```tsx
+import { notFound } from 'next/navigation'
+
+export default async function Profile({ params }) {
+  // ...
+  if (!user) {
+    notFound()
+  }
+  // ...
+}
+```
+
+## Handling Unexpected Errors
+
+`error.js`に Error Boundary を書くことで行う。
+ネスト可能であり、直近の祖先の`error.js`が利用される。
+
+あまり一般的じゃないけと`global-error.js`を使ってルートレイアウトでエラーをハンドリングすることもできる。
