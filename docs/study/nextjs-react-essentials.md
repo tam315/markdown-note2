@@ -1,5 +1,7 @@
 # Next.js - React Essentials
 
+（どのドキュメントをまとめたのか忘れた）
+
 ## Server Components
 
 - レンダリングされる場所をサーバ側に固定できるようになった
@@ -24,16 +26,6 @@
   - バンドルサイズの減少
   - Ruby on Rails のような開発体験
 - App Router ではコンポーネントはデフォルトで Server Components としてレンダリングされる
-- 以下のファイル名は特別な役割を持つ
-  - `layout`
-  - `page`
-  - `loading`
-  - `not-found`
-  - `error`
-  - `global-error`
-  - `route`
-  - `template`
-  - `default`
 
 ## Client Components
 
@@ -78,17 +70,9 @@ const SomeServerComponent = () => {
     <ExampleClientComponent>
       <ExampleServerComponent />
     </ExampleClientComponent>
-  );
-};
+  )
+}
 ```
-
-### Client Component に props を渡す
-
-- Server Component から Client Component に props を渡すときには Serializable な値しか渡せない
-  - e.g. コールバック関数を与えることはできない
-- なぜならそこにネットワークによる境界(断絶)があるため
-  - App Router では、Server Component と Client Component の間に境界がある
-  - Pages Router では、`get***Props`と Page Component の間に境界がある
 
 ### サーバサイド or クライアントサイドでしか使えないコードを明示する
 
@@ -97,7 +81,7 @@ await fetch('https://external-service.com/data', {
   headers: {
     authorization: process.env.API_KEY,
   },
-});
+})
 ```
 
 例えば上記は`NEXT_PUBLIC`がついていないのでクライアントサイドでは動作しない。
@@ -109,9 +93,9 @@ npm install client-only
 ```
 
 ```tsx
-import 'server-only';
+import 'server-only'
 // or
-import 'server-only';
+import 'client-only'
 ```
 
 こうすることでサーバサイド or クライアントサイドでしか動作しないことを明示＆保証できる。
@@ -131,24 +115,24 @@ Server Component では Context を作ったり使ったりできないので、
 Client Component で Context をセットアップして ↓
 
 ```tsx
-'use client';
+'use client'
 
-import { ThemeProvider } from 'acme-theme';
-import { AuthProvider } from 'acme-auth';
+import { ThemeProvider } from 'acme-theme'
+import { AuthProvider } from 'acme-auth'
 
 export function Providers({ children }) {
   return (
     <ThemeProvider>
       <AuthProvider>{children}</AuthProvider>
     </ThemeProvider>
-  );
+  )
 }
 ```
 
 Server Component でそれをつかう ↓
 
 ```tsx
-import { Providers } from './providers';
+import { Providers } from './providers'
 
 export default function RootLayout({ children }) {
   return (
@@ -157,7 +141,7 @@ export default function RootLayout({ children }) {
         <Providers>{children}</Providers>
       </body>
     </html>
-  );
+  )
 }
 ```
 
