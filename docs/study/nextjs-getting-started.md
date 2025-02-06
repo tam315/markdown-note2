@@ -249,35 +249,60 @@ https://nextjs.org/docs/app/getting-started/updating-data
 まずは Form による方法。
 
 ```tsx
+// action.ts
+'use server'
+// アクションでは FormData を受け取るようにしておく
+export async function createPost(formData: FormData) {}
+```
+
+```tsx
+// page.ts
 import { createPost } from '@/app/actions'
 // Reactのformは拡張されており、action属性を受け取ることができる
 <form action={createPost}>
 ```
 
-アクションでは FormData を受け取ることができる。後のやり方は MDN に聞いてくれ。
+次に、イベントハンドラ内での呼び出しをする方法。`startTransition`で囲む必要があるらしい。
 
 ```tsx
-'use server'
-export async function createPost(formData: FormData) {}
+export async function someAction(someArgs: { nandemoOk: string }) {}
 ```
 
-イベントハンドラによる呼び出しは、普通に関数を呼び出すだけでよく、特記事項はない。
+```ts
+startTransition(() => {
+  someAction(someArgs)
+})
+```
 
-### Pending state
+### State のあるアクション
 
-`useActionState`フックを使うと、アクションの実行状態を管理したり、返値を受け取ったりできる。
+アクションが何らかの値を返す場合や、Pending 状態を扱いたい時は、`useActionState`フックを使ってラップしなければならない。
 
 ```tsx
+// page.ts
 import { useActionState } from 'react'
 
 // 以下、レンダリングプロセス内で
-const [state, action, pending] = useActionState(createPost, false)
+
+// stateにはactionの返り値が入る。
+// formActionにはactionをラップしたものが入る（ちなみに、actionに返り値があるとformにはそのまま渡せない）
+const [state, formAction, pending] = useActionState(createPost, null)
 return (
-  <button onClick={() => action()}>
+  <button onClick={formAction}>
     {pending ? <LoadingSpinner /> : 'Create Post'}
   </button>
 )
 ```
+
+この時アクション本体は第一引数に prevState を受け取るようになっていないといけない。
+たとえ不要であっても。うーーん、なるほど。。。？なんか色々絡まっているような。。。
+
+```ts
+export const createPost = async (_prevState: unknown, formData: FormData) => {}
+```
+
+詳しくは以下を読め。
+https://ja.react.dev/reference/react/useActionState
 
 ### Revalidation
 
