@@ -37,7 +37,7 @@ npx create-next-app@latest
 - `[folder]` Dynamic Route Segment
 - `[...folder]`
   - Catch-all Route Segment
-  - e.g. `app/shop/[[...slug]]/page.js`だと以下にマッチする
+  - e.g. `app/shop/[...slug]/page.js`だと以下にマッチする
     - `/shop/clothes`
     - `/shop/clothes/tops`
     - `/shop/clothes/tops/t-shirts`
@@ -51,13 +51,14 @@ npx create-next-app@latest
 ### Route Groups
 
 ルーティングに影響を与えずにファイルを構造化するための仕組み。
-ある共通レイアウトを複数画面に当てつつ、ルーティングには影響を与えたくない時などに使う。
+ルーティングを変えずに共通レイアウトを複数画面に当てたいときなどに使う。
 
 - `(folder)`
 
 ### Private Folders
 
-ルーティングに影響を与えないフォルダ。ファイル整理に使う。
+ルーティング等に一切の影響を与えないフォルダ。
+`layout.js`その他のファイルがあっても全て無視される。ファイル整理に使う。
 
 - `_folder`
 
@@ -190,6 +191,9 @@ const allPosts = await db.select().from(posts)
 
 サーバーコンポーネントで await していない Promise を用意し、Suspense で囲んだクライアントコンポーネントにわたし、`use`で受け取る方法。
 サーバーコンポーネントからクライアントコンポーネントに**Streaming**する(順次データを流し込む)ことができる。
+
+(シリアライズできないものをクライアントに渡せるようになったのね、魔法ですね)
+
 タイトルや説明文などを先行して表示し、データ取得が終わりしだい本文を表示するようなケースで便利。
 
 ```tsx
