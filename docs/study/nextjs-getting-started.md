@@ -230,11 +230,19 @@ export default function Posts({
 
 https://nextjs.org/docs/app/getting-started/updating-data
 
-データの更新は Server Functions という仕組みで行う。
+データの更新は Server Functions という仕組みで行う。（2024 後半までは`Server Actions`と呼ばれていたもの）
 クライアントコンポーネントからサーバーサイドの関数を呼び出すことを可能にするための仕組みである。
 定義の仕方は 2 つある。
 
 ### Server Functions の定義
+
+`use server`を使って定義する。これは、「この関数（ファイル）はクライアントから呼び出せるものですよ」という宣言である。
+
+> 'use server' marks server-side functions that can be called from client-side code.
+
+出典: https://react.dev/reference/rsc/use-server
+
+記法は二つある。
 
 - `actions.ts`などの独立したファイルに定義し、Server|Client Component でインポートして使う
   - この場合はファイルの先頭に`'use server'`と書く
@@ -244,14 +252,15 @@ https://nextjs.org/docs/app/getting-started/updating-data
 
 ### Server Functions の呼び出し
 
-呼び出し方法は Form による方法とイベントハンドラによる方法の 2 つがある。
+呼び出し方法は Form による方法とイベントハンドラによる方法がある。
 
-まずは Form による方法。
+### Form による呼び出し(Pending や返り値を扱わない場合)
+
+form の action にそのまま突っ込めば OK。
 
 ```tsx
 // action.ts
 'use server'
-// アクションでは FormData を受け取るようにしておく
 export async function createPost(formData: FormData) {}
 ```
 
@@ -262,21 +271,9 @@ import { createPost } from '@/app/actions'
 <form action={createPost}>
 ```
 
-次に、イベントハンドラ内での呼び出しをする方法。`startTransition`で囲む必要があるらしい。
+### Form による呼び出し(Pending や返り値を扱う場合)
 
-```tsx
-export async function someAction(someArgs: { nandemoOk: string }) {}
-```
-
-```ts
-startTransition(() => {
-  someAction(someArgs)
-})
-```
-
-### State のあるアクション
-
-アクションが何らかの値を返す場合や、Pending 状態を扱いたい時は、`useActionState`フックを使ってラップしなければならない。
+Pending や返り値を扱う必要があるなら、`useActionState`フックを使わなければいけない。
 
 ```tsx
 // page.ts
@@ -285,7 +282,8 @@ import { useActionState } from 'react'
 // 以下、レンダリングプロセス内で
 
 // stateにはactionの返り値が入る。
-// formActionにはactionをラップしたものが入る（ちなみに、actionに返り値があるとformにはそのまま渡せない）
+// formActionにはactionをラップしたものが入る。
+// ちなみに返り値のあるactionをformにそのまま渡すと型エラーになるので注意。
 const [state, formAction, pending] = useActionState(createPost, null)
 return (
   <button onClick={formAction}>
@@ -294,19 +292,47 @@ return (
 )
 ```
 
-この時アクション本体は第一引数に prevState を受け取るようになっていないといけない。
-たとえ不要であっても。うーーん、なるほど。。。？なんか色々絡まっているような。。。
+`useActionState` を使う場合は、Action のシグネチャも変わるので注意。
+第一引数に prevState を受け取るように変更しないといけない。
+たとえ prevState が不要であってもね。
+（useActionState の利用を前提として Action のシグネチャを決めるのが運用としてはシンプルか？）
 
 ```ts
 export const createPost = async (_prevState: unknown, formData: FormData) => {}
 ```
 
-詳しくは以下を読め。
-https://ja.react.dev/reference/react/useActionState
+### イベントハンドラ内での呼び出し
+
+イベントハンドラなど、フォームの外で Server Function を実行したい時は、トランジション内で実行する必要がある。
+ちなみに、Form で使う場合は自動的にトランジション内で実行されているのだよ。
+
+https://react.dev/reference/rsc/use-server#calling-a-server-function-outside-of-form
+
+```tsx
+export async function someAction(someArgs: { nandemoOk: string }) {}
+```
+
+```tsx
+const [isPending, startTransition] = useTransition()
+
+// イベントハンドラ内で
+startTransition(async () => {
+  const result = someAction({ nandemoOk: 'aaa' })
+})
+```
+
+↑ こんな感じで、pending も state も自然に扱える。
+`useActionState`を使うこともできそうだが、ベストプラクティスがよくわからない。
+
+### Server Functions 関連の参考資料
+
+- https://ja.react.dev/reference/react/useActionState
+- https://zenn.dev/uhyo/books/react-19-new/viewer/useactionstate
+- https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations#server-side-form-validation
 
 ### Revalidation
 
-action 実行後の再検証は`revalidatePath`や`revalidateTag`を使う。
+action 実行後の再検証は、Server Function 内で`revalidatePath`や`revalidateTag`を使う。
 
 ```tsx
 'use server'
@@ -319,7 +345,7 @@ export async function createPost(formData: FormData) {
 
 ### Redirecting
 
-`redirect`を使う。
+Server Function 内で`redirect`を使う。
 
 ```tsx
 'use server'
