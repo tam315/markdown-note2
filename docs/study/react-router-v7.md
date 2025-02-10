@@ -273,6 +273,7 @@ export async function clientAction({ serverAction }) {
 
 これがエクスポートされていると loader でのロード中に表示される。
 普通はロードが完了するまで何も表示されない。
+(試したところ、SPA モードでのみ使える模様)
 
 ```tsx
 export function HydrateFallback() {
