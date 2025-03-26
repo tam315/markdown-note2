@@ -1,8 +1,8 @@
-const { themes } = require('prism-react-renderer');
+import { themes } from 'prism-react-renderer';
 const lightCodeTheme = themes.github;
 const darkCodeTheme = themes.dracula;
-const math = require('remark-math');
-const katex = require('rehype-katex');
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -40,15 +40,15 @@ const config = {
         docs: {
           // `/docs/study/hoge` ではなく `/study/hoge` でアクセスできるように
           routeBasePath: '/',
-          sidebarPath: require.resolve('./sidebars.js'),
+          sidebarPath: './sidebars.js',
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           // editUrl: 'https://github.com/junkboy0315/markdown-note2',
-          remarkPlugins: [math],
-          rehypePlugins: [[katex, { strict: false }]],
+          remarkPlugins: [remarkMath],
+          rehypePlugins: [[rehypeKatex, { strict: false }]],
         },
         theme: {
-          customCss: require.resolve('./src/css/custom.css'),
+          customCss: './src/css/custom.css',
         },
         gtag: {
           trackingID: 'G-X4XKDEQ71K',
@@ -156,4 +156,4 @@ const config = {
     }),
 };
 
-module.exports = config;
+export default config;
