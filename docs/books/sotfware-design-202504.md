@@ -7,6 +7,24 @@ CDN はそのドメインに対して、最適なエッジサーバの IP アド
 ユーザーは地理的に近いエッジサーバに接続される。
 接続後、オリジンサーバはリクエストの HTTP ヘッダ内の Host 情報をもとに、返すコンテンツを判断する。
 
+CNAMEの具体的な動作はRFC 1034 に記載がある。
+https://datatracker.ietf.org/doc/html/rfc1034#section-3.6.2
+
+```txt
+CNAME RRs cause special action in DNS software.  When a name server
+fails to find a desired RR in the resource set associated with the
+domain name, it checks to see if the resource set consists of a CNAME
+record with a matching class.  If so, the name server includes the CNAME
+record in the response and restarts the query at the domain name
+specified in the data field of the CNAME record.  The one exception to
+this rule is that queries which match the CNAME type are not restarted.
+```
+
+つまり、こういうこと。
+
+- DNS で A レコードなどを探していて見つからなかったとき、そのドメインに CNAME があれば、それをたどって別の名前に対して再び検索する。
+- ただし、「CNAME レコードそのものを求めるクエリ（タイプが CNAME）」の場合は、再検索せず、CNAME レコードだけを返す。
+
 ルートドメイン（ゾーンアペックス）には CNAME レコードを設定できない。
 CNAME を使うと他のレコードが使えなくなり、SOA や NS など必要なレコードも設定できなくなるためである。
 この制限を回避する方法として、ALIAS や ANAME レコードがあるが、これらは DNS の標準仕様ではなく、
