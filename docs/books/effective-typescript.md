@@ -141,10 +141,33 @@ DOM 操作時など、TS よりも人間がコンテキストを知っている�
 ## 10. Object Wrapper Types を使うな
 
 `String`,`Number`,`Boolean`,`Synbol`,`BigInt`は Object Wrapper Types と呼ばれる。
-
-TSではプリミティブな値はメソッドを持たない。
-`"Hello".toUpperCase()`は、`"Hello"`が`String`型という
-Object Wrapper Types にオンデマンドに変換されることで利用可能になっている。
-
 `new String(hoge)`のようにすると直接扱うこともできるが、使うな。
-ただし`String(hoge)`は単にプリミティブ型にキャストするだけなので使ってもよい。
+
+もともと、TS ではプリミティブな値はメソッドを持たない。
+`"Hello".toUpperCase()`は、`"Hello"`が`String`型という
+Object Wrapper Types に一時的に変換されることで利用可能になっている。
+
+なお、new しない`String(hoge)`などは単にプリミティブ型にキャストするだけなので使ってもよい。
+
+## 11. 過剰プロパティチェックと型チェックを区別せよ
+
+厳密な Structural Typing だと、その仕組み上、タイポや凡ミスがスルーされがちで不便である。
+このため、過剰プロパティチェックという仕組みが用意されている。
+
+これは型チェックとは違う仕組みなので注意すること。
+（TypeScript は Closed な型システムではないことを思い出して）
+
+オブジェクトリテラルを使って、型がわかっている変数に代入したときや、関数の引数に与えたときに発動する。
+中間変数を使うと、過剰プロパティチェックは発動しない。
+
+```ts
+type Person = { name: string; gender?: string }
+
+const person: Person = { name: 'Alice', age: 42 } // エラーになる
+
+const intermidiate = { name: 'Alice', age: 42 }
+const person2: Person = intermidiate // エラーにならない
+```
+
+Weak type とよばれるオプショナルなプロパティしか持たない型への代入時には、
+（過剰プロパティチェックとは別に）少なくとも一つの一致するプロパティがあるかどうかをチェックが行われる。
