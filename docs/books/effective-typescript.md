@@ -215,5 +215,47 @@ JS では、プリミティブな値は元から immutable だが、オブジェ
 const は再代入を防ぎ、readonly は変更を防ぐという点で異なる。
 
 readonly は shallow に適用される点に注意する。
-Deepに適用したいなら自作せずにライブラリを使え。
+Deep に適用したいなら自作せずにライブラリを使え。
 また、メソッドプロパティを介した変更は依然として可能である点にも注意する。
+
+## 15. 型オペレーションとジェネリック型を使って繰り返しを減らす
+
+DRY 原則は型の世界でも適用される。
+
+型に名前をつけて繰り返しを減らそう。
+interface で extends して繰り返しを避けよう。
+
+型を別の型にマップ(変換、写像)する公式の方法を知ろう。
+`keyof`,`typeof`,indexing, mapped types などがある。
+
+```ts
+// typeof
+const config = { host: '', port: 0 }
+type Config = typeof config // { host: string; port: number; }
+
+// keyof
+type Keys = keyof Config // 'host' | 'port'
+
+// indexing
+type Host = Config['host'] // string
+
+// mapped types
+type ReadonlyCfg = {
+  readonly [K in keyof Config]: Config[K] // { readonly host: string; readonly port: number; }
+}
+```
+
+ジェネリック型は型の世界の関数である。
+型を別の型にマップするために使う。
+公式の`Pick`, `Partial`, `Record`, `ReturnType`などを知っておこう。
+
+```ts
+// 関数定義 (左側に<>がある)
+type Box<T> = { value: T }
+
+// 関数適用 (右側に<>がある)
+type StringBox = Box<string>
+```
+
+DRY 原則にこだわりすぎないこと。
+間違った抽象化よりも繰り返しの方がマシ。
