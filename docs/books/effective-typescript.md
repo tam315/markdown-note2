@@ -226,7 +226,14 @@ DRY 原則は型の世界でも適用される。
 interface で extends して繰り返しを避けよう。
 
 型を別の型にマップ(変換、写像)する公式の方法を知ろう。
-`keyof`,`typeof`,indexing, mapped types などがある。
+`keyof`, `typeof`, indexing, mapped types(`Record`) などがある。
+
+`typeof`は値の世界と型の世界の両方に存在するので注意すること。
+
+mapped types(`Record`) は`[A in B]`のような書き方をする。
+配列のループ処理を同じような動作をする。
+特に`A in keyof B`の様に書いたときはhomomorphicにマップされ、
+readonlyやoptionalといった情報がそのまま引き継がれる。
 
 ```ts
 // typeof
@@ -259,3 +266,37 @@ type StringBox = Box<string>
 
 DRY 原則にこだわりすぎないこと。
 間違った抽象化よりも繰り返しの方がマシ。
+
+## 16. Index Signature は避けてもっと正確な型を使う
+
+`{[key: string]: string}`のような書き方をするのが Index Signature である。
+
+Index Signature は、どんな値がやってくるか不明な動的データに限って使うもの。
+anyのような悪い効果をもたらすので、なるべく避けるべき。
+
+代わりに、interefaceを定義せよ。
+もしくは`Record<Union, V>` / `Map<Union, V>`や、
+最悪でも`{[key: Union]: V}`を使え。
+
+## 17. Numericな Index Signature は使うな
+
+JSでは、あらゆるオブジェクトのキー名はstring or symbolである。
+
+配列も例外ではない。
+TypeScript で配列の要素取り出しにnumber を使える様に見えるのは、
+バグを見つけやすくするための架空の仕組みに過ぎず、
+あくまで見かけ上のフィクションである。
+
+```ts
+const arr = ['a', 'b', 'c']
+/**
+ * 配列はこんなふうに管理されている
+ * { '0': 'a', '1': 'b', '2': 'c', length: 3 }
+ */
+arr[1] // 'b' <= 数値でキーを指定できるようにみえるが
+Object.keys(arr) // ['0', '1', '2', 'length'] <= 実はキーは文字列
+```
+
+自前オブジェクトに numeric キーを付けると様々な厄災が起きるのでやめよう。
+
+数値をキー名にしたくなったら、配列、タプル、`ArrayLike`、`Iterable`で事足りるはず。
