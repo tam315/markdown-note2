@@ -398,3 +398,47 @@ if (place.name) {
   place.name // string | null
 }
 ```
+
+## 24. 型推論でコンテキストがどう使われるか理解する
+
+コンテキストが失われて型エラーになることがある。
+
+```ts
+type Language = 'JavaScript' | 'TypeScript'
+function setLanguage(language: Language) {}
+
+let language = 'JavaScript' // string
+setLanguage(language) // error: string is not assignable to Language
+```
+
+対処法は以下の通り。
+
+- Use inline style (Best if appricable)
+- Use `const` assertion (定義を間違えると定義時ではなく使用時にエラーがでてわかりづらいので注意)
+- Use Type annotation
+- Use `satisfies` operator
+
+## 25. 進化する型(Evolving types)を理解する
+
+最初はanyだけど文脈によって進化していく型もあるらしい。
+手元では動作が確認できずエラーになった。
+これは使わずに明示的に型を指定した方が良さそう。
+
+```ts
+const arr = [] // any[]
+arr.push('a') // string[]
+arr.push(1) // (string | number)[]
+```
+
+## 26. 関数型構文やサードパーティライブラリを使って型の流れを改善する
+
+以下を活用することで、型の流れを改善し、可読性を高め、明示的な型注釈の必要性を減らすことができる。
+
+- `Array.protorype.map()`
+- `Array.protorype.flat()`
+- `for-of`ループ
+- `Object.fromEntries()`
+- `Object.fromValues()`
+- 他多数
+
+`zipObject`のような複雑なものは、lodash等のライブラリ活用も検討すべき。
