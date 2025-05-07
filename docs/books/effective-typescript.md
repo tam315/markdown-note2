@@ -453,19 +453,26 @@ arr.push(1) // (string | number)[]
 読みやすいコードを不可解なエラーを減らすため、
 コールバックよりプロミスを、生プロミスよりも async-await を使おう。
 
-## 28. 型引数の事前確定や省略がしたくなったらクラスやカリー化を使う
+## 28. 型引数を省略するにはクラスやカリー化を使う
 
-型引数は全て明示的に記載する必要があり、一部を省略したり、事前に確定しておくことはできない。
-そういったことをしたくなったら、クラスやカリー化を活用すると良い。
+複数の型引数を持つ関数では、すべてを型推論するか、
+全てを明示的に指定するかの二択(all or nothing)になる。
+
+```ts
+const createAPI = <API, Path extends keyof API>(path: Path) => {}
+// 利用時には2つの型引数を明示する必要がある。
+// Pathだけを推論にして省略することは不可能である。
+createAPI<SomeSpecialAPI, '/some/endpoint'>('/some/endpoint')
+```
+
+もし型引数の一部だけを省略したい場合、逆に言うと一部だけを事前に確定しておきたい場合は、
+クラスやカリー化を活用し、型引数を与える場面を分割するとよい。
 
 例えば以下のような事例で考えてみよう。
 
 - API の種別ごとに、エンドポイントと返り値を定義した型がすでにある
 - データフェッチのロジックはすべての API で完全に共通である
-- どのエンドポイントを叩くかは実行時に決めたいし、結果には型推論が効いてほしい
-
-この場合、最終的にデータフェッチを行う関数が扱うべき型引数は API とエンドポイントという 2 つになる。
-このうち、API はあらかじめ確定しているが、パスは実行時に決まる。
+- どのエンドポイントを叩くかは実行時に動的に決めたいし、結果には型推論が効いてほしい
 
 ```ts
 interface SeedAPI {
@@ -478,7 +485,8 @@ interface CarAPI {
 }
 
 // カリー化の例
-function createFetcher<API /* ここでAPIを事前適用している */>() {
+function createFetcher<API>() {
+  // 関数を返す
   return async function <Path extends keyof API>(
     path: Path,
   ): Promise<API[Path]> {
@@ -486,7 +494,7 @@ function createFetcher<API /* ここでAPIを事前適用している */>() {
   }
 }
 
-const seedFetcher = createFetcher<SeedAPI>()
+const seedFetcher = createFetcher<SeedAPI>() // ここでAPIを事前適用している
 const berry = await seedFetcher('/seed/apple') // Pathは推論され、berryの型はSeed型になる
 
 const carFetcher = createFetcher<CarAPI>()
@@ -494,3 +502,5 @@ const car = await carFetcher('/car/1') // Pathは推論され、carの型はCar�
 ```
 
 上記はカリー化の例だが、クラスを使ってもやることは同じである。
+
+(個人的には利用したい具体的なシーンがあまり思い浮かばないが、カリー化が型引数の省略に使えるということは覚えておこう)
