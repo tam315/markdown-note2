@@ -232,8 +232,8 @@ interface で extends して繰り返しを避けよう。
 
 mapped types(`Record`) は`[A in B]`のような書き方をする。
 配列のループ処理を同じような動作をする。
-特に`A in keyof B`の様に書いたときはhomomorphicにマップされ、
-readonlyやoptionalといった情報がそのまま引き継がれる。
+特に`A in keyof B`の様に書いたときは homomorphic にマップされ、
+readonly や optional といった情報がそのまま引き継がれる。
 
 ```ts
 // typeof
@@ -252,16 +252,21 @@ type ReadonlyCfg = {
 }
 ```
 
-ジェネリック型は型の世界の関数である。
+ジェネリック(関数)型は型の世界の関数、型関数といえる。
 型を別の型にマップするために使う。
 公式の`Pick`, `Partial`, `Record`, `ReturnType`などを知っておこう。
 
 ```ts
-// 関数定義 (左側に<>がある)
+// オブジェクトのジェネリック型の定義と適用
 type Box<T> = { value: T }
-
-// 関数適用 (右側に<>がある)
 type StringBox = Box<string>
+```
+
+```ts
+// 関数のジェネリック型の定義と適用
+type Multiplier<Factor extends number> = (factor: Factor) => number // これはジェネリックである
+type Multiplier2 = <Factor extends number>(factor: Factor) => number // これはジェネリックではない。引数に制約を加えているだけ。
+type FiveMultiplier = Multiplier<5>
 ```
 
 DRY 原則にこだわりすぎないこと。
@@ -272,18 +277,18 @@ DRY 原則にこだわりすぎないこと。
 `{[key: string]: string}`のような書き方をするのが Index Signature である。
 
 Index Signature は、どんな値がやってくるか不明な動的データに限って使うもの。
-anyのような悪い効果をもたらすので、なるべく避けるべき。
+any のような悪い効果をもたらすので、なるべく避けるべき。
 
-代わりに、interefaceを定義せよ。
+代わりに、intereface を定義せよ。
 もしくは`Record<Union, V>` / `Map<Union, V>`や、
 最悪でも`{[key: Union]: V}`を使え。
 
-## 17. Numericな Index Signature は使わない
+## 17. Numeric な Index Signature は使わない
 
-JSでは、あらゆるオブジェクトのキー名はstring or symbolである。
+JS では、あらゆるオブジェクトのキー名は string or symbol である。
 
 配列も例外ではない。
-TypeScript で配列の要素取り出しにnumber を使える様に見えるのは、
+TypeScript で配列の要素取り出しに number を使える様に見えるのは、
 バグを見つけやすくするための架空の仕組みに過ぎず、
 あくまで見かけ上のフィクションである。
 
@@ -299,7 +304,7 @@ Object.keys(arr) // ['0', '1', '2', 'length'] <= 実はキーは文字列
 
 自前オブジェクトに numeric キーを使うと様々な厄災が起きるのでやめよう。
 
-数値をキー名にしたくなったら、配列、タプル、`ArrayLike`(Mapを含む)、`Iterable`などで代用しよう。
+数値をキー名にしたくなったら、配列、タプル、`ArrayLike`(Map を含む)、`Iterable`などで代用しよう。
 
 ## 18. 推論できるときは型注釈をつけない
 
@@ -311,7 +316,7 @@ Object.keys(arr) // ['0', '1', '2', 'length'] <= 実はキーは文字列
 関数の引数には型注釈をつけよう。ただし関数内部のローカル変数には不要。
 
 関数の返り値には基本的に型注釈はつけるな。
-ただし、returnが複数ある場合や、パブリックに使われる関数である場合、
+ただし、return が複数ある場合や、パブリックに使われる関数である場合、
 名前付きの型で返したい場合などは、適宜付けよう。
 
 ## 19. 違う値には違う型を使う
@@ -322,7 +327,7 @@ Object.keys(arr) // ['0', '1', '2', 'length'] <= 実はキーは文字列
 
 ## 20. 型推論がどう機能するか知る
 
-TypeScriptはコンテキスト、柔軟性と特異性のバランスを見ながら型を推論している。
+TypeScript はコンテキスト、柔軟性と特異性のバランスを見ながら型を推論している。
 
 - Widening
   - リテラル型 → 基本型
@@ -332,8 +337,8 @@ TypeScriptはコンテキスト、柔軟性と特異性のバランスを見な�
   - Union 型 → 部分型
   - 実行時情報で型を「厳しく」して安全に扱う
 
-satisfiesと型注釈は似ている。どちらもプロパティの過不足チェックを行う。
-しかし、satisfiesは推論結果を尊重してより狭い型を選択するのに対し、
+satisfies と型注釈は似ている。どちらもプロパティの過不足チェックを行う。
+しかし、satisfies は推論結果を尊重してより狭い型を選択するのに対し、
 型注釈のほうは推論せずに強制的に型を上書きするという点で異なる。
 
 ## 21. オブジェクトはいっぺんに作る
@@ -356,9 +361,9 @@ const obj = {
 
 ## 22. Type Narrowing を理解する
 
-TypeScriptではコードがどの場所にあるかによって、値の型が変わりうる。
-これは他の言語にはないTSの特徴である。
-Type narrowingするには以下のようなやり方がある。
+TypeScript ではコードがどの場所にあるかによって、値の型が変わりうる。
+これは他の言語にはない TS の特徴である。
+Type narrowing するには以下のようなやり方がある。
 
 - Null checking
 - `instanceof`
@@ -369,11 +374,11 @@ Type narrowingするには以下のようなやり方がある。
 - User defined type guard
 
 なお、コールバック関数はいつの時点で実行されるかわからないため、
-その外側でNarrowingを行ったとしても無効であることに注意する。
+その外側で Narrowing を行ったとしても無効であることに注意する。
 
 ## 23. エイリアスを作ったらそれを使い続けろ
 
-エイリアスに対して行ったNarrowingは元のオブジェクトに適用はされないことがある（ただし手元ではこの挙動は確認できず）。
+エイリアスに対して行った Narrowing は元のオブジェクトに適用はされないことがある（ただし手元ではこの挙動は確認できず）。
 エイリアスを作ったらそれを使い続けろ。
 
 ```ts
@@ -389,7 +394,7 @@ if (personName) {
 
 なお、オブジェクトを関数に渡すと、その値が変更されるかもしれない点に注意せよ。
 プロパティは信用せずに、ローカル変数のみを信頼すること。
-もしくは、必要に応じて関数の引数をreadonlyにするとよい。
+もしくは、必要に応じて関数の引数を readonly にするとよい。
 
 ```ts
 if (place.name) {
@@ -420,7 +425,7 @@ setLanguage(language) // error: string is not assignable to Language
 
 ## 25. 進化する型(Evolving types)を理解する
 
-最初はanyだけど文脈によって進化していく型もあるらしい。
+最初は any だけど文脈によって進化していく型もあるらしい。
 手元では動作が確認できずエラーになった。
 これは使わずに明示的に型を指定した方が良さそう。
 
@@ -441,4 +446,51 @@ arr.push(1) // (string | number)[]
 - `Object.fromValues()`
 - 他多数
 
-`zipObject`のような複雑なものは、lodash等のライブラリ活用も検討すべき。
+`zipObject`のような複雑なものは、lodash 等のライブラリ活用も検討すべき。
+
+## 27. 非同期関数を使って型の流れを改善する
+
+読みやすいコードを不可解なエラーを減らすため、
+コールバックよりプロミスを、生プロミスよりも async-await を使おう。
+
+## 28. 型引数の事前確定や省略がしたくなったらクラスやカリー化を使う
+
+型引数は全て明示的に記載する必要があり、一部を省略したり、事前に確定しておくことはできない。
+そういったことをしたくなったら、クラスやカリー化を活用すると良い。
+
+例えば以下のような事例で考えてみよう。
+
+- API の種別ごとに、エンドポイントと返り値を定義した型がすでにある
+- データフェッチのロジックはすべての API で完全に共通である
+- どのエンドポイントを叩くかは実行時に決めたいし、結果には型推論が効いてほしい
+
+この場合、最終的にデータフェッチを行う関数が扱うべき型引数は API とエンドポイントという 2 つになる。
+このうち、API はあらかじめ確定しているが、パスは実行時に決まる。
+
+```ts
+interface SeedAPI {
+  '/seeds': Seed[]
+  '/seed/apple': Seed
+}
+interface CarAPI {
+  '/cars': Car[]
+  '/car/1': Car
+}
+
+// カリー化の例
+function createFetcher<API /* ここでAPIを事前適用している */>() {
+  return async function <Path extends keyof API>(
+    path: Path,
+  ): Promise<API[Path]> {
+    return fetch(path).then(res => res.json()) // ここは任意の実装にする
+  }
+}
+
+const seedFetcher = createFetcher<SeedAPI>()
+const berry = await seedFetcher('/seed/apple') // Pathは推論され、berryの型はSeed型になる
+
+const carFetcher = createFetcher<CarAPI>()
+const car = await carFetcher('/car/1') // Pathは推論され、carの型はCar型になる
+```
+
+上記はカリー化の例だが、クラスを使ってもやることは同じである。
