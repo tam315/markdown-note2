@@ -484,15 +484,15 @@ interface CarAPI {
   '/car/1': Car
 }
 
-// カリー化の例
+// ① APIという型引数はここで明示的に指定する
 function createFetcher<API>() {
-  // 関数を返す
+  // ② Pathという型引数はここで暗黙的に推論する
   return async <Path extends keyof API>(path: Path): Promise<API[Path]> => {
-    return fetch(path).then(res => res.json()) // ここは任意の実装にする
+    /* ここは任意の実装にする */
   }
 }
 
-const seedFetcher = createFetcher<SeedAPI>() // ここでAPIを事前適用している
+const seedFetcher = createFetcher<SeedAPI>()
 const berry = await seedFetcher('/seed/apple') // Pathは推論され、berryの型はSeed型になる
 
 const carFetcher = createFetcher<CarAPI>()
