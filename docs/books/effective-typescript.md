@@ -487,9 +487,7 @@ interface CarAPI {
 // カリー化の例
 function createFetcher<API>() {
   // 関数を返す
-  return async function <Path extends keyof API>(
-    path: Path,
-  ): Promise<API[Path]> {
+  return async <Path extends keyof API>(path: Path): Promise<API[Path]> => {
     return fetch(path).then(res => res.json()) // ここは任意の実装にする
   }
 }
