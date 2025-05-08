@@ -252,21 +252,39 @@ type ReadonlyCfg = {
 }
 ```
 
-ジェネリック(関数)型は型の世界の関数、型関数といえる。
-型を別の型にマップするために使う。
+ジェネリック型は、ある型を別の型にマップするための仕組み。
 公式の`Pick`, `Partial`, `Record`, `ReturnType`などを知っておこう。
 
 ```ts
-// オブジェクトのジェネリック型の定義と適用
+// オブジェクトのジェネリック型
 type Box<T> = { value: T }
 type StringBox = Box<string>
 ```
 
 ```ts
-// 関数のジェネリック型の定義と適用
-type Multiplier<Factor extends number> = (factor: Factor) => number // これはジェネリックである
-type Multiplier2 = <Factor extends number>(factor: Factor) => number // これはジェネリックではない。引数に制約を加えているだけ。
-type FiveMultiplier = Multiplier<5>
+// 関数のジェネリック型
+type Multiplier<Factor extends number> = (factor: Factor) => number
+type FiveMultiplier = Multiplier<5> // ok
+const fiveMultiplier: FiveMultiplier = factor => {
+  return factor * 5
+}
+fiveMultiplier(5) // ok
+fiveMultiplier(10) // error: 引数は5でなければならない
+fiveMultiplier<5>(123) // error: FiveMultiplierはジェネリック型ではない
+```
+
+以下は関数のジェネリック型ではなく、**ジェネリック関数**であり別物なので注意。
+ジェネリック関数では、型に型引数を渡すのではなく、関数自体に型引数を渡す。
+
+```ts
+type Multiplier = <Factor extends number>(factor: Factor) => number
+type FiveMultiplier = Multiplier<5> // error: ジェネリック型ではないため
+const fiveMultiplier: Multiplier = factor => {
+  return factor * 5
+} // これはok
+fiveMultiplier(5) // ok: ジェネリック関数 + 引数の型を推論
+fiveMultiplier<5>(5) // ok: ジェネリック関数 + 引数の型を明示
+fiveMultiplier<5>(1) // error: 引数は5でなければならない
 ```
 
 DRY 原則にこだわりすぎないこと。
