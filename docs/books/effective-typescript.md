@@ -222,8 +222,8 @@ Deep に適用したいなら自作せずにライブラリを使え。
 
 DRY 原則は型の世界でも適用される。
 
-型に名前をつけて繰り返しを減らそう。
-interface で extends して繰り返しを避けよう。
+型に名前をつけて(型エイリアス)繰り返しを減らそう。
+interface で extends したり、型を Union したりして、繰り返しを避けよう。
 
 型を別の型にマップ(変換、写像)する公式の方法を知ろう。
 `keyof`, `typeof`, indexing, mapped types(`Record`) などがある。
@@ -252,39 +252,47 @@ type ReadonlyCfg = {
 }
 ```
 
-ジェネリック型は、ある型を別の型にマップするための仕組み。
+ジェネリック型は、「型を変数のように扱い、あとから具体的な型を渡せる仕組み」といえる。
 公式の`Pick`, `Partial`, `Record`, `ReturnType`などを知っておこう。
 
-```ts
-// オブジェクトのジェネリック型
-type Box<T> = { value: T }
-type StringBox = Box<string>
-```
+以下はオブジェクト型に解決されるジェネリック型の例。
 
 ```ts
-// 関数のジェネリック型
-type Multiplier<Factor extends number> = (factor: Factor) => number
-type FiveMultiplier = Multiplier<5> // ok
-const fiveMultiplier: FiveMultiplier = factor => {
-  return factor * 5
+type Box<T> = { value: T } // ジェネリック型の定義
+type StringBox = Box<string> // ジェネリック型の利用
+```
+
+以下は関数型に解決されるジェネリック型の例。
+
+```ts
+type Barker<Kind extends 'cat' | 'dog'> = (kind: Kind) => string // ジェネリック型の定義
+type CatBarker = Barker<'cat'> // ジェネリック型の利用
+const catBarker: CatBarker = kind => {
+  return `Meow! I am a ${kind}`
 }
-fiveMultiplier(5) // ok
-fiveMultiplier(10) // error: 引数は5でなければならない
-fiveMultiplier<5>(123) // error: FiveMultiplierはジェネリック型ではない
+catBarker('cat') // ok
+// catBarker('dog') // error: kindは'cat'でなければならない
+// catBarker<'cat'>('cat') // error: catBarkerはジェネリック**関数**ではない
 ```
 
-以下は関数のジェネリック型ではなく、**ジェネリック関数**であり別物なので注意。
-ジェネリック関数では、型に型引数を渡すのではなく、関数自体に型引数を渡す。
+以下は関数にマップされるジェネリック型ではなく、**ジェネリック関数**であり別物なので注意。
+ジェネリック関数では、型エイリアスに型引数を渡すのではなく、実際の関数に型引数を渡す。
 
 ```ts
-type Multiplier = <Factor extends number>(factor: Factor) => number
-type FiveMultiplier = Multiplier<5> // error: ジェネリック型ではないため
-const fiveMultiplier: Multiplier = factor => {
-  return factor * 5
-} // これはok
-fiveMultiplier(5) // ok: ジェネリック関数 + 引数の型を推論
-fiveMultiplier<5>(5) // ok: ジェネリック関数 + 引数の型を明示
-fiveMultiplier<5>(1) // error: 引数は5でなければならない
+type Barker = <Kind extends 'cat' | 'dog'>(kind: Kind) => string
+// type CatBarker = Barker<'cat'> // error: ジェネリック型ではないため
+const barker: Barker = kind => {
+  switch (kind) {
+    case 'cat':
+      return 'meow'
+    case 'dog':
+      return 'woof'
+  }
+}
+barker('cat') // ok: ジェネリック関数 + 引数の型を推論
+barker('dog') // ok: ジェネリック関数 + 引数の型を推論
+barker<'cat'>('cat') // ok: ジェネリック関数 + 引数の型を明示
+// barker<'cat'>('dog') // error: 引数は'cat'でなければならない
 ```
 
 DRY 原則にこだわりすぎないこと。
@@ -473,8 +481,8 @@ arr.push(1) // (string | number)[]
 
 ## 28. 型引数を省略するにはクラスやカリー化を使う
 
-複数の型引数を持つ関数では、すべてを型推論するか、
-全てを明示的に指定するかの二択(all or nothing)になる。
+複数の型引数を持つジェネリック関数では、すべての型引数を推論するか、
+明示的に指定するかの二択(all or nothing)になる。
 
 ```ts
 const createAPI = <API, Path extends keyof API>(path: Path) => {}
@@ -519,4 +527,4 @@ const car = await carFetcher('/car/1') // Pathは推論され、carの型はCar�
 
 上記はカリー化の例だが、クラスを使ってもやることは同じである。
 
-(個人的には利用したい具体的なシーンがあまり思い浮かばないが、カリー化が型引数の省略に使えるということは覚えておこう)
+(個人的には利用したい具体的なシーンがあまり思い浮かばないが、カリー化がジェネリック関数の型引数の省略に使えるということは覚えておこう)
