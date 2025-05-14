@@ -143,12 +143,30 @@ tracestate ヘッダはベンダ独自の情報をやりとりするために使
 
 OpenTelemetry は、Provider とよばれるデータ生成と処理をグローバルに一元管理する司令塔により動作する。
 
-- TracerProvider
+- TracerProvider -> Exporter
   - トレースデータの生成と処理を担当
-- MeterProvider
+- MeterProvider -> Reader -> Exporter -> Temporality
   - メトリクスデータの生成と処理を担当
-  - Temporality: 累積送る or 差分で送る
   - Reader: 一定間隔で送る or 命令時に送る
-- LoggerProvider
+  - Temporality: 累積送る or 差分で送る
+- LoggerProvider -> LogRecordProcessors -> Exporter
   - ロギングライブラリと OpenTelemetry を連携させるためのブリッジ的なもの
   - 単にコンテキストの付与を行う程度のことしかしない
+
+### オブザーバビリティの Tips
+
+CPU 使用率のような「原因」だけでなく、ページ表示までの時間のような「ユーザーにとって目にみえる症状」を監視することで、見逃しや不要な対応を減らす。
+
+通知には、通知を受け取った人間が判断や行動をするためのマニュアルや情報へのリンクを含めることで、行動しやすくする。
+
+トレースなどを活用したデータによるインサイトを活用し、属人性をなくす。
+
+バージョンや Feature Flag の情報などをトレースに含めることで、リリースや変更の影響を分析しやすくする。
+
+Real User Monitoring (RUM) などを活用する。
+ユーザー ID などをトレース情報含めれば、フロントからインフラまで一気通貫で分析できる。
+ただし [OpenTelemetry のブラウザ実装](https://opentelemetry.io/docs/languages/js/getting-started/browser/) はまだ実験段階である。
+
+オブザーバビリティに関するバス係数(何人バスに轢かれたら破綻するか)を増やしていく。
+
+旧技術からの移行時にはリフト＆シフトは避け、最初からベストプラクティスを選んだ方がいい。
