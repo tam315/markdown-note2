@@ -1,8 +1,8 @@
-import { themes } from 'prism-react-renderer';
-const lightCodeTheme = themes.github;
-const darkCodeTheme = themes.dracula;
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
+import { themes } from 'prism-react-renderer'
+const lightCodeTheme = themes.github
+const darkCodeTheme = themes.dracula
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -154,6 +154,11 @@ const config = {
         indexName: 'yuuniworksnotes',
       },
     }),
-};
 
-export default config;
+  markdown: {
+    mermaid: true,
+  },
+  themes: ['@docusaurus/theme-mermaid'],
+}
+
+export default config
