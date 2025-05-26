@@ -536,3 +536,97 @@ const car = await carFetcher('/car/1') // Pathは推論され、carの型はCar�
 (個人的には利用したい具体的なシーンがあまり思い浮かばないが、カリー化がジェネリック関数の型引数の省略に使えるということは覚えておこう)
 
 ## 29. 常に「正しい状態」を表す型を使う
+
+ありえない状態を表現できてしまう型を作ると、混乱と事故を招く。
+ありえる状態しか表せない型を設計しよう。
+たとえコードが長くなったり設計が辛くても、最後には君を助けてくれる。
+
+## 30. 入力には寛容に、出力には厳格に
+
+入力はオプショナルだったりユニオン型だったりしても OK。
+
+出力は常に厳格に型を定義する。そうしないと利用者側で混乱する。
+
+型が巨大であり入出力で型を再利用する動機がある場合は、Pick や Omit を活用するとよい。
+
+イテレートしたいだけなら`T[]`じゃなくて`Iterable<T>`を使うとよい。
+
+## 31. 型を見ればわかることをコメント等に書かない
+
+型を見ればわかることをコメントや変数名に書くと、冗長になったり、情報の齟齬が発生しがちになったりするのでやめよう。
+
+例外として、単位を書くのは OK (e.g. `const timeMs: number = 100`)
+
+## 32. null や undefined を型エイリアスに含めない
+
+`const User = { name: string } | null`のような書き方はやめよう。
+どうしても避けられない場合は`Maybe<T>`のような型を定義して使うとよい。
+
+## 33. Null を型の外側に追い出す
+
+外側に追い出せば、以下の利点が得られる。
+
+1. **型の複雑さを局所化**: null チェックが一箇所で済む
+2. **推論の改善**: 一度 null チェックを通れば、以降はすべてのプロパティを安全に使える
+3. **保守性**: 型定義がシンプルで理解しやすい
+
+悪い例: Null が内側にある設計
+
+```typescript
+// 各プロパティにnullが混入
+interface User {
+  id: string | null
+  name: string | null
+  email: string | null
+}
+
+// 使う側が複雑になる
+function displayUser(user: User) {
+  if (user.id && user.name && user.email) {
+    // 毎回すべてのプロパティをチェック
+    console.log(`${user.name} (${user.email})`)
+  }
+}
+```
+
+良い例: Null を外側に追い出す
+
+```typescript
+// 型定義は純粋に
+interface User {
+  id: string
+  name: string
+  email: string
+}
+
+// nullの可能性は外側で管理
+type MaybeUser = User | null
+
+// 使う側がシンプルになる
+function displayUser(user: MaybeUser) {
+  if (user) {
+    // 一度チェックすれば、内部は安全に使える
+    console.log(`${user.name} (${user.email})`)
+  }
+}
+```
+
+## 34. インターフェースをユニオンにする（逆はだめ）
+
+いわゆるタグ付きユニオン。
+
+```ts
+interface Layer {
+  layout: FillLayout | LineLayout | PointLayout
+  paint: FillPaint | LinePaint | PointPaint
+}
+// ではなく
+
+type Layer =
+  | { type: 'fill'; layout: FillLayout; paint: FillPaint }
+  | { type: 'line'; layout: LineLayout; paint: LinePaint }
+  | { type: 'point'; layout: PointLayout; paint: PointPaint }
+// にしたほうがいい
+```
+
+## 35. String Type より詳細な型を使う
