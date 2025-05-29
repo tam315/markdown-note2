@@ -788,7 +788,30 @@ TypeScript は利便性・表現力・安全性のバランスを考え、あえ
 - 引数を Mutate しない
   - 呼び出し元での Soundness が失われるため
 - オプショナルプロパティを避ける
-  - 構造的部分型では、値の代入を繰り返す際に Excessive Property Checking が回避され、意図しないプロパティが混入する恐れがあるため
+  - Excessive Property Checking を回避する形での代入をした際に、意図しないプロパティが混入する恐れがあるため
+  - `exactOptionalPropertyTypes`を有効にすればオプショナルプロパティの挙動自体は多少マシになるが、意図しないプロパティ代入自体を防ぐことはできない
+
+具体例
+
+```ts
+// 1. すべてのプロパティを持つ完全なオブジェクト
+const full: { name: string; isAdmin: boolean } = {
+  name: 'Alice',
+  isAdmin: true,
+}
+
+// 2. 一部のプロパティだけを持つオブジェクト型に代入（プロパティを減らす）
+const partial: { name: string } = full
+
+// 3. isAdmin を「あるかもしれない」オプショナルプロパティとして持つ型に代入
+const maybeWrong: { name: string; isAdmin?: string } = partial
+
+// 4. isAdmin にアクセスしてみると…？
+const role = maybeWrong.isAdmin
+
+// 型は string | undefined のはずが…実際の値は boolean (true)！
+console.log(role) // => true ← 🤯
+```
 
 ## 49. 型のカバレッジを確認する
 
