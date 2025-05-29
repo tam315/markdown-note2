@@ -869,3 +869,29 @@ function first<T>(arr: T[]): T | undefined {
 これは any を返すのと同じ働きをする。
 
 不要な型パラメーターは、多くの場合は unknown で書き換えられる。
+
+## 52. オーバーロードよりも Conditional Type を使う
+
+引数が number なら数値を返し、string なら文字列を返すという `double(x)`関数を作りたいとする。
+このような場合は Conditional Type を活用すると良い。
+
+そうすることで、正確な返り値の型を表現できるし、
+また T がユニオン型(`number|string`)であったとしても適切に分配してくれる。
+
+とはいえ、性質が全く違う場合などは素直に関数を分けた方がいいだろう。
+
+Conditional Type は関数の実装側ではちゃんと推論できないことが多いので、
+型と関数を一度に定義するのではなく、
+正確な型定義を独立して作成したうえで、実装側では簡単な型で行う「single-overload」戦略が有効である。
+
+```ts
+// 正確な型定義
+function double<T extends number | string>(
+  x: T,
+): T extends string ? string : number
+
+// シンプルな実装
+function double(x: string | number): string | number {
+  return typeof x === 'string' ? 'aaa' : 111
+}
+```
