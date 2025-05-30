@@ -957,48 +957,49 @@ type ToString<T> = [T] extends [number] ? string : boolean
 type Result = ToString<number | Date> // boolean (`[number|Date]`は`[number]`をextendsしてないので)
 ```
 
-なお、`boolean` 型は `true | false` のユニオンとして分配されるので注意。
+なお、`boolean` を条件付き型に渡すと `true | false` のユニオンとして分配されるので注意。
 
 ```ts
 type IfTrue<T> = T extends true ? 'yes' : never
-// IfTrue<boolean> すると？
-type Step1 = IfTrue<true> | IfTrue<false>
-type Step2 = 'yes' | never
-type Step3 = 'yes'
+type Step1 = IfTrue<boolean>
+type Step2 = IfTrue<true> | IfTrue<false>
+type Step3 = 'yes' | never
+type Step4 = 'yes'
 ```
 
-また、never を条件付き型に渡すと、条件付き型の実装によらず、結果は常に never になるので注意。
+また、`never` を条件付き型に渡すと、条件付き型の実装によらず、結果は常に `never` になるので注意。
 
 ```ts
-type Result = IfTrue<never> // 結果は常にnever
+type Result = IfTrue<never> // 結果は常にnever、実装は関係ない
 ```
 
 ## 54. テンプレートリテラル型を活用する
 
 テンプレートリテラル型を活用すると、string を構造化したサブセットを作れる。
 これは文字列にルールを与えられることを意味し、
-DSLs（domain-specific language、領域固有のミニ言語）を扱うに非常に便利である。
+DSLs（domain-specific language、領域固有のミニ言語）を扱うときに非常に便利である。
 
-例えば、`img#id` のような CSS セレクタから`img`タグだけを抽出したり、
-`snake_case`から`camelCase`に変換したりするような場合だ。
+具体的には、例えば`img#id` のような CSS セレクタから`img`タグだけを抽出したり、
+`snake_case`から`camelCase`に変換したりするような場合に役立つ。
 
 ---
 
-文字列の検証に使う例
+文字列の検証に使う例。
 
 ```ts
 type Users = {
-  // プロパティ名に制約を加える
+  // プロパティ名が必ず特定の文字列から始まっていること
   [K in `user_${string}`]: string
 }
 ```
 
-ジェネリクス・型推論と組み合わせて、型(HTMLTag)を別の型(Element の種類)に対応づけできる
+ジェネリクス・型推論と組み合わせて、型(HTMLTag)を別の型(Element の種類)に対応づけする例。
 
 ```ts
-// こうすれば`img#some-id`でセレクトしてもElementじゃなくImageElementを返せる
 type HTMLTag = keyof HTMLElementTagNameMap // HTML タグ名のユニオン型
 function querySelector<TagName extends HTMLTag>(
+  // こう書くと引数から型推論したうえ文字列リテラル型として取り出せる
+  // (こうすれば`img#id`でセレクトしてもちゃんとHTMLImageElementが得られる)
   selector: `${TagName}#${string}`,
 ): HTMLElementTagNameMap[TagName] | null
 ```
@@ -1006,7 +1007,8 @@ function querySelector<TagName extends HTMLTag>(
 さらに条件付き型やマップ型と組み合わせることで、高度な型変換が可能になる。
 
 ```ts
-// 条件付き型を使ってsnake_caseからcamelCaseに変換する
+// 条件付き型を使ってsnake_caseからcamelCaseに変換する。
+// 条件付き型の比較対象部分で`infer`すると文字列リテラル型を取り出せる。
 type ToCamel<S extends string> = S extends `${infer Head}_${infer Tail}`
   ? `${Head}${Capitalize<ToCamel<Tail>>}`
   : S
