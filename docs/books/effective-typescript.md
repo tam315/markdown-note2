@@ -972,3 +972,50 @@ type Step3 = 'yes'
 ```ts
 type Result = IfTrue<never> // 結果は常にnever
 ```
+
+## 54. テンプレートリテラル型を活用する
+
+テンプレートリテラル型を活用すると、string を構造化したサブセットを作れる。
+これは文字列にルールを与えられることを意味し、
+DSLs（domain-specific language、領域固有のミニ言語）を扱うに非常に便利である。
+
+例えば、`img#id` のような CSS セレクタから`img`タグだけを抽出したり、
+`snake_case`から`camelCase`に変換したりするような場合だ。
+
+---
+
+文字列の検証に使う例
+
+```ts
+type Users = {
+  // プロパティ名に制約を加える
+  [K in `user_${string}`]: string
+}
+```
+
+ジェネリクス・型推論と組み合わせて、型(HTMLTag)を別の型(Element の種類)に対応づけできる
+
+```ts
+// こうすれば`img#some-id`でセレクトしてもElementじゃなくImageElementを返せる
+type HTMLTag = keyof HTMLElementTagNameMap // HTML タグ名のユニオン型
+function querySelector<TagName extends HTMLTag>(
+  selector: `${TagName}#${string}`,
+): HTMLElementTagNameMap[TagName] | null
+```
+
+さらに条件付き型やマップ型と組み合わせることで、高度な型変換が可能になる。
+
+```ts
+// 条件付き型を使ってsnake_caseからcamelCaseに変換する
+type ToCamel<S extends string> = S extends `${infer Head}_${infer Tail}`
+  ? `${Head}${Capitalize<ToCamel<Tail>>}`
+  : S
+
+// マップ型を使ってオブジェクトのキーを一括してcamelCaseに変換する
+type ObjectToCamel<T extends object> = {
+  [K in keyof T as ToCamel<K & string>]: T[K]
+}
+```
+
+やりすぎに注意し、不正確な型を作らないようにしよう。
+あくまで利用者の DevEx が無理なく向上する範囲に留めよう。
