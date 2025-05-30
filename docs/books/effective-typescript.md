@@ -34,11 +34,11 @@ if (a instanceof Foo) {
 ```
 
 - 型エラーはあってもトランスパイルはできる。
-  - 少々型エラーがあっても動かせた方が開発時には便利だよね。
-  - `noEmitOnError`を使うと、型エラーがあるとトランスパイルしないようにできるけど。
-- 型アサーション（キャスト、`as Hoge`）しても実際の値は変わらない。
-- ランタイムの値は型と相違しうる。だからこそ、unsound な値(any、型アサーション、構造的部分型のミスユース)はなくすのが大事。
-- 関数を型レベルでオーバーロード定義することはできるが、実装は一つしか書けない（どゆこと）。
+  - 少々型エラーがあっても動かせた方が開発時には便利だからそうなっている
+  - `noEmitOnError`を使うと、型エラーがあるときにトランスパイルしないようにもできる
+- 型アサーション（`as Hoge`）しても実際の値は変わらない。キャストではない。
+- ランタイムの値は型と相違しうる。だからこそ、unsound(不健全)な値(any、型アサーション、構造的部分型のミスユースで発生しうる)はなくすのが大事。
+- 関数を型レベルでオーバーロード定義することはできるが、実装は一つしか書けない
 
 ## 4. 構造的部分型と仲良くなる
 
@@ -105,7 +105,10 @@ any はあらゆる厄災のもと。使うな。
   - never の対極にあり、Top Type と呼ばれる
   - どんな値でも代入できる
 
-## 8. シンボルが型空間にあるのか値空間にあるのかを知る
+ちなみに any は unknown と似ているが、any はどんな型にでも代入できるという点で異なる。
+型安全性を無視できる特殊型であり、集合論の枠にはまらない「抜け穴」のような存在である。
+
+## 8. そのシンボルが型空間にあるのか値空間にあるのかを知る
 
 TypScript のシンボルは、型空間に存在するものと値空間に存在するものがある。
 
@@ -163,10 +166,12 @@ Object Wrapper Types に一時的に変換されることで利用可能にな�
 ```ts
 type Person = { name: string; gender?: string }
 
-const person: Person = { name: 'Alice', age: 42 } // エラーになる
+// オブジェクトリテラルで書くとエラーになる
+const person: Person = { name: 'Alice', age: 42 }
 
+// 中間変数を使うとエラーにならない
 const intermidiate = { name: 'Alice', age: 42 }
-const person2: Person = intermidiate // エラーにならない
+const person2: Person = intermidiate
 ```
 
 オプショナルなプロパティしか持たない型を Weak type と呼ぶ。この型への代入時には、
@@ -202,7 +207,7 @@ const myFetch = (...args: Parameters<typeof fetch>): Promise<number> => {}
 どっちを使ってもいいが、ルールが未決定のプロジェクトであれば、
 なるべく interface を使うのがおすすめとのこと。
 
-(個人的には interface を使うメリットを感じないので、シンプルに type に統一するのがいいと思う)
+(訳注: interface を使うメリットを感じないので、シンプルに type に統一するのがいいと思う)
 
 ちなみに型の頭に I や T などをつけるのはバッドプラクティスである。
 
@@ -351,6 +356,7 @@ Object.keys(arr) // ['0', '1', '2', 'length'] <= 実はキーは文字列
 関数の返り値には基本的に型注釈はつけるな。
 ただし、return が複数ある場合や、パブリックに使われる関数である場合、
 名前付きの型で返したい場合などは、適宜付けよう。
+(訳注: 私は常につける派)
 
 ## 19. 違う値には違う型を使う
 
@@ -366,9 +372,16 @@ TypeScript はコンテキスト、柔軟性と特異性のバランスを見な
   - リテラル型 → 基本型
   - 推論を「ゆるく」して再代入を許容する
   - 止めたい場合は`as const`、`satisfies`、型注釈、ヘルパー関数などを使う
+
+```ts
+let msg = 'hello' // 文字列リテラルから文字列型へ
+msg = 'world' // OK
+```
+
 - Narrowing
   - Union 型 → 部分型
   - 実行時情報で型を「厳しく」して安全に扱う
+  - (詳細後述)
 
 satisfies と型注釈は似ている。どちらもプロパティの過不足チェックを行う。
 しかし、satisfies は推論結果を尊重してより狭い型を選択するのに対し、
@@ -390,6 +403,9 @@ const obj = {
 // const obj: {
 //   a?: number | undefined;
 // }
+
+// &&で書くのは危険
+const maybeNever = { ...(flag && { a: 1 }) }
 ```
 
 ## 22. Type Narrowing を理解する
@@ -401,7 +417,7 @@ Type narrowing するには以下のようなやり方がある。
 - Null checking
 - `instanceof`
 - Property checking
-- Built-in functions (e.g. `Array.isArray`)
+- Built-in functions (e.g. `Array.isArray()`)
 - `typeof`
 - Tagged union (a.k.a Discriminated union)
 - User defined type guard
@@ -433,28 +449,37 @@ if (personName) {
 if (place.name) {
   place.name // string
   someFunc(place)
-  place.name // string | null
+  place.name // string | null に変わってるかも！
 }
 ```
 
 ## 24. 型推論でコンテキストがどう使われるか理解する
 
 コンテキストが失われて型エラーになることがある。
+対処法は以下の通り。
 
 ```ts
 type Language = 'JavaScript' | 'TypeScript'
 function setLanguage(language: Language) {}
 
 let language = 'JavaScript' // string
-setLanguage(language) // error: string is not assignable to Language
+setLanguage(language) // 🚨 error: string is not assignable to Language
+
+// ✅ 1. Use inline style
+setLanguage('JavaScript')
+
+// ✅ 2. Use const assertion (定義を間違えると定義時じゃなく使用時にエラーになるのでやっかい。注意せよ。)
+const langConst = 'JavaScript' as const
+setLanguage(langConst)
+
+// ✅ 3. Use Type annotation
+let langTyped: Language = 'JavaScript'
+setLanguage(langTyped)
+
+// ✅ 4. Use satisfies operator
+const langSatisfied = 'JavaScript' satisfies Language
+setLanguage(langSatisfied)
 ```
-
-対処法は以下の通り。
-
-- Use inline style (Best if appricable)
-- Use `const` assertion (定義を間違えると定義時ではなく使用時にエラーがでてわかりづらいので注意)
-- Use Type annotation
-- Use `satisfies` operator
 
 ## 25. 進化する型(Evolving types)を理解する
 
@@ -878,6 +903,7 @@ function first<T>(arr: T[]): T | undefined {
 オーバーロードとは、1 つの関数に対して複数の呼び出しパターン（シグネチャ）を型として宣言し、
 そのあとに 実装（本体）は 1 つだけ書く仕組みのこと。
 このとき、型は最初にマッチした 1 つだけが採用される。
+（なお、アロー関数でオーバーロードする方法は調べたところなさそう）
 
 しかし、実はオーバーロードを使うよりも、
 Conditional Type を活用した単一の関数型を定義するほうがよい。
@@ -886,7 +912,7 @@ Conditional Type を活用した単一の関数型を定義するほうがよい
 T がユニオン型であったとしても適切に分配してくれる。
 
 なお、Conditional Type をつかって型定義と実装を同時にやろうとすると、
-うまく推論できないことが多いので「single-overload」戦略が有効である。
+うまく推論できない場合が多いので「single-overload」戦略が有効である。
 
 これは、正確な型定義を独立して作成したうえで、実装側では簡単な型で行うもの。
 ただし型と実装に差が出ないように注意は必要である。
@@ -904,3 +930,45 @@ function double(x: string | number): string | number {
 ```
 
 とはいえ、性質が全く違う場合などは素直に関数を分けた方がいいだろう。
+
+## 53. Union 型と条件付き型の分配制御
+
+条件付き型にユニオン型を与えると、デフォルトで分配される。
+
+分配とは、条件付き型にユニオン型を渡した際に、
+そのユニオンの各構成要素に対して個別に条件式が評価され、
+その結果が再びユニオンとして合成されるという動作のことを指す。
+
+たとえば、`(A | B) extends U ? X : Y` という型は、
+`(A extends U ? X : Y) | (B extends U ? X : Y)` として評価される。
+
+分配の挙動は、思わぬバグや意図しない型推論の原因になりがち。
+
+```ts
+type ToString<T> = T extends number ? string : boolean
+type Result = ToString<number | Date> // string | boolean
+```
+
+分配を望まないときは、型を`[]` で包んで一つのタプル型にしてから判定するとよい。
+そうすると分配されずに、単一のタプル型として扱われる。
+
+```ts
+type ToString<T> = [T] extends [number] ? string : boolean
+type Result = ToString<number | Date> // boolean (`[number|Date]`は`[number]`をextendsしてないので)
+```
+
+なお、`boolean` 型は `true | false` のユニオンとして分配されるので注意。
+
+```ts
+type IfTrue<T> = T extends true ? 'yes' : never
+// IfTrue<boolean> すると？
+type Step1 = IfTrue<true> | IfTrue<false>
+type Step2 = 'yes' | never
+type Step3 = 'yes'
+```
+
+また、never を条件付き型に渡すと、条件付き型の実装によらず、結果は常に never になるので注意。
+
+```ts
+type Result = IfTrue<never> // 結果は常にnever
+```
