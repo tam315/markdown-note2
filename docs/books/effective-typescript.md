@@ -1041,3 +1041,34 @@ type ObjectToCamel<T extends object> = {
 ```ts
 type Resolve<T> = T extends Function ? T : {[K in keyof T: T[K]]}
 ```
+
+## 57. Tail-Recursive なジェネリック型を使う
+
+関数の最後の処理が自分自身の再帰呼び出しだった場合、
+Tail Call Optimization (TCO) という最適化処理が実行され、
+コールスタックを使い果たすことがなくなる。
+
+型エイリアスの世界でも同様のことが言える。Accumulator を使うと良い。
+例えば配列の長さを求める型エイリアスの例は以下のとおり。
+
+```ts
+// 通常の再帰 - すぐに制限に達する
+type Length<T extends readonly unknown[]> =
+  T extends readonly [unknown, ...infer Rest]
+    ? 1 + Length<Rest>  // ここで加算をしているため、TCOが効かない
+    : 0;
+
+// Accumulatorを使った実装
+type Length<
+  T extends readonly unknown[],
+  Acc extends readonly unknown[] = []  // Accumulatorとして配列を使用
+> = T extends readonly [unknown, ...infer Rest]
+  ? Length<Rest, [...Acc, unknown]>   // 再帰呼び出しが最後の処理
+  : Acc['length'];                    // Accumulatorの長さが結果
+```
+
+## 58. 型が複雑な場合はコード生成も検討する
+
+型プログラミングは強力だが常に最適な選択肢ではない。
+複雑な型の作成が求められる場合は、コード生成を活用するほうが
+より実用的で保守しやすい場合もある。
