@@ -1072,3 +1072,29 @@ type Length<
 型プログラミングは強力だが常に最適な選択肢ではない。
 複雑な型の作成が求められる場合は、コード生成を活用するほうが
 より実用的で保守しやすい場合もある。
+
+## 59. 網羅性チェックに never を活用する
+
+case 文や if 文などで網羅性をチェックするために、以下のような util 関数を使うと良い。
+
+```ts
+export const assertNever = (_: never): never => {
+  // もしランタイムで呼ばれたらすぐに気がつけるように一応エラーを投げておく
+  throw new Error('This code should not be called')
+}
+
+// こんな感じで使う
+const getNumber = (value:string):number => {
+  case (value) {
+    case 'a':
+      return 123
+    case 'b':
+      return 456
+    default:
+      // valueがnever型以外だと型エラーになるので漏れに気がつける。
+      // ちなみに関数の返り値であるneverをreturnしているが、
+      // never型はどの型にも代入できるため、型エラーにはならない。へぇー。
+      return assertNever(value)
+  }
+}
+```
