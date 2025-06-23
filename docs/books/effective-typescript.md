@@ -1098,3 +1098,90 @@ const getNumber = (value:string):number => {
   }
 }
 ```
+
+## 60. オブジェクトをイテレートする方法を知る
+
+- 構造的部分型においては、オブジェクトには余分なプロパティが含まれている可能性が常にあることを忘れないこと
+  - だからこそ、イテレートしたときにオブジェクトのキーは、文字列リテラルのユニオンではなく、`string`に解釈されるのだ
+- キーと値をイテレートする場合は`Object.entries()`を使うと良い
+- 必要に応じて Map の利用も検討する
+
+## 61. 型とロジックを同期させるために Record を使う
+
+「データ構造」と「それに対応する処理ロジック」の同期が必要なときには、
+Record 型を活用すると良い。
+
+たとえば、パフォーマンス向上のために、オブジェクトの特定のプロパティが更新された時にだけ
+保存処理をしたい場合を考えてみよう。
+
+こういうとき、愚直にやると fail-open / fail-closed のジレンマにハマりがちである。
+
+- **Fail Open** - 不明・曖昧な場合に「処理を実行する」側に倒す
+  - 安全だが、うっかり無駄な処理が生まれがち
+- **Fail Closed** - 不明・曖昧な場合に「処理をしない」側に倒す
+  - 効率的だが、必要な処理を落とすリスクあり
+
+このジレンマを解消するには Record を活用して型とロジックの対応を定義する。
+そうすると型だけを更新して、処理を更新し忘れるという人為的ミスを防ぐことができる。
+
+```ts
+// ユーザー設定のインターフェース
+interface UserSettings {
+  theme: 'light' | 'dark'
+  language: string
+  notifications: boolean
+  // ここに将来何かのプロパティを追加するかもしれない
+}
+
+// ❌ 悪い例：手動でプロパティを列挙
+function shouldSaveSettings(old: UserSettings, current: UserSettings): boolean {
+  return (
+    old.theme !== current.theme ||
+    old.language !== current.language ||
+    old.notifications !== current.notifications
+    // もし新しいプロパティが追加されても気づかない。つまり、必要な更新がされない。fail-closed。
+  )
+}
+
+// ✅ 良い例：Record型で保存が必要な設定を別途定義しておく
+const SHOULD_SAVE: Record<keyof UserSettings, boolean> = {
+  theme: true,
+  language: true,
+  notifications: false,
+  // もし新しいプロパティが追加されても、ここでエラーが出るので確実に気がつける
+}
+
+function shouldSaveSettings(old: UserSettings, current: UserSettings): boolean {
+  return Object.entries(SHOULD_SAVE).some(([key, shouldSave]) => {
+    if (shouldSave) {
+      return (
+        old[key as keyof UserSettings] !== current[key as keyof UserSettings]
+      )
+    }
+    return false
+  })
+}
+```
+
+## 62. 可変長引数を扱うために Rest と Tuple を使う
+
+関数で引数を可変長にしたいときは、値の世界で Rest を使い、その型としてタプル型を割り当てることで、
+シンプルに実現できる。
+
+```ts
+type Routes = {
+  '/users': []
+  '/users/:id': [id: string]
+  '/search': [query: string, limit?: number]
+}
+
+function fetch<T extends keyof Routes>(path: T, ...args: Routes[T]) {
+  console.log(`Fetching ${path}`, args)
+}
+
+// 使用例
+fetch('/users') // OK - 引数なし
+fetch('/users/:id', '123') // OK - 1つの引数
+fetch('/search', 'typescript') // OK - 1つの必須引数
+fetch('/search', 'typescript', 10) // OK - オプショナル引数付き
+```
