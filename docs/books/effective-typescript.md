@@ -1185,3 +1185,67 @@ fetch('/users/:id', '123') // OK - 1つの引数
 fetch('/search', 'typescript') // OK - 1つの必須引数
 fetch('/search', 'typescript', 10) // OK - オプショナル引数付き
 ```
+
+## 63. 排他的論理和の表現に never を使う
+
+日常会話の or は排他的論理和だが、TypeScript の or は包含的論理和である。
+
+排他的論理和を表現したい場合は、まずはタグ付きユニオンを使うのが一般である。
+
+タグを使いたくない場合には、never を使う方法もある。
+
+```ts
+interface OnlyThingOne {
+  shirtColor: string
+  hairColor?: never
+}
+
+interface OnlyThingTwo {
+  hairColor: string
+  shirtColor?: never
+}
+
+type ExclusiveThing = OnlyThingOne | OnlyThingTwo
+```
+
+さらに、never を直接的に使うよりは、以下のような util 型を介して使うと良いだろう。
+
+```ts
+type XOR<T1, T2> =
+  | (T1 & { [k in Exclude<keyof T2, keyof T1>]?: never })
+  | (T2 & { [k in Exclude<keyof T1, keyof T2>]?: never })
+```
+
+## 64. Brand を使って Nominal Typing を実現する
+
+- 構造的部分型：形が同じなら同じ型として扱う
+- 公称型：名前が違えば別の型として扱う
+
+構造は同じだが意味的には違うものを区別したい場合には、公称型を使う必要がある。
+このような場合はタグ付きユニオンを使うのが一般的だが、
+これは少なからずランタイムオーバーヘッドを伴う。
+
+純粋に型の世界で実現したい場合は、Brand を使うと良い。
+Brand とは、型に対して追加の情報を付与することで、異なる型として扱う手法である。
+
+```ts
+// 文字列型にブランドを付与する
+type AbsolutePath = string & { _brand: 'abs' }
+function isAbsolutePath(path: string): path is AbsolutePath {
+  return path.startsWith('/')
+}
+
+// 数値型にブランドを付与する
+type Meters = number & { _brand: 'meters' }
+function isMeters(value: number): value is Meters {} // 実装略
+
+// 配列にブランドを付与する
+type SortedList<T> = T[] & { _brand: 'sorted' }
+function isSorted<T>(xs: T[]): xs is SortedList<T> {} // 実装略
+
+// ブランドを偽装されるのを防ぐには、プロパティ名にsymbolを使うとよい
+// こうするとbrandは公開されないので、ユーザーは必ず
+// 提供されたカスタム型ガードなどを通過しなければならない
+declare const brand: unique symbol
+export type Meters = number & { [brand]: 'meters' }
+```
