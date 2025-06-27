@@ -1424,3 +1424,70 @@ TS のツールチェーンを活用でき、学習コストなしで使える�
 デメリットとしてはビルドプロセスの複雑化が挙げられる。
 
 どれが正解ということはなく、トレードオフである。
+
+## 75. DOM の階層を理解する
+
+DOM や DOM イベントには階層構造がある。
+これを理解し、型ガードや型アサーションと組み合わせることで、堅牢なコードを書くことが可能になる。
+
+### DOM の階層構造
+
+```txt
+EventTarget
+  └── Node
+      ├── Element
+      │   ├── HTMLElement
+      │   │   ├── HTMLButtonElement
+      │   │   └── ...その他のHTML要素
+      │   └── SVGElement
+      ├── Text
+      ├── Comment
+      └── ...
+```
+
+- EventTarget
+  - 最も基本的なインターフェース
+  - すべての DOM 要素が実装する
+  - イベントリスナーの登録や削除が可能
+  - e.g. `addEventListener()`, `removeEventListener()`などが使える
+- Node
+  - 親子関係、兄弟関係などを表現するためのインターフェース
+  - Element だけでなく、Text ノードや Comment ノードなどを含む
+  - e.g. `childNodes`, `appendChild()`などが使える
+- Element
+  - HTML/XML 要素を表すインターフェース
+  - 属性操作、クラス操作、セレクタによる検索機能を提供する
+  - e.g. `classList`, `querySelector()`などが使える
+- HTMLElement
+  - HTML 要素の基底インターフェース
+  - e.g. `style`, `onclick`, `hidden`, `dataset`などが使える
+- 具体的な要素型(HTMLButtonElement ほか)
+  - 各 HTML 要素特有のプロパティ・メソッド
+  - `<button>`の場合：`disabled`, `type`, `value`など
+
+### DOM イベントの階層構造
+
+```txt
+Event
+  ├── UIEvent
+  │   ├── MouseEvent
+  │   ├── TouchEvent
+  │   └── KeyboardEvent
+  └── （その他のイベント）
+```
+
+- Event
+  - すべてのイベントの基底インターフェース
+  - `type`, `target`, `preventDefault()`, `stopPropagation()`
+- UIEvent
+  - ユーザーインターフェース関連イベントの基底
+  - `detail`, `view`（window オブジェクト）
+- MouseEvent
+  - マウス操作に関する情報
+  - `clientX/Y`, `pageX/Y`, `button`, `ctrlKey`, `shiftKey`
+- TouchEvent
+  - タッチ操作の情報
+  - `touches`, `targetTouches`, `changedTouches`
+- KeyboardEvent
+  - キーボード操作の情報
+  - `key`, `code`, `ctrlKey`, `shiftKey`, `altKey`
