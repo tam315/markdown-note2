@@ -1339,3 +1339,41 @@ interface Body {
 ```
 
 こういう小さな改善を集積したライブラリが[`ts-reset`](https://github.com/mattpocock/ts-reset)なので使うと良い。
+
+## 72. TypeScript の機能より JavaScript の機能を優先して使う
+
+原則として、TS のコードから型の記載を削除すれば、JS のコードになる。
+しかし以下はその例外である。JS 標準から外れた仕様とも言える。
+
+- Enums
+- クラスの Parameter Properties 記法
+- Triple-slash imports (`namespace`)
+- `experimentalDecorators`
+- `protected`や`private`などのアクセス修飾子
+
+TS と JS の役割をきちんと分離すべきであることや、将来の互換性も考慮すると、
+これら非標準の機能を使うのは避けるべきである。
+
+- 諸問題を抱える enum ではなく、文字列リテラルのユニオンを使う
+- Parameter Properties 記法は使わず、明示的に書く（諸説あり）
+- Triple-slash imports は使わず、JS 標準の import/export を使う
+- `experimentalDecorators`オプションによるデコレータは古いので`false`にし、JS 標準のデコレーターを使う。そもそもデコレータは控えめに使え。
+- `private`のかわりに、JS 標準の`#`を使う。`protected`はそもそも不要、使うな。
+
+## 73. デバッグにソースマップを使う
+
+トランスパイル語の JS ファイルではデバッグできないので、ソースマップを使おう。
+
+`tsconfig.json`で`compilerOptions.sourceMap`を`true`にすると、
+`tsc`した時に`.js`とあわせて`.js.map`ファイルが生成される。
+
+Vitest など、何らかのバンドラーを使っている場合はこの設定は効かないので、
+そのバンドラー固有の設定でソースマップ生成を有効にすること。
+
+`NODE_OPTIONS='--inspect(-brk)=0.0.0.0'`にするか、
+`node ----inspect(-brk)=0.0.0.0 some-file.js`のように起動することで、
+デバッガー用のエンドポイントがデフォルトで`9229`番ポートで開かれる。
+そこに`chrome://inspect`や VSCode/JetBrains のデバッガーなどで接続してデバッグする。
+
+`brk`つけると全コードの中の一番最初の行にあらかじめブレークポイントが設定されるので、
+プロセスの起動前に落ち着いてブレークポイントを設定したい場合に使う。
