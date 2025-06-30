@@ -893,6 +893,13 @@ function first<T>(arr: T[]): T | undefined {
 特に宣言部分とリターン部分でしか使われていない"Return-only generics" は避ける。
 これは any を返すのと同じ働きをする。
 
+```ts
+// Return-only generics の例
+function getValue<T>(): T {
+  return JSON.parse(localStorage.getItem('value') || '{}')
+}
+```
+
 不要な型パラメーターは、多くの場合は unknown で書き換えられる。
 
 ## 52. オーバーロードよりも Conditional Type を使う
@@ -1491,3 +1498,127 @@ Event
 - KeyboardEvent
   - キーボード操作の情報
   - `key`, `code`, `ctrlKey`, `shiftKey`, `altKey`
+
+## 76. 実行環境の情報を TypeScript に正しく伝える
+
+TypeScript のコードは、最終的には何らかのランタイム環境で実行される。
+たとえば V8 とか、JavaScriptCore などである。
+環境情報を TypeScript に正しく伝えることが、正確な型エラー検出のために重要である。
+
+✅ まず、環境によって使える関数が違うことがある(ブラウザのバージョン違いなど)。
+これを伝える方法の一つは`tsconfig.json`の`compilerOptions.lib`を使うこと。
+例えば`["dom", "es2020"]`のように指定することで、ブラウザ環境であることと、
+ES2020 の機能が使える環境であることを TypeScript に伝えることができる。
+
+✅ 次に、jQuery や Google Analytics を script タグで読み込んだ場合などには、
+`window`といったグローバル環境に、特定の変数や関数がセットされている場合がある。
+この場合は以下のいずれかの方法で型を拡張するとよい(どちらもやっていることは同じ)。
+
+- Section 71 の Module Argumentation を使って型を拡張する
+- `@types/google.analytics`や`@types/jquery`などの型定義ライブラリを使う
+  - バージョンがミスマッチだとアホほどエラーが出るので注意。必ず合わせる。
+
+✅ 次に、Webpack などのバンドラーを使っていると、jpg や css をインポートできるが、
+これは TypeScript にとっては未知の型である。
+これらも手動で定義してやる必要がある。
+
+```ts
+// webpack-imports.d.ts
+declare module '*.jpg' {
+  const src: string
+  export default src
+}
+```
+
+✅ 最後に、一つのコードベースで複数の実行環境をサポートする必要がある場合を考えてみる。
+たとえばブラウザと Node.js の両方で動くコードを書いている場合などだ。
+この場合は、複数の`tsconfig.json`を用意するとよい。
+詳細は Section 78 の'Project References'を参照。
+
+## 77. 型チェックとユニットテストの関係を知る
+
+型チェックとユニットテストは相互補完関係にある。
+
+- 型チェック
+  - 特定の種類のエラーを完全に丸ごと排除してくれる(型の不一致、存在しないプロパティへのアクセスなど)
+  - 型の検査のために使用する
+- ユニットテスト
+  - 特定の入力に対して、期待される出力が得られるかを確認する
+  - 型の検査では検出できないロジックのエラーを検出するために使用する
+  - 型の世界で保証できることをユニットテストで検査するな(ただしセキュリティ上の懸念がある場合は除く)
+
+## 78. コンパイラのパフォーマンスに気を配る
+
+TypeScript は 2 つのプログラムで構成される。
+
+- `tsc` / the TypeScript Compiler
+  - これが遅いということは、**ビルドプロセス**(主として CI での型チェックや成果物の生成)に時間がかかることを意味する
+- `tsserver` / the TypeScript Language Server
+  - これが遅いということは、**エディタ**の動作が遅くラギーになることを意味する
+
+ビルドプロセスやエディタのスピードに問題がある場合、いくつかの改善方法がある。
+
+✅ 型チェックをビルドプロセスから分離する
+
+これは`tsc`の改善に使える。ユースケースは限られるが、劇的に速くなる。
+
+✅ 未利用の依存ライブラリやコードを削除する
+
+これは`tsc`と`tsserver`の両方の改善に使える。
+
+TypeScript が扱っているファイルを一覧にして、不要なものを削除すると良い。
+
+```bash
+# TypeScript が扱っているファイル一覧を表示
+tsc --listFiles
+# より視覚的に確認する方法
+tsc --listFiles | xargs stat -f "%z %N" | npx webtreemap-cli
+```
+
+✅ `Project Reference`によるインクリメンタルビルドを使う
+
+これは`tsc`の改善に使える。
+
+巨大なモノレポなどにおいて、パッケージごとに複数の`tsconfig.json`を作成し、効率的なビルドを可能にするもの。
+`noEmit`している場合や Webpack/Vite などを使っている場合は使えないので注意。
+
+各プロジェクトの`tsconfig.json`は以下のように書いたうえで、`tsc --build`オプションと組み合わせて使う。
+詳細は[こちら](https://typescriptbook.jp/reference/advanced-topics/project-references)を参照。
+
+```ts
+// 各パッケージのtsconfig.json
+{
+  "compilerOptions": {
+    "composite": true, // この設定により、プロジェクト参照機能における「プロジェクト」として認識される
+    "declaration": true, // 型定義ファイルを生成するため
+    "declarationMap": true // ソースマップを.d.tsファイルに含めるため
+  },
+  "references": [
+    { "path": "../other-project" } // プロジェクト間の参照があればここに書く
+  ]
+}
+
+// ルートの tsconfig.json はただの目次のような役割を果たす。以下のように書く。
+{
+  "include": [],
+  "references": [
+    {
+      "path": "packages/cli"
+    },
+    {
+      "path": "packages/common"
+    },
+    {
+      "path": "packages/web"
+    }
+  ]
+}
+```
+
+✅ 型をシンプルにする
+
+これは`tsc`と`tsserver`の両方の改善に使える。
+
+- 巨大なユニオン型をつくらない
+- interface/extends のほうが効率がいいので、型エイリアスより優先して使う
+- Return Type を明示して計算量を減らす
