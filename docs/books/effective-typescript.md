@@ -1622,3 +1622,59 @@ tsc --listFiles | xargs stat -f "%z %N" | npx webtreemap-cli
 - 巨大なユニオン型をつくらない
 - interface/extends のほうが効率がいいので、型エイリアスより優先して使う
 - Return Type を明示して計算量を減らす
+
+## 79. モダンな JavaScript を書く
+
+(以下、JS から TS への以降の話)
+
+`tsc`は 2009 年の古典的な JavaScript をターゲットにトランスパイルができる。
+つまり、古い JS のコードを TS にすることにはなんの支障もないどころか、多くのメリットがある。
+
+- `import`/`export`
+- Prototype の代わりに `class`
+- `var`の代わりに`let`/`const`
+- for-loop の代わりに`for...of`
+- callback や素の Promise の代わりに `async`/`await`
+- this binding の代わりに Arrow function
+- 引数のデフォルト値指定と型推論
+- 豊富な記法(Destructuring, Spread, Rest, Optional Chaining, Nullish Coalescing)
+- `Map`/`Set` などのコレクション
+
+## 80. `@ts-check`と JSDoc で TypeScript をお試しする
+
+`@ts-check`をつけることで緩い型チェックを有効にし、TS への移行の取っ掛かりとすることができる。
+ありがちな問題は以下の通り。
+
+- 未宣言の Global Variables
+  - いきなり`user.name`とか出てくるなど
+  - `types.d.ts`を書いて対処する
+- 未知のライブラリ
+  - jQuery を使っている場合に`$`が未知でエラーになるなど
+  - `@types/*`をインストールして対処する
+- DOM の未知のプロパティ
+  - HTMLElement の value にアクセスしてエラーになるなど
+  - JSDoc でアサーションして対処する
+
+```ts
+const ageEl = /** @type {HTMLInputElement} */ document.getElementById('age')
+ageEl.value = '12' // ok
+```
+
+- 不正確な JSDoc
+  - これまで見過ごされていた、もともと間違っていた JSDoc が顕在化するなど
+  - 正しく修正する
+
+JSDoc での修正に時間をかけすぎないこと。
+TS は`.ts`のファイルで最も効果を発揮する。
+さっさと移行せよ。
+
+## 81. `allowJs`で段階的な移行を可能にする
+
+`allowJs`オプションを有効にすると、TS と JS の相互インポートが可能になる。
+ただし、ビルドチェーンを作る作業は必要になる。楽しくないけど頑張ろう。
+
+- webpack なら`ts-loader`を導入する
+- jest なら`ts-jest`を導入する
+- Node.js なら`ts-node`を導入する
+- 独自のビルドチェーンなら、まあ頑張れ
+  - 一般的には`tsc`で全て JS として出力し、その結果に対して既存の処理を適用するのが王道
