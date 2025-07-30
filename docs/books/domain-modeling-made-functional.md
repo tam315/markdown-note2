@@ -566,3 +566,46 @@ F#ではあらゆる関数は自動的にカリー化される。
 関数をコンポジションするときは、前の関数の出力型が次の関数の入力型とマッチする必要がある。
 マッチしていないときは、最小公倍数に揃える。
 例えば出力が`int`で入力が`Option<int>`なら、`int`を`Some<int>`に変換してから渡すなど。
+
+## 9. パイプラインを組み上げる
+
+（ポイントのみ抜粋）
+
+各ステップは純粋関数にする。テストの独立性確保や、関心の分離のため。
+
+カリー化を使うときは、関数連鎖全体をあらかじめ型として定義したのち、
+その型に合うように実装をしていくと、エラー時に見やすくなっていいよ。
+
+関数は、依存->入力->出力という順にカリー化された形で書かれる。
+依存のところまでを実行して部分適用したうえで、パイプに渡していく。
+
+```ts
+type ValidateOrder =
+  //
+  (CheckProductCodeExists: Function) => // 依存
+  (CheckAddressExists: Function) => // 依存
+  (UnvalidatedOrder: object) => // 入力
+  ValidatedOrder // 出力
+```
+
+子エンティティの検証と生成は、それぞれ`toOrderLine`や`toQuantity`のような関数を作って適用することで行う。
+
+真偽値を返す関数(predicateという)は、そのままではパイプラインに組み込めない。
+こういうときは **Function Transformer** を使って、入力値をそのまま返す関数に変換する。
+
+```ts
+// (v:T)=>boolを、(v:T)=>T に変換する
+function predicateToPassThrough<T>(predicate: (value: T) => boolean) {
+  return (value: T): T => {
+    if (!predicate(value)) {
+      // 実際にはResult型を返すなど工夫が必要
+      throw new Error('Predicate condition failed')
+    }
+    return value // 条件を満たした場合のみ入力値を返す
+  }
+}
+
+// 使用例
+const isPositive = (n: number) => n > 0
+const ensurePositive = predicateToPassThrough(isPositive) // これはpipelineで扱える
+```
