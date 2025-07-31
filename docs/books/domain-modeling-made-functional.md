@@ -666,7 +666,7 @@ const ensurePositive = predicateToPassThrough(isPositive) // これはpipeline�
 
 ### Raiload-oriented programming
 
-「成功 or 失敗」といった**文脈**を取り出して処理し、
+Error effect(成功または失敗がありえる)といった**文脈**を取り出して処理し、
 結果を再び文脈に包んで返す関数のことを、**monadic functions** / switch functions などと呼ぶ。
 
 エラー対処のコードを愚直に書くとコードが醜くなるため、
@@ -674,9 +674,12 @@ const ensurePositive = predicateToPassThrough(isPositive) // これはpipeline�
 
 これは成功パスと失敗パス(two-track ≒ Result型)を鉄道の線路に例えたもので、
 エラーが発生すると自動的に失敗パスに切り替わって残りの処理をスキップする。
+
+### bindとmapを使って関数同士を接続する
+
 Raiload-oriented programmingで扱う関数は、Resultを**受取り**、かつ返すmonadic functionsである必要がある。
 
-Resultを出力する関数をmonadicにするためには、`bind`と呼ばれる関数アダプタを使う。
+Resultを出力する関数(Error effectがある関数)をmonadicにするためには、`bind`と呼ばれる関数アダプタを使う。
 
 ```fsharp
 let bind switchFn twoTrackInput =
@@ -685,7 +688,7 @@ let bind switchFn twoTrackInput =
   | Error e -> Error e
 ```
 
-Resultを入力も出力もしない関数をmonadicにするには、`map`と呼ばれる関数アダプタを使う。
+Resultを入力も出力もしない(Error effectがない)関数をmonadicにするには、`map`と呼ばれる関数アダプタを使う。
 
 ```fsharp
 let map f twoTrackInput =
@@ -693,3 +696,39 @@ let map f twoTrackInput =
   | Ok a -> Ok (f a) // Result型でラップして返す
   | Error e -> Error e
 ```
+
+ワークフロー内でmonadicな関数を`bind`で接続するには、前後の入出力の型が完全に一致しないといけない。
+成功系については、処理の内部で型を変換するなどして、マッチさせればいい。
+問題は失敗系で、ワークフロー内の全ての関数で同じエラー型を使う必要がある。
+このためには、ワークフロー内で使う**共通のエラー型**を作成したうえで、`map`の失敗系版である`mapError`を使う。
+
+```fsharp
+let mapError f twoTrackInput =
+  match twoTrackInput with
+  | Ok a -> Ok a
+  | Error e -> Error (f e) // fには、エラーを受け取り、別のワークフロー内で共通して使えるエラーを返す関数を渡す
+```
+
+### その他の関数の取り扱い
+
+- 例外を投げる関数はどうする？
+  - -> `tryCatch`的なコードによりResult型を返す関数に変換する。
+- 出力がないDead-endな関数はどうする？
+  - -> 値を出力するように`tee`のような関数でラップしたうえで`map`する。
+
+```fsharp
+let tee f x =
+  f x
+  x
+```
+
+### 楽に書く
+
+関数を組み合わせていくのは煩雑な作業ではある。
+
+`let!`や`result`(小文字)といったComputation Expressionを使うと、
+Resultがネストしていったとしても楽に書けるようになる（Rustの`?`演算子を使うイメージ）。
+これらは自動でResult型でラップしたりアンラップしてくれるというもの。
+
+配列に対して処理をするときは、結果が`list of Result`になりがち。
+それらを`Result of list`に変換するutil関数を書いておくと便利。
