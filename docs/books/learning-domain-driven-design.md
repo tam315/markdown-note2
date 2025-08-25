@@ -580,15 +580,11 @@ Open-host service(OHS)を使ってupstream側で行われる場合があるが�
 変換処理をオフロードしたほうがより良い場合がある。
 
 ```mermaid
-graph LR
-  A[Bounded context 1]
-  B[Proxy]
-  C[Bounded context 2]
-
-  A -->|Request| B
-  B -->|Transformed request| C
-  C -->|Response| B
-  B -->|Transformed response| A
+flowchart BT
+  A["Bounded context (downstream)"] -- Request --> B["Proxy"]
+  B -- Transformed request --> C["Bounded context (upstream)"]
+  C -- Response --> B
+  B -- Transformed response --> A
 ```
 
 非同期のステートレス変換では、**Message Proxy**を使う。
@@ -599,14 +595,19 @@ Event-sourced + Open-host serviceの組み合わせでは、この非同期変�
 そうすることで、コンテキスト間の境界を明確に保ち、内部実装の詳細を隠蔽できる。
 
 ```mermaid
-graph LR
-    subgraph "Upstream context"
-        A[Aggregate] --> B(Domain events)
-        B --> C[Open-host service]
-    end
-    C --> D(Published language)
-    D --> E[Downstream context]
-    style C fill:gray
+flowchart TB
+  subgraph subGraph0["Upstream context"]
+    B("Domain events")
+    A["Aggregate"]
+    C["Open-host service"]
+  end
+
+  A --> B
+  B --> C
+  C --> D("Published language")
+  D --> E["Downstream context"]
+
+  style C fill:gray
 ```
 
 #### ステートフルなモデル変換
