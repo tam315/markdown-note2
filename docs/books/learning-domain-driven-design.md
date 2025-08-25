@@ -620,9 +620,37 @@ graph LR
 
 ```mermaid
 flowchart LR
-    BC1[Bounded context 1] --> |Request| P[Proxy]
-    P --> |request| BC2[Bounded context 2]
-    P --> |request| BC3[Bounded context 3]
-    P --> |request| BC4[Bounded context 4]
+    BC1[Bounded<br/>context 1] --> |Request| P[Proxy]
+    P --> |request| BC2[Bounded<br/>context 2]
+    P --> |request| BC3[Bounded<br/>context 3]
+    P --> |request| BC4[Bounded<br/>context 4]
     P --> S[(Storage)]
+```
+
+### 集約どうしの連携
+
+#### Outbox pattern
+
+ある集約がシステムの他の部分と連携する方法の一つが、イベントであると学んだ。
+では、そのイベントはどういうやり方で発行すべきだろうか。
+集約自体やユースケースにおいてイベントを発行すると、一貫性のある動作は実現できない。
+かわりに、**Outbox pattern**を使う。動作の流れは以下のとおり。
+
+- 集約の状態更新とイベントの発行(≒outbox tableの追記)を同一トランザクション内で行う
+- **Message relay**がDBから新しいイベントを取得し、メッセージバスに送る
+- 成功したらOutbox tableに`published`をマークする
+
+仕組み上、イベントは最低1回は発行が保証され、場合によっては2回以上発行される可能性がある。
+未発行のイベントを検知する方法として、relayがpollingする方法と、DBがpushでrelayをキックする方法がある。
+
+```mermaid
+flowchart LR
+    subgraph Transaction["Transaction"]
+        AS[Aggregate state<br/>table]
+        OT[Outbox<br/>table]
+    end
+
+    A[Application] -->|Commit| Transaction
+    MR[Message relay] -->|Query| OT
+    MR -->|Publish| MB[Message bus]
 ```
