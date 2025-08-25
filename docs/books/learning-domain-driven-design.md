@@ -592,21 +592,21 @@ flowchart BT
 **非同期**のステートレス変換では、**Message Proxy**を使う。
 これはソースコンテキストとターゲットコンテキストの間に配置される。
 Event-sourced + Open-host serviceの組み合わせでは、この非同期変換が欠かせない。
-なぜなら、Event-source model をそのまま公開すると、内部イベントまで全て外部に露出してしまうからである。
-代わりに、Published languageへの変換を行う。
-そうすることで、コンテキスト間の境界を明確に保ち、内部実装の詳細を隠蔽できる。
+なぜなら、Event-sourced domain model をそのまま公開すると、内部イベントまで全て外部に露出してしまうからである。
+代わりに、Published languageへの変換を行ってから公開せよ。
+そうすることで、コンテキスト間の境界を明確に保ち、内部詳細を隠蔽できる。
 
 ```mermaid
-flowchart TB
+graph TB
   subgraph subGraph0["Upstream context"]
-    B("Domain events")
+    B(["Domain events"])
     A["Aggregate"]
     C["Open-host service"]
   end
 
   A --> B
   B --> C
-  C --> D("Published language")
+  C --> D(["Published language"])
   D --> E["Downstream context"]
 
   style C fill:gray
