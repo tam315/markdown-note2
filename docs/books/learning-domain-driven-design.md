@@ -138,7 +138,7 @@ Bounded Context が現実世界のどこに存在するかというと、ドメ�
 
 サブドメインは**発見**するものである。企業の戦略で決まり、開発者の範疇の外にある。
 
-一方、Bounded Context(これはユビキタス言語というモデルのスコープでもある)は、**デザイン**するものである。
+一方、Bounded Context(これはユビキタス言語というモデルのスコープでもある)は、**デザイン(設計)**するものである。
 戦略的な判断により適切に決める。
 
 Contextは必ずしもサブドメインと**1-1で結びつかなくてもいい**。
@@ -152,7 +152,7 @@ Contextの範囲は小さいほうがモデルの一貫性を保ちやすく、�
 
 ### 境界の役割
 
-アーキテクチャデザインとは、つまるところ境界を決めることである。
+アーキテクチャデザイン(設計)とは、つまるところ境界を決めることである。
 何が含まれ、何が除外され、何が境界を跨ぎ、何がその間を行き来するかを明らかにすることだ。
 
 Bounded Context は**物理境界**である。
@@ -486,11 +486,11 @@ Hexagonal architecture や Onion architecture とも呼ばれる。
 データベース、外部サービス、UI、メッセージバスなどである。
 
 そして、Layered architecture のように Business layer が直接 Infra layer を呼び出すのではなく、
-Business layer は **Port（規格・インターフェース）**のみを定義し、Infra layer は **Adapter（実装）**を定義する。
+Business layer は **Port（規格・インターフェース）** のみを定義し、Infra layer は **Adapter（実装）** を定義する。
 これにより、依存の方向が Infra -> Business logic という逆方向になり、
 Business layer が最も中心的な役割を果たすようになる。
 
-これは、**Dependency Inversion Principle（DIP）**と呼ばれる、
+これは、**Dependency Inversion Principle（DIP）** と呼ばれる、
 「高レベルのモジュールは低レベルのモジュールに依存してはならない」という原則に基づいた構成である。
 
 最後に、Business logic の手前にファサードとして Application layer を配置し、
@@ -695,3 +695,51 @@ state-based or event-sourced な集約として実装する。
 sagaと違い、イベントだけではなく自身が持つ詳細な状態に依存するため、明示的なインスタンス化が必要。また、インスタンスはIDを持つ。
 より広義のビジネスプロセス調整に主眼を置いたもの。
 実装の仕方は saga とほぼ同じ。
+
+## 10. 設計の経験則 (Design Heuristics)
+
+この章では、ビジネスドメインでの発見と、技術的な実装手法をどう結びつけるかを考える。
+結びつけの知見は **Heuristics(経験則)** である。
+つまり、成功が保証された原理ではないものの、たいていの場合にうまくいくであろう方法である。
+
+設計方針を決めるためには、まずは subdomain のタイプ(core/generic/supporting)を発見するのが最も大事である。
+**実装技術はサブドメイン単位で選択**する。タイプに応じて、必要最小限の最もシンプルな方法を選択するとよい。
+無条件で全てのサブドメインにCQRSを適用するみたいなことは、非効率なのでやめよう。
+
+### Bounded Contextの分け方
+
+Bounded Contextを間違った単位で作ったときの弊害は大きく、修正も困難である。
+まずは、**Core subdomain とその関連subdomainを一つのContextに含める** ことから始めると良い。
+全貌が分かってきてから、別のコンテキストに切り出すこと(物理分割)は容易だし、
+subdomain(論理分割)の再構成はもっと容易だ。
+
+### ビジネスロジックの実装手法の選択
+
+大きな方針は以下の通り。
+
+1. Subdomain がお金を扱うものだったり、データの深い分析や監査ログが必要なら、Event-sourced domain model
+2. そうではない場合で、Subdomain のドメイン言語やビジネスロジックが複雑なら、State-based domain model
+3. そうではない場合で、Subdomain のデータ構造が複雑なら、Active record pattern
+4. そうではない場合は、Transaction script
+
+### アーキテクチャの選択
+
+- **Event-sourced domain model ならCQRS** を採用する。
+  じゃないとまともにクエリができないので。
+- **State-based domain model なら Ports & Adaptersパターン**を採用する。
+  じゃないと集約や値オブジェクトを扱うときに永続化のことを考えなければならず、複雑になりすぎるので。
+- **Active record pattern なら Layered architecture(4-layers)** を採用する。
+  Service layerに、Activeレコードを組み合わせた複雑なロジックを書く。
+- **Transaction script なら Layered architecture(3-layers)** を採用する。
+  Business layerに重複上等でベタ書きする。
+
+### テスト戦略の選択
+
+Domain model patternなら **Testing Pyramid** が最適。
+ドメイン層にたくさんユニットテストを書いていくことが堅牢さにつながるからだ。
+
+Active Record patternなら **Testing Diamond** が最適。
+サービス層とビジネスロジック層にロジックが散らばりがちなので、ここをまとめて効率よくテストを書けるからだ。
+
+Transaction scriptなら **Reversed Testing Pyramid** が最適。
+コードがミニマルなので、全部まとめてテストするほうが効率がいいからだ。
