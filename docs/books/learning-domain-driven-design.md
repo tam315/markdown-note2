@@ -727,13 +727,22 @@ subdomain(論理分割)の再構成はもっと容易だ。
 ### アーキテクチャの選択
 
 - **Event-sourced domain model ならCQRS** を採用する。
-  じゃないとまともにクエリができないので。
+  - じゃないとまともにクエリができないので。
 - **State-based domain model なら Ports & Adaptersパターン**を採用する。
-  複雑なロジックをもつドメインオブジェクトから、少なくとも永続化のことは分離してシンプルにしたいから。
+  - 複雑なロジックをもつドメインオブジェクトから、少なくとも永続化のことは分離してシンプルにしたいから。
 - **Active record pattern なら Layered architecture(4-layers)** を採用する。
-  Service layerに、Activeレコードを組み合わせた複雑なロジックを書く。
+  - (具体的にどう4-layerで書くのかは調べたがよくわからず)
 - **Transaction script なら Layered architecture(3-layers)** を採用する。
-  Business layerに重複上等でベタ書きする。
+  - Data access layer が振る舞いを持たないモデル（データモデル）を返したり受け取ったりする
+    - モデルを定義する場所はたぶん Data access layerなんだろうが、別にBusiness layerに置いてもいいと思う
+    - Table Data Gateway Patternなど(Repositoryパターンをテーブルと密結合にしたもの)が有名っぽい
+  - Business layerにロジックを書く (重複上等)
+
+なお、アーキテクチャについてはリクルートの資料が参考になる。
+
+- [実践アプリケーション設計 ①データモデルとドメインモデル](https://speakerdeck.com/recruitengineers/app1-2025)
+- [実践アプリケーション設計 ②トランザクションスクリプトへの対応](https://speakerdeck.com/recruitengineers/shi-jian-apurikesiyonshe-ji-toranzakusiyonsukuriputohenodui-ying)
+- [実践アプリケーション設計 ③ドメイン駆動設計](https://speakerdeck.com/recruitengineers/shi-jian-apurikesiyonshe-ji-tomeinqu-dong-she-ji)
 
 ### テスト戦略の選択
 
