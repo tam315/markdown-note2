@@ -1200,3 +1200,73 @@ Domain eventをそのまま露出すると、ロジックが漏れ出したり�
 Bounded Context間のやり取りにおける**一貫性の要件によりイベントの種類を選択**しよう。
 結果整合性で良いのであれば、ECST massage を採用する。
 結果整合性ではだめなら、Event notification mesageを採用し、最新データをクエリする。
+
+## 16. Data Mesh
+
+### 分析用データモデルとトランザクション用データモデル
+
+**Data Mesh**は、分析用のデータを扱うためのアーキテクチャである。
+
+日々の業務で使うモデルを**Online Transactional Processing (OLTP) data**という。
+OTLPは、ビジネスドメインのエンティティで、リアルタイムのビジネストランザクションのために最適化されている。
+
+一方で、分析に用いるモデルを**Online Analytical Processing (OLAP) data**という。
+
+OLAPは、ビジネス活動のパフォーマンスを分析したり、より大きな価値を創出する最適化を可能にするためのもの。
+個々のビジネスエンティティは無視し、活動にのみ注目する。
+そのために使うのが、fact table と dimension table である。
+
+Factとは、既に起こったビジネス活動(動詞)のこと。
+**Fact Table** はその記録である。追記のみ可能。変更は新しいデータの追加で行う。
+動詞で表現される記録という点においてDomain eventと似ているが、現在形でも良い点が異なる。
+なので、`fact_solved_cases`だけでなく`fact_case_status`もOK。
+
+OLAPがOLTPと違うもう一つの点は、その**粒度の粗さ**である。
+OLAPでは一定間隔で全データをスナップショットして、Factテーブルに書き込むようなことをする。
+データが更新されるたびに都度Factテーブルを更新してたら効率が悪すぎるからだ。
+
+**Dimenstion Table**は、Factを説明するための記録(形容詞)である。
+Fact Tableから外部キーで参照する。
+`dim_customers`や`dim_category`など。
+なぜ正規化された形でデータを保持するかというと、分析時にクエリしやすくするため。
+
+中心にFact Table、その周りにFKで参照されるDimension Tableがある構成を**Star Schema**と呼ぶ。
+さらに、Dimension Table が推移的に別のDimension Tableを参照する構成を**Snowflake Schema**と呼ぶ。
+正規化が進むのでデータ容量は減らせるが、クエリ時にJOINが必要になるのでより大きい計算能力が必要になる。
+
+### データ分析基盤
+
+**Data Warehouse (DWH) Architecture**では、システムからデータをぶっこ抜き、
+分析に適した形に変換し、分析に適したDBに突っ込むという、比較的シンプルな方法だ。
+DWHはそのDB自体を指す。
+extract-transform-load (ETL) scriptを使う。
+
+```mermaid
+flowchart LR
+    A[(業務DBなど)] -->|Extract| B[Transform]
+    B -->|Load| C[(DWH)]
+    C --> D[分析]
+```
+
+この方式の弱さの一つは、全体で1つのモデルを作ることになり、範囲が広すぎてうまくモデル化できない点だ。
+一部の領域を独立したデータマートにすることで改善はするものの、
+今度は全体を通したクエリができなくなる。
+また、ちょっとでも元データのスキーマが変わるとETLプロセスが壊れる脆さもある。
+
+**Data Lake Architecture**は、まずは一旦DBに生データをそのまま保存し、それを変換してDWHにぶっこむ方法。
+元データは常に残っているので、必要に応じていろいろなモデルを作れるメリットが有る。
+しかし、元データはスキーマレスで品質が一定でなく、一定の規模を超えるとカオスになりがち(いわゆるData swamp / 沼)。
+
+```mermaid
+flowchart LR
+    A[(業務DBなど)] -->|Ingest| B[(Data lake)]
+    B --> C[Transform]
+    C -->|Load| D[(DWH)]
+    D --> E[分析]
+```
+
+DWHやData Lakeの欠点を補うために出てきたのが**Data Mesh**である。
+これはDDDのデータ分析版と言える。
+**Data as a Product**という考え方に基づき、
+Bonded Context(チーム)ごとにOLTP/OLAP modelを作る。
+開発チームは、分析者の要望に合わせ様々な形式のデータを提供する責務を持つ。
