@@ -708,6 +708,18 @@ sagaと違い、イベントだけではなく自身が持つ詳細な状態に�
 **実装技術はサブドメイン単位で選択**する。タイプに応じて、必要最小限の最もシンプルな方法を選択するとよい。
 無条件で全てのサブドメインにCQRSを適用するみたいなことは、無駄だし非効率なのでやめよう。
 
+```mermaid
+flowchart LR
+    UL[Ubiquitous language] --> |Protected by|BC[Bounded contexts]
+    BC --> |Identify<br/>subdomains|Core[Core]
+    BC --> |Identify<br/>subdomains|Supporting[Supporting]
+    BC --> |Identify<br/>subdomains|Generic[Generic]
+
+    Core --> |Implement<br/>using|DM[Domain model/<br/>event sourcing]
+    Supporting --> |Implement<br/>using|AR[Active record/<br/>transaction script]
+    Generic --> |Implement<br/>using|BA[Buy/adopt]
+```
+
 ### Bounded Contextの分け方
 
 Bounded Contextを間違った単位で作ったときの弊害は大きく、修正も困難である。
@@ -731,10 +743,11 @@ subdomain(論理分割)の再構成はもっと容易だ。
 - **State-based domain model なら Ports & Adaptersパターン**を採用する。
   - 複雑なロジックをもつドメインオブジェクトから、少なくとも永続化のことは分離してシンプルにしたいから。
 - **Active record pattern なら Layered architecture(4-layers)** を採用する。
-  - (具体的にどう4-layerで書くのかは調べたがよくわからず)
+  - Presentation -> Application -> Active Record -> Infrastructure のイメージ
+  - 複雑なロジックはサービスレイヤーに書く
 - **Transaction script なら Layered architecture(3-layers)** を採用する。
   - Data access layer が振る舞いを持たないモデル（データモデル）を返したり受け取ったりする
-    - モデルを定義する場所はたぶん Data access layerなんだろうが、別にBusiness layerに置いてもいいと思う
+    - モデルを定義する場所は Data access layerだろう
     - Table Data Gateway Patternなど(Repositoryパターンをテーブルと密結合にしたもの)が有名っぽい
   - Business layerにロジックを書く (重複上等)
 
