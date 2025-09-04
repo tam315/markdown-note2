@@ -94,23 +94,23 @@
 Feature: 書籍の貸出
   図書館員が利用者に書籍を貸し出すことができる
 
-    Background:
-      Given 図書館システムが稼働している
+  Background:
+    Given 図書館システムが稼働している
 
-    Scenario: 通常の貸出
-      Given 会員 "山田" の貸出冊数が 2冊
-      And 書籍 "吾輩は猫である" が貸出可能
-      When 山田に貸し出す
-      Then 貸出が完了する
-      And 山田の貸出冊数が 3冊になる
-      And 書籍が "貸出中" になる
+  Scenario: 通常の貸出
+    Given 会員 "山田" の貸出冊数が 2冊
+    And 書籍 "吾輩は猫である" が貸出可能
+    When 山田に貸し出す
+    Then 貸出が完了する
+    And 山田の貸出冊数が 3冊になる
+    And 書籍が "貸出中" になる
 
-    Scenario: 貸出上限エラー
-      Given 会員 "鈴木" の貸出冊数が 5冊（上限）
-      And 書籍 "坊っちゃん" が貸出可能
-      When 鈴木に貸し出そうとする
-      Then "貸出上限に達しています" とエラーになる
-      And 貸出冊数は変わらない
+  Scenario: 貸出上限エラー
+    Given 会員 "鈴木" の貸出冊数が 5冊（上限）
+    And 書籍 "坊っちゃん" が貸出可能
+    When 鈴木に貸し出そうとする
+    Then "貸出上限に達しています" とエラーになる
+    And 貸出冊数は変わらない
 ```
 
 大事な知識はドメインエキスパートの頭の中にしかなかったりするので、モデルを作るのは厳しい道だ。
@@ -188,7 +188,8 @@ namespace, module, package といった手法で分離される。
 
 - 地理的に離れたチームなのでPartnershipを採用できないとき
 - レガシーシステムの近代化の過程での一時的な構成として
-- 単一チームで複数のContextを扱うときに、あえて境界を明確化するため (単一チームでPartnershipを採用すると境界が曖昧になりがち)
+- 単一チームで複数のContextを扱うときに、あえて境界を明確化するため
+  (単一チームでPartnershipを採用すると境界が曖昧になりがち)
 
 ### Customer-Supplier
 
@@ -698,7 +699,8 @@ sagaと違い、イベントだけではなく自身が持つ詳細な状態に�
 
 ## 10. 設計の経験則 (Design Heuristics)
 
-**Heuristics** is a way of solving problems by discovering things yourself and learning from your own experiences. - [Cambridge Dictionary](https://dictionary.cambridge.org/ja/dictionary/english/heuristics?q=Heuristics)
+**Heuristics** is a way of solving problems by discovering things yourself and learning from your own
+experiences. - [Cambridge Dictionary](https://dictionary.cambridge.org/ja/dictionary/english/heuristics?q=Heuristics)
 
 この章では、設計、つまり「ビジネスドメインでの発見を技術的な実装手法にどう結びつけるか」について考える。
 よりよい設計の知見は、**Heuristics(経験則 = 自らの探索と実践学習に基づく問題解決方法)** として得られるものである。
@@ -767,6 +769,11 @@ Active Record patternなら **Testing Diamond** が最適。
 
 Transaction scriptなら **Reversed Testing Pyramid** が最適。
 コードがミニマルなので、全部まとめてテストするほうが効率がいいからだ。
+
+### その他
+
+ユビキタス言語が一番大事なので、ここをおろそかにしないこと。コストは後で十分回収できる。
+SubdomainがCore/Genric/Supportのどれであっても。
 
 ## 11. デザインを進化させる
 
@@ -1285,3 +1292,22 @@ DWHやData Lakeの欠点を補うために出てきたのが**Data Mesh**であ�
 **Data as a Product**という考え方に基づき、
 Bonded Context(チーム)ごとにOLTP/OLAP modelを作る。
 開発チームは、分析者の要望に合わせ様々な形式のデータを提供する責務を持つ。
+
+## 読後の感想、新しく知ったこと、印象的だったこと
+
+- アーキテクチャとは境界を設定することである。境界がないとそもそも問題解決ができない。
+- システムの複雑さを決める大きな要素はDegrees of freedom (自由度)である
+- CQRSはもともとEvent-sourced domain modelのために生まれた
+- イベントを確実に発出するための Outbox パターン
+- モデルを変換するための Anticorruption layer & Open-host service
+- 分散トランザクションのための Saga pattern & Process manager
+- サブドメイン単位で技術選定をする(オニオンはあくまで選択肢の一つに過ぎない)
+  - Event-sourced domain-model + CQRS
+  - State-based domain model + Ports & Adapters
+  - Active Record + 4-Layered
+  - Transaction Script + 3-Layered
+- DDDはGreenfield projectよりもBrownfield projectに適している
+- ストラングラーパターン
+- マイクロサービスにおけるLocal complexity & Global Complexity
+- Event-driven architectureにおけるイベント3種類
+- (感想)トランザクションは集約単位でのみ利用し、それ以外ではsaga等を使えというのは、ほとんどのスタートアップにとってはなかなか過酷な仕組みだと思った
