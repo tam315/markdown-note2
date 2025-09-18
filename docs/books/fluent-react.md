@@ -124,14 +124,18 @@ JSXの`<`は JSX Pragma と呼ばれる。
 
 ## 3. Virtual DOM
 
-DOMは`Node`オブジェクトからなる。vDOMはプレーンなJSオブジェクトからなる。
+### vDOMとは
+
+Real DOMは`Node`オブジェクトからなる。一方、vDOMはプレーンなJSオブジェクトからなる。
 
 Reactでは`setState`時などにまずvDOMが更新され、そのあとにDOMがvDOMに同期される。
 この同期作業を **Reconciliation** と呼ぶ。
 vDOMの更新はDOMの更新より軽量に行える。
 また、必要最小限の差分だけをDOMに適用することで、パフォーマンスも向上する。
 
-DOMには多くの落とし穴がある。
+### Real DOMの落とし穴
+
+Real DOMには多くの落とし穴がある。
 パフォーマンス、クロスブラウザ互換性、セキュリティ脆弱性である。
 
 まずは**パフォーマンス**だ。例えばDOM要素の`offsetWidth`を読むだけでも再計算が走る。
@@ -147,3 +151,35 @@ DOMには多くの落とし穴がある。
 また、イベントリスナーは個々のDOMではなく、ルート要素にまとめてセットされたうえで管理される。
 `e.nativeEvent`でネイティブイベントへのアクセス手段も残している。
 これら一連の互換性担保のための仕組みも、vDOMの世界で実現されている。
+
+最後に**セキュリティ脆弱性**だ。Real DOMを直接操作すると、XSSに弱くなりがちだ。
+Reactでは明示的に危険なAPIを使わに限りは、デフォルトでXSS対策が適用される。
+
+**Document Fragment**は、Real DOM Nodeの軽量なコンテナである。
+`document.createDocumentFragment()`で作成する。
+実際のDOMに適用する前段階で、ステージングエリアのように使うことが可能。
+複数の変更を適用した後に、レンダリングは1回だけで済ませる事ができ、効率がよい。
+Document Fragmentの持つ効率性を、
+単一のNodeのみならずアプリケーション全体で使えるようにしたものがvDOMであると言える。
+
+### vDOMはどう動くか
+
+vDOMの最小構成要素は、**React Element**である。
+これはHTML要素またはコンポーネントを扱うための、軽量な代替表現である。
+`React.createElement`や`_jsxs`で作成される。つまり`<`である。
+以下のようなプロパティを持つ単純なJSONオブジェクトである。
+
+- `$$typeof` - React Elementの種類。element/fragment/portal/provider など
+- `type` - HTMLタグ名またはコンポーネント関数。`"div"`(文字列)/`MyComponent`(関数)など
+- `props` - propsのオブジェクト。`{children: "hello"}`など
+
+メモリ上に保持される点では、実際のDOM Nodeを作る`document.createElement()`と似ているが、
+React NodeはそのままDOMツリーに差し込まれることはなく、**永久に仮想である**点が異なる。
+また、React Nodeはインスタンス化するときに**propsやchildrenを受取って保持する**点も異なる。
+
+React elementのツリーがvDOMである。
+画面の内容が更新されたときは、新旧のツリーを比較し、差分だけを効率的にReal DOMに反映する。
+親から配下の全ての要素に対して再帰的に処理が行われるため、
+**不必要な再描写が必然的に発生しうる**。
+これを防ぐには、ルート付近にある値を広い範囲で使わないことや、
+`memo`や`useMemo`による最適化が必要となる。
