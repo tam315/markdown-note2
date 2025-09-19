@@ -128,6 +128,10 @@ JSXの`<`は JSX Pragma と呼ばれる。
 
 Real DOMは`Node`オブジェクトからなる。一方、vDOMはプレーンなJSオブジェクトからなる。
 
+vDOMはReactが持つ、UIの青写真である。
+これを基にして、ブラウザ、iOS、Android、Shellといった、各環境に対応する成果物を生成する。
+ブラウザ用の成果物は、DOMである。
+
 Reactでは`setState`時などにまずvDOMが更新され、そのあとにDOMがvDOMに同期される。
 この同期作業を **Reconciliation** と呼ぶ。
 vDOMの更新はDOMの更新より軽量に行える。
@@ -153,7 +157,7 @@ Real DOMには多くの落とし穴がある。
 これら一連の互換性担保のための仕組みも、vDOMの世界で実現されている。
 
 最後に**セキュリティ脆弱性**だ。Real DOMを直接操作すると、XSSに弱くなりがちだ。
-Reactでは明示的に危険なAPIを使わに限りは、デフォルトでXSS対策が適用される。
+Reactでは明示的に危険なAPIを使わない限りは、デフォルトでXSS対策が適用される。
 
 **Document Fragment**は、Real DOM Nodeの軽量なコンテナである。
 `document.createDocumentFragment()`で作成する。
@@ -164,22 +168,80 @@ Document Fragmentの持つ効率性を、
 
 ### vDOMはどう動くか
 
-vDOMの最小構成要素は、**React Element**である。
-これはHTML要素またはコンポーネントを扱うための、軽量な代替表現である。
-`React.createElement`や`_jsxs`で作成される。つまり`<`である。
-以下のようなプロパティを持つ単純なJSONオブジェクトである。
+vDOMの構成要素は、**React Element**である。
+これはHTML要素またはコンポーネントをvDOMで扱うための、軽量な代替表現である。
+`React.createElement`や`_jsxs`で作成される。つまり`<`であり、JSXである。
+JSXのアプリレベルでのツリー全体が、vDOMであるといえる。
 
-- `$$typeof` - React Elementの種類。element/fragment/portal/provider など
+React Elementは、以下のようなプロパティを持つ単純なJSオブジェクトである。
+
+```js
+{
+  $$typeof: Symbol(react.element)
+  type: "div",
+  "props": {
+    "className": "hogehoge",
+    "children": { /* 別のReact Element群 */ }
+  }
+}
+```
+
+- `$$typeof` - React Elementの種類。element/fragment/portal/provider などの別
 - `type` - HTMLタグ名またはコンポーネント関数。`"div"`(文字列)/`MyComponent`(関数)など
 - `props` - propsのオブジェクト。`{children: "hello"}`など
 
 メモリ上に保持される点では、実際のDOM Nodeを作る`document.createElement()`と似ているが、
 React NodeはそのままDOMツリーに差し込まれることはなく、**永久に仮想である**点が異なる。
-また、React Nodeはインスタンス化するときに**propsやchildrenを受取って保持する**点も異なる。
+また、React Elementはインスタンス化するときに**propsやchildrenを受取って保持する**点も異なる。
 
-React elementのツリーがvDOMである。
 画面の内容が更新されたときは、新旧のツリーを比較し、差分だけを効率的にReal DOMに反映する。
 親から配下の全ての要素に対して再帰的に処理が行われるため、
 **不必要な再描写が必然的に発生しうる**。
 これを防ぐには、ルート付近にある値を広い範囲で使わないことや、
 `memo`や`useMemo`による最適化が必要となる。
+
+## 4. Reconciliation
+
+### Batching
+
+React v15 以前は**Stack Reconciler**が使われていた。
+Stackの仕組みで動くため、更新の優先順位付けができず、常に決まった順番どおりに処理が行われる。
+また、処理の中断やキャンセルもできない。
+このため、本来は不要だったり優先度が低かったりする描写に時間がかかり、
+パフォーマンスが悪化することがある。
+
+これを改善するため、React v16 以降は**Fiber Reconciler**が使われている。
+1つのvDOM要素(React Element)に対して1つのFiberが作成される(`createFiberFromTypeAndProps()`)。
+Fiberは作業の単位を表す。
+React ElementとFiberのデータ構造は似ているが、
+前者がステートレス/短命/イミュータブルなのに対し、後者はステートフル/長寿命/ミュータブルである点が異なる。
+
+Fiberはコンポーネントのあらゆる情報を持っている。
+コンポーネントを定義している関数やクラスへの参照、コンポーネントインスタンスへの参照、
+propsの状態、children、コンポーネントツリーでの位置、優先度を決めるためのメタデータなど。
+
+**Double Buffering**という、チラツキや遅れを減らすための仕組みに基づいている。
+もともとはゲームなどで使われるテクニックである。
+画像やフレームを保持するバッファやメモリ空間(ここではFiber Tree)を2つ作り、
+一定の頻度でそれらを切り替えながら画面を描写することで、画面の更新を効率化するもの。
+
+裏で更新を準備できるため以下のメリットがある。
+
+- ちらつきを防げる
+- パフォーマンスが高い
+- より優先度の高い更新が必要になったら（不要になったら）、いつでも処理を捨てられる
+- 実際の画面を汚すことなく、いつでも処理を中断したり再開したりできる
+
+コンポーネントのstateが更新されると、Current (Fiber) TreeをフォークしたWIP (Fiber) Treeが作成される。
+このとき、両方のツリーの適切なFiberに、Laneという優先度を示すフラグがセットされる。
+Fiber Reconciliation は、Current Tree と WIP Tree を比較しながら処理を行っていく。
+
+- `workLoop`
+- Render phase - このフェーズはいつでも中止と再開が可能
+  - `beginWork`
+    - WIP Treeのルートから末端に向けて、更新の要否を示すフラグを付けていく
+    - FiberにセットされているLaneと、そのレンダリングサイクルでの処理対象Laneに基づいて、いま更新するか、後回しにするか判定を行う
+  - `completeWork`- WIP Treeの末端からルートに向けて、実際のDOMをひとまずメモリ上に作りながら、戻っていく
+- Commit phase / `commitRoot()` - Current TreeをWIP Treeと入れ替える
+  - mutation phase / `commitMutationEffects()`
+  - layout phase / `commitLayoutEffects()`
