@@ -202,46 +202,70 @@ React NodeはそのままDOMツリーに差し込まれることはなく、**�
 
 ## 4. Reconciliation
 
-### Batching
+### Fiber Reconcilerとは
 
 React v15 以前は**Stack Reconciler**が使われていた。
-Stackの仕組みで動くため、更新の優先順位付けができず、常に決まった順番どおりに処理が行われる。
-また、処理の中断やキャンセルもできない。
-このため、本来は不要だったり優先度が低かったりする描写に時間がかかり、
-パフォーマンスが悪化することがある。
+ルート要素から末端方向にスタックにタスクを積みながら走査していくため、
+優先順位付けができないうえ、処理の中断やキャンセルもできない。
 
 これを改善するため、React v16 以降は**Fiber Reconciler**が使われている。
-1つのvDOM要素(React Element)に対して1つのFiberが作成される(`createFiberFromTypeAndProps()`)。
-Fiberは作業の単位を表す。
-React ElementとFiberのデータ構造は似ているが、
-前者がステートレス/短命/イミュータブルなのに対し、後者はステートフル/長寿命/ミュータブルである点が異なる。
+Fiberとは、画面更新時の作業単位を表したJavaScriptオブジェクトである。
+1つのvReact Elementに対して、1つのFiberが作成される。
+
+両者のデータ構造は似ているが、前者がステートレス/短命/イミュータブルなのに対し、
+後者はステートフル/長寿命/ミュータブルである点が異なる。
 
 Fiberはコンポーネントのあらゆる情報を持っている。
-コンポーネントを定義している関数やクラスへの参照、コンポーネントインスタンスへの参照、
+コンポーネントの定義関数またはクラスへの参照、コンポーネントインスタンスへの参照、
 propsの状態、children、コンポーネントツリーでの位置、優先度を決めるためのメタデータなど。
 
-**Double Buffering**という、チラツキや遅れを減らすための仕組みに基づいている。
-もともとはゲームなどで使われるテクニックである。
+```ts
+// Fiberオブジェクトの一例
+{
+  tag: 3, // 3 is Class Component
+  type: MyComponentClass,
+  key: null,
+  ref: null,
+  props: {/* */},
+  stateNode: InstanceOfMyComponentClass,
+  // ...親・子・兄弟Fiberへの参照や、indexなど
+}
+```
+
+Fiber Reconcilerは、**Double Buffering**という仕組みで動作する。
+これは、もともとはゲーム画面などで使われるテクニックである。
 画像やフレームを保持するバッファやメモリ空間(ここではFiber Tree)を2つ作り、
-一定の頻度でそれらを切り替えながら画面を描写することで、画面の更新を効率化するもの。
+一定の頻度でそれらを切り替えながら画面を描写する。
+これにより、高パフォーマンスで、中止(スケジューリング)可能で、ちらつきのない更新を実現できる。
 
-裏で更新を準備できるため以下のメリットがある。
+### Fiber Reconcilerの動作
 
-- ちらつきを防げる
-- パフォーマンスが高い
-- より優先度の高い更新が必要になったら（不要になったら）、いつでも処理を捨てられる
-- 実際の画面を汚すことなく、いつでも処理を中断したり再開したりできる
+コンポーネントのstateが更新されると、Current Fiber TreeをフォークしたWIP Fiber Tree が作成される。
+なお、ソース上ではWIPの代わりにAlternateという言葉が使われている場所もある。
 
-コンポーネントのstateが更新されると、Current (Fiber) TreeをフォークしたWIP (Fiber) Treeが作成される。
-このとき、両方のツリーの適切なFiberに、Laneという優先度を示すフラグがセットされる。
-Fiber Reconciliation は、Current Tree と WIP Tree を比較しながら処理を行っていく。
+このとき、更新対象となるFiberやその祖先となるFiberに、Laneという優先度を示すフラグが適宜セットされる。
+処理が中断されても優先度が消失しないようにするため、この記録はCurrentとWIPの両方に対して書き込まれる？
+ソースは[このあたり]((https://github.com/facebook/react/blob/6eda534718d09a26d58d65c0a376e05d7e2a3358/packages/react-reconciler/src/ReactFiberConcurrentUpdates.js#L194-L208)。
 
-- `workLoop`
-- Render phase - このフェーズはいつでも中止と再開が可能
-  - `beginWork`
-    - WIP Treeのルートから末端に向けて、更新の要否を示すフラグを付けていく
-    - FiberにセットされているLaneと、そのレンダリングサイクルでの処理対象Laneに基づいて、いま更新するか、後回しにするか判定を行う
-  - `completeWork`- WIP Treeの末端からルートに向けて、実際のDOMをひとまずメモリ上に作りながら、戻っていく
-- Commit phase / `commitRoot()` - Current TreeをWIP Treeと入れ替える
-  - mutation phase / `commitMutationEffects()`
-  - layout phase / `commitLayoutEffects()`
+- ワークループ / `workLoop()`
+  - Render phase - このフェーズはいつでも中止と再開が可能
+    - `beginWork()`
+      - WIP Treeのルートから末端に向けて走査する
+      - Current Treeと見比べながら、更新の要否を示すフラグを付けていく
+      - 対象のFiberが所属しているLaneと、いまのレンダリングサイクルがどのレーンを処理しているかに基づいて、いまのサイクルで更新するか後回しにするか判定する
+    - `completeWork()`
+      - WIP Treeの末端からルートに向けて、実際のDOMをひとまずメモリ上に作りながら、遡上していく
+      - 作ったDOMはWIP Treeの対象Fiberの`stateNode`にくっつけておく
+  - Commit phase
+    - `commitRoot()`
+      - `FiberRootNode`の向き先をCurrent TreeからWIP Treeに切り替え、実際の画面への適用を開始する
+    - mutation phase / `commitMutationEffects()`
+      - 出来上がったWIP Treeを走査しながら、実際のDOMに変更を適用していく(追加・更新・削除)
+    - layout phase / `commitLayoutEffects()`
+      - 更新されたDOMの新しいレイアウトを計算する
+    - Effect
+      - Commit Phaseでは副作用も実行される
+        - Placement Effect - コンポーネントが新規に追加されたとき
+        - Update Effect - コンポーネントのpropsやstateが変更されたとき
+        - Deletion Effect - コンポーネントが削除されたとき
+        - Layout Effect - `useLayoutEffect`がセットされているとき(画面描写の前に実行される)
