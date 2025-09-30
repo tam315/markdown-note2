@@ -207,6 +207,7 @@ React NodeはそのままDOMツリーに差し込まれることはなく、**�
 React v15 以前は**Stack Reconciler**が使われていた。
 ルート要素から末端方向にスタックにタスクを積みながら走査していくため、
 優先順位付けができないうえ、処理の中断やキャンセルもできない。
+Batchingも行われないためパフォーマンスも悪い。
 
 これを改善するため、React v16 以降は**Fiber Reconciler**が使われている。
 Fiberとは、画面更新時の作業単位を表したJavaScriptオブジェクトである。
@@ -245,10 +246,11 @@ Fiber Reconcilerは、**Double Buffering**という仕組みで動作する。
 
 このとき、更新対象となるFiberやその祖先となるFiberに、Laneという優先度を示すフラグが適宜セットされる。
 処理が中断されても優先度が消失しないようにするため、この記録はCurrentとWIPの両方に対して書き込まれる？
-ソースは[このあたり]((https://github.com/facebook/react/blob/6eda534718d09a26d58d65c0a376e05d7e2a3358/packages/react-reconciler/src/ReactFiberConcurrentUpdates.js#L194-L208)。
+ソースは[このあたり](https://github.com/facebook/react/blob/6eda534718d09a26d58d65c0a376e05d7e2a3358/packages/react-reconciler/src/ReactFiberConcurrentUpdates.js#L194-L208)。
 
 - ワークループ / `workLoop()`
-  - Render phase - このフェーズはいつでも中止と再開が可能
+  - Render phase
+    - このフェーズはいつでも中止と再開が可能
     - `beginWork()`
       - WIP Treeのルートから末端に向けて走査する
       - Current Treeと見比べながら、更新の要否を示すフラグを付けていく
@@ -269,3 +271,10 @@ Fiber Reconcilerは、**Double Buffering**という仕組みで動作する。
         - Update Effect - コンポーネントのpropsやstateが変更されたとき
         - Deletion Effect - コンポーネントが削除されたとき
         - Layout Effect - `useLayoutEffect`がセットされているとき(画面描写の前に実行される)
+
+以上の仕組みにより以下が実現された。
+
+- Batchingによる高パフォーマンス性
+  - ただし非同期処理後など、レンダリングサイクル外でのBatchingはReact v16ではなくv18以降で可能になった
+- Time Slicingによる優先順位を考慮した効率的な描写
+- 描写途中での柔軟なスケジュールの変更(処理が中断可能になったので)
