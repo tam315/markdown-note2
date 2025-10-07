@@ -279,7 +279,7 @@ Fiber Reconcilerは、**Double Buffering**という仕組みで動作する。
 - Time Slicingによる優先順位を考慮した効率的な描写
 - 描写途中での柔軟なスケジュールの変更(処理が中断可能になったので)
 
-## 5. Memoization, Lazy loading, Performance
+## 5. よくある疑問、強力なパターン
 
 ### `React.memo`
 
@@ -318,3 +318,74 @@ React.memoされているコンポーネントに関数を渡す場合に、最�
 
 React Compiler (社内コードネーム: React Forget)のリリースにより、
 前述のメモ化は自動で行われるようになったため、開発者が手動で対処する必要がなくなった。
+
+### `React.lazy` & `Suspense`
+
+大きなプロダクトで愚直にJSを同期的に読み込むと、初期ロードが遅くなりがち。
+そのため、JSのプロジェクトでは、scriptタグの`async`属性や、
+`import()`関数を用いて遅延読み込みを行うことがある。
+
+さらに、lazy + suspense + importを組み合わせることで、
+必要になるタイミングまでコンポーネントの取得を遅延させることができる。
+
+```ts
+import React, { lazy, Suspense } from 'react';
+import FakeSidebar from './FakeSidebar'; // 取得が完了するまではダミーを表示
+
+const Sidebar = lazy(() => import('./Sidebar'));
+
+function App() {
+  const showSidebar = true; // ホントはuseStateなどで管理
+  return (
+    <Suspense fallback={<FakeSidebar />}>
+      {showSidebar  && <Sidebar />}
+    </Suspense>
+  );
+}
+```
+
+### `React.useState` & `React.useReducer`
+
+useStateは高レベルなので簡素なコードになる。useReducerは低レベルなので複雑なコードになる。
+useStateはuseReducerを抽象化したものにすぎず、実際に内部でuseReducerを用いている。
+
+useReducerには以下のメリットがあるので、状態管理が複雑なケースで有効だが、多くの場合ではオーバーキルである。
+
+- テストが書きやすい
+- 状態とその変更方法を一箇所にまとめられる
+- event-sourcedモデルなのでタイムトラベルデバッグや楽天更新がやりやすい
+
+Reducerは純粋関数である必要があり、常に新しいオブジェクトを返さねばならない。
+しかし、ネストしたプロパティを書き換えようとすると冗長になりがち。
+`immer`や`use-immer`などのライブラリを使うと、ネストしたプロパティの更新が楽になる。
+
+### 強力なパターン
+
+**Presentation/Container**パターンはロジックと描写の関心を分けられるという点で強力だが、
+いまではその多くがhooksで代用可能。
+
+**Higher-order component**は、コンポーネントを受け取って別のコンポーネントを返すコンポーネント。
+重複を避けながら振る舞いを共有するために使う。慣例として`with***`という名前の関数として実装される。
+型安全性、レンダリングの効率性、Wrapper-hellなど色々問題があり、いまではhooksに代用された。
+
+**Render propsやchildren as a function**もロジックを共有するためのパターンだが、
+こちらもhooksに代用された。
+
+**Controll props**は親から制御用の値をpropsとして差し込む手法。
+宣言的なUIを作るのに役立つ。
+Controlled & Uncontrolled のどちらでも使えるようにすると便利だったりする。
+
+**Prop collections**は、よく使うまとまりのpropsを一箇所で定義して利便性を高める手法。
+特に関数に対して使うと有効。
+デフォルトの関数の挙動に加え、使用時に任意で処理を付け加えられるように、
+Prop getterが関数群をcomposeする仕組みにすると、使いやすくなる。
+
+**Compound components**は、描写の責務だけを親に委譲して依存を逆転させることで柔軟性を高めつつ、
+stateに対するロジックは子に書けるようにする方法。
+タブやアコーディオンの実装でよく使う。
+たとえば5項目ごとに間に線を入れたい、みたいなユースケースで便利。
+Contextを使った親コンポーネントと、その利用者である子コンポーネント群の組み合わせとして実装する。
+
+**State Reducer**パターンは、コンポーネントの状態管理の制御を外部に委譲するパターン。
+カスタムなreducerをpropsとしてコンポーネントに渡すことで依存を逆転させる。
+デフォルトの振る舞いは提供しつつ、特殊なケースでは処理を変更したい場合などに使われる。
