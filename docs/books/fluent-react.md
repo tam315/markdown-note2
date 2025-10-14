@@ -551,12 +551,12 @@ Concurrent Renderingによるコンポーネント群の描写の時差に起因
 
 ## 8. Frameworks
 
-ReactはUnopnionatedなので、自前で作らないと行けない周辺機能が多い。
+ReactはUnopnionatedなので、自前で作る必要のある周辺機能が多い。
 その労力を減らしてくれるのがFrameworkである。
 
 - Data fetching
   - State management, Caching, Error handling
-  - SSR時にデータを埋め込める必要がある
+  - SSR時にデータを埋め込める必要もある
 - Routing
   - Isomorphic、つまりサーバでもクライアントでも動く必要がある
 - Server rendering
@@ -573,7 +573,7 @@ Frameworkのデメリット
 
 - 学習コストがかかる
 - 逆に柔軟性を失う場合がある
-  - 要件によっては、規約により得られるメリットよりも、規約により失われる柔軟性の方が大きい場合も
+  - 要件によっては、規約により得られるメリットよりも、規約により失われる柔軟性の方が大きい
 - Frameworkと一蓮托生になるリスクがある
   - メンテされなくなったり、対応不可能な破壊的変更が入ったり、方向性が明後日の方角に進み出したらどうする？
 - 抽象化による魔法が増え、逆に理解・デバッグ・パフォーマンス最適化が難しくなることがある
@@ -581,14 +581,13 @@ Frameworkのデメリット
 ### Remix
 
 `entry.server.tsx`にSSRのロジックが描かれており、カスタマイズが可能。
-このファイルを消せばデフォルト挙動にフォールバックする。
-FrameworksによるMagicによるロックインを避ける作りになっている。
-
-Botによるリクエスト時にはSEO効果が高くなるよう、なるべく全部を描写して返すような工夫もある。
+なお、このファイルを消せばデフォルト挙動にフォールバックする。
 
 データの更新時には、フォームのstateや振る舞いの管理をブラウザに任せ、Web標準に沿うようになっている。
 これにより、Hydrationが完了する前であってもフォームが動作する。
-Reactで全てを管理することで生まれがちな、学習コスト・複雑さ・オレオレ仕様を可能な限り避けている。
+
+全体を通して、Magicによるロックインを避ける作りになっている。
+また、Reactで全てを管理することで生まれがちな、学習コスト・複雑さ・オレオレ仕様を可能な限り避けている。
 
 - Web標準に沿っているので学習曲線は直線的
 - 魔法がなく直感的ではあるが、冗長であるとも言える
@@ -633,3 +632,153 @@ server-firstであり、`use client`を明示的に書かない限りは、
 
 - 柔軟性の高いフルスタックのフレームワークで、SSG/ISR/SSRをしたいなら、Next.js
 - SSRのみが必要で、Web標準に沿ったプログレッシブエンハンスメントが好きなら、Remix
+
+## 9. React Server Components
+
+### RSCの基本
+
+RSCはサーバサイドでのみ実行されるコンポーネント。
+
+突き詰めると、Reactのコンポーネントは、React Element、つまりvDOMを返す関数だ。
+RSCにおいても、それは変わらない。
+
+- RSCのメリット
+  - サーバの計算環境は、クライアントの計算環境より高性能で安定している
+  - サーバ環境なので秘匿情報を扱える
+  - レンダリング時に`await`できる
+
+RSCの処理と、SSRは異なる2つのプロセスと捉えることができる。
+
+- Step1. **RSCs renderer**
+  - RSCをクライアントに渡せる状態のReact Elementsに変換するフェーズ
+    - サーバでしか使えない機能(e.g. 主として`await`)は処理済みにする
+    - クライアントでしか使えない機能(e.g.`useState`)のあるElementにはJSファイルへの参照をもたせる
+  - `turnServerComponentsIntoTreeOfElements(<App />)`のように処理される
+- Step2. **Server renderer**
+  - React ElementsをHTML文字列やストリームに変換するフェーズ
+  - ここではクライアントコンポーネントもレンダリング可能である点に注意(ややこしっ)
+  - `renderToString()`その他により処理される
+
+RSCはSuspenseと組み合わせることができる。
+これにより、データ取得などの準備ができるのを待ってから、クライアントにストリームすることができる。
+
+### Serialization
+
+React Elementsをブラウザに送るために文字列化することをSerializationという。
+
+```jsx
+const htmlString = ReactDOMServer.renderToString(<App />)
+// htmlString will be `<div id="root"><div>Hello World</div></div>`
+```
+
+この処理は以下に関わるので重要である。
+
+- すぐに描写可能な完全なHTMLをクライアントに送ることで、ロード時間を減らせる
+- 最終確定したHTMLだけをクライアントに送ることで、フリッカーなどをなくせる
+- Hydrationを行うための扱いやすいスタート地点となる
+
+React Elementの`$$typeof`はSymbolなのでそのままではシリアライズできない。
+以下のように標準APIを使って、そこだけ文字列に置き換えて疎通させている。
+
+```jsx
+JSON.stringify(ReactElement, replacer)
+JSON.parse(jsonString, replacer)
+// replacerのシグネチャーは (key,value)=>value
+// これを使って`$typeof`だけをstringに置き換える
+```
+
+### Navigation
+
+RSCが有効なアプリケーションで、ナビゲーション(e.g. `<a href="/blog">`)がどのように機能するか見ていこう。
+
+まず、フルリロードを防ぐため、クライアント側でAタグをハイジャックする。
+効率化のためにwindowにイベントをセットしている点に注意。
+このような方法を Event Delegation とよぶ。
+
+```jsx
+window.addEventListener('click', event => {
+  if (event.target.tagName !== 'A') {
+    return
+  }
+  event.preventDefault()
+  navigate(event.target.href)
+})
+```
+
+navigate関数では、初期ロード時のようにHTMLシェルも含めた全体ではなく、
+JSX(=vDOM=ReactElements)のJSONをシリアライズした文字列だけをサーバーから取得して、
+クライアント側で`root.render(newElements)`することで、
+UXを保ちつつページ遷移を実現する。
+
+### Updates
+
+useStateといった**状態管理のAPIはクライアントサイドでしか使えない**。これは意図的な設計である。
+理由の一つは、サーバサイドは複数のクライアントの処理を扱うため、状態を扱うとセキュリティ的に危険であること。
+もう一つは、関数がシリアライズできないことだ。
+
+onClickといった**イベントハンドラAPIもクライアントサイドでしか使えない**。
+サーバレンダリング時にはクリックという概念は存在しないからだ。
+また、関数はシリアライズできないのも理由だ。
+
+つまり、更新はクライアントコンポーネントでしか行えない。
+なるべく多くの部分をRSCに寄せていくことが肝要である。
+
+### RSCとクライアントコンポーネントはどう協調するか
+
+RSCは静的なReact Elementsとして描写される。
+
+一方、クライアントサイドで描写すべき部分のReact Elementは、
+該当するコンポーネントのJSファイルへの参照を持つ形で作成される。
+
+```JS
+// こんなかんじで
+{
+  "$$typeof": Symbol(react.element),
+  "type": {
+    "$$typeof": Symbol(react.module.reference),
+    "filename": "./src/MyComponent.js"
+  },
+  props:{/* ... */}
+}
+```
+
+つまり、あらかじめ開けられた「穴」のようなものだ。
+JSはこの穴を発見すると、しかるべきJSを読み込んで画面上に描写するのである。
+
+### 描写の流れ
+
+「コンポーネントの実行」とは、コンポーネントをReact Elementに変換することである、とすると、
+流れは以下のように整理できる。
+
+- RSCがサーバで実行され、React Elementsに変換される
+- Client Componentがサーバで実行され、React Elementに変換される
+- これで、全てのReact Elementsを含む大きなオブジェクトがサーバ上にできあがる
+- 文字列に変換されたうえでクライアントに送られる
+- これ以降、RSCがクライアントで実行されることはない
+- これ以降、Client Componentはクライアントでのみ実行される
+
+### RSCのルール
+
+Client Componentに渡すpropsは、シリアライズできなければならない。
+簡単なコールバック関数を渡すことすらできない。
+
+副作用のあるHooksは使えない。`useState`とか。
+
+RSCのStateは複数のユーザーで共有される可能性があり、
+Client ComponentのStateとは根本的に異なるので注意。
+
+Client Component内でRSCを使うことはできない。
+ただし、childrenで内容を受け取って使うことなら可能。
+
+RSCはClient Componentより勝っているわけではない。
+あくまで新しく出てきたオプションに過ぎない。
+
+### Server Actions
+
+`"use server"`とファイルの先頭に書くことで、サーバサイドの関数をクライアントからも呼び出すことができるようになる。
+この関数を Server Actions と呼ぶ。
+
+クライアントで直接実行されるのではなく、サーバーにリクエストを送ってサーバで実行した後、結果だけがクライアントに返ってくる。
+
+formのaction属性にServer Actionsを与えると、第1引数は`FormData`型が与えられる。
+この処理方法にすると、JSのロード前であってもフォームの送信が可能になる。
