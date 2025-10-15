@@ -253,7 +253,7 @@ Fiber Reconcilerは、**Double Buffering**という仕組みで動作する。
     - このフェーズはいつでも中止と再開が可能
     - `beginWork()`
       - WIP Treeのルートから末端に向けて走査する
-      - Current Treeと見比べながら、更新の要否を示すフラグを付けていく
+      - Current Fiber Tree と最新の React Elements を見比べながら、更新の要否を示すフラグを付けていく
       - 対象のFiberが所属しているLaneと、いまのレンダリングサイクルがどのレーンを処理しているかに基づいて、いまのサイクルで更新するか後回しにするか判定する
     - `completeWork()`
       - WIP Treeの末端からルートに向けて、実際のDOMをひとまずメモリ上に作りながら、遡上していく
@@ -403,13 +403,13 @@ JSの機能やイベントリスナーをあとから添付するプロセスの
 素朴な実装だと、以下のような流れで実現される。
 
 - サーバー側
-  - `react-dom/server` -> `renderToString(<App />)`という感じでhtmlとして描写する
+  - `react-dom/server`の`renderToString(<App />)`という感じでhtmlとして描写する
   - HTMLのテンプレートに、前述の結果と、ビルドしたJS(Client bundle)を埋め込んでクライアントに送る
 - クライアント側
   - HTMLを読み込んで描写する
   - Client bundleのダウンロードして読み込む
   - DOMに対してイベントリスナの添付と、動的な機能の添付を行う
-    - `react-dom` -> `hydrateRoot(document, <App />)`という感じで行う
+    - `react-dom`の`hydrateRoot(document, <App />)`という感じで行う
     - このとき、サーバーから受け取った静的HTMLと、クライアントで生成したJSXに不一致があればエラーを吐く
 
 Hydrationには、画面が描写されてからインタラクションが可能になるまでわずかに時間がかかるという欠点がある。
@@ -459,7 +459,7 @@ WHATWGが策定する標準仕様に沿っている。
 
 以下のメリットがあるので、SSRを自前で実装するのはやめておいて、フレームワークを使え。
 
-- セキュリティリスクがあらかじめ潰されている (e.g. キャッシュのコンタミネーション)
+- セキュリティリスクがあらかじめ潰されている (e.g. キャッシュの取り違え)
 - パフォーマンスがよい (e.g. Automatic Code Splitting)
 - なにもせずとも簡単に使えて、ビジネスの本質に集中できる
 - 自然とベストプラクティスに沿うことができる
@@ -638,26 +638,19 @@ server-firstであり、`use client`を明示的に書かない限りは、
 ### RSCの基本
 
 RSCはサーバサイドでのみ実行されるコンポーネント。
+サーバ側のセキュアかつ安定した環境で動作することで、非同期処理や秘匿情報をうまく扱えるのがポイント。
 
 突き詰めると、Reactのコンポーネントは、React Element、つまりvDOMを返す関数だ。
 RSCにおいても、それは変わらない。
 
-- RSCのメリット
-  - サーバの計算環境は、クライアントの計算環境より高性能で安定している
-  - サーバ環境なので秘匿情報を扱える
-  - レンダリング時に`await`できる
-
-RSCの処理と、SSRは異なる2つのプロセスと捉えることができる。
-
-- Step1. **RSCs renderer**
-  - RSCをクライアントに渡せる状態のReact Elementsに変換するフェーズ
-    - サーバでしか使えない機能(e.g. 主として`await`)は処理済みにする
-    - クライアントでしか使えない機能(e.g.`useState`)のあるElementにはJSファイルへの参照をもたせる
-  - `turnServerComponentsIntoTreeOfElements(<App />)`のように処理される
-- Step2. **Server renderer**
-  - React ElementsをHTML文字列やストリームに変換するフェーズ
-  - ここではクライアントコンポーネントもレンダリング可能である点に注意(ややこしっ)
-  - `renderToString()`その他により処理される
+- Step1. RSCの実行
+  - RSCを静的なReact Elementsに変換するフェーズ
+  - サーバでしか使えない機能(e.g. 主として`await`)を処理済みにする
+- Step2. Client Componentsの実行
+  - Client ComponentsをJSファイルへの参照を持つReact Elementsに変換するフェーズ
+- Step3. Server Side Rendering
+  - 出来上がった大きなReact Elements全体を、HTML文字列やストリームに変換するフェーズ
+  - `renderToPipeableStream()`その他により処理される
 
 RSCはSuspenseと組み合わせることができる。
 これにより、データ取得などの準備ができるのを待ってから、クライアントにストリームすることができる。
@@ -684,7 +677,7 @@ React Elementの`$$typeof`はSymbolなのでそのままではシリアライズ
 JSON.stringify(ReactElement, replacer)
 JSON.parse(jsonString, replacer)
 // replacerのシグネチャーは (key,value)=>value
-// これを使って`$typeof`だけをstringに置き換える
+// これを使って `$typeof`<->string を相互変換する
 ```
 
 ### Navigation
@@ -706,7 +699,7 @@ window.addEventListener('click', event => {
 ```
 
 navigate関数では、初期ロード時のようにHTMLシェルも含めた全体ではなく、
-JSX(=vDOM=ReactElements)のJSONをシリアライズした文字列だけをサーバーから取得して、
+JSX(=vDOM, =ReactElements)のJSONをシリアライズした文字列だけをサーバーから取得して、
 クライアント側で`root.render(newElements)`することで、
 UXを保ちつつページ遷移を実現する。
 
@@ -725,7 +718,7 @@ onClickといった**イベントハンドラAPIもクライアントサイド�
 
 ### RSCとクライアントコンポーネントはどう協調するか
 
-RSCは静的なReact Elementsとして描写される。
+RSCは静的なReact Elementsとして作成される。
 
 一方、クライアントサイドで描写すべき部分のReact Elementは、
 該当するコンポーネントのJSファイルへの参照を持つ形で作成される。
@@ -743,17 +736,18 @@ RSCは静的なReact Elementsとして描写される。
 ```
 
 つまり、あらかじめ開けられた「穴」のようなものだ。
-JSはこの穴を発見すると、しかるべきJSを読み込んで画面上に描写するのである。
+クライアントはこの穴を発見すると、しかるべきJSを読み込んで、
+状況に応じてHydrationしたり画面上に描写したりするのである。
 
 ### 描写の流れ
 
-「コンポーネントの実行」とは、コンポーネントをReact Elementに変換することである、とすると、
-流れは以下のように整理できる。
+「コンポーネントの実行」とは、コンポーネントをReact Elementに変換することである。
+これをふまえると、流れは以下のように整理できる。
 
 - RSCがサーバで実行され、React Elementsに変換される
 - Client Componentがサーバで実行され、React Elementに変換される
 - これで、全てのReact Elementsを含む大きなオブジェクトがサーバ上にできあがる
-- 文字列に変換されたうえでクライアントに送られる
+- React Elementsが文字列に変換されたうえでクライアントに送られる
 - これ以降、RSCがクライアントで実行されることはない
 - これ以降、Client Componentはクライアントでのみ実行される
 
@@ -782,3 +776,39 @@ RSCはClient Componentより勝っているわけではない。
 
 formのaction属性にServer Actionsを与えると、第1引数は`FormData`型が与えられる。
 この処理方法にすると、JSのロード前であってもフォームの送信が可能になる。
+
+## 10. React Alternatives
+
+Vue.js, Angular, Solid, Svelte, Quikなどがある。
+
+### React は Reactive ではない？
+
+リアクティブなUIシステムには二つのアプローチがある。
+
+一つ目は**Fine-grained reactivity**と呼ばれる仕組みである。
+これはData-binding、observables、Signals and slotsといった技術によって実現される。
+この方式では、リアクティブな値が変更されると、それに依存している部分だけが自動的に追跡され、
+その箇所だけがピンポイントで更新される。
+
+例えばSolidというフレームワークでは、コンポーネントの関数は初回のレンダリング時に一度だけ実行される。
+その後、値が変更されると、値が実際に使われているDOM要素だけがin-placeで更新される。
+
+一方、Reactは**Coarse-grained reactivity**と呼ばれるアプローチを採用している。
+
+Reactでは、setStateなどを明示的に呼び出さない限り、UIが自動で更新されることはない。
+そしてsetStateが実行されると、値が使われている部分だけを部分的に更新するのではなく、
+コンポーネント関数全体が再実行される。
+この再実行によって、stateから派生する値なども含めてすべてが再計算され、
+結果的に画面が更新されるという仕組みである。
+
+明示的な指示なしには再描画が起こらないため、
+開発者は変更が全体に及ぼす影響を予測しやすく、コントロールもしやすくなる。
+`const view = component(state)`という明快な原則を常に保つことで、システムの動作を理解しやすく保っている。
+
+関数を毎回再実行するのは一見非効率に見えるが、
+Reactは賢いReconcilerアルゴリズムやReact Compiler（Forget）といった技術でこの問題をカバーしている。
+全体として、Reactは動的UIを構築するための仕組みを、高い効率性とわかりやすさで提供している。
+
+ReactがReactiveかどうかは、Reactiveの定義による。
+値の変更がシステム全体に自動的に反映されることが定義なら、答えはNoだ。
+値の変更にシステム全体が反応できることが定義なら、答えはYesだ。
