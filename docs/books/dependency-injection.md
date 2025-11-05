@@ -229,3 +229,31 @@ DIコンテナを使うとコードの全体像を把握するのが難しくな
 - **ユーザーに関するコンテキスト** は、ドメイン層でインターフェースとして定義しておき、
   UI層などで事前にアダプトさせてからドメイン層に渡す形にすると良い。
   フレームワークごとの流儀を考えなくて済むし、別のフレームワークに乗り換えるのも簡単になるので。
+
+## 4. DIのデザインパターン
+
+### 合成基点 / Composition Root
+
+合成基点はエントリポイントに限りなく近いところに置く。例えばMainメソッドなど。
+
+その中で、UI層、ドメイン層、データアクセス層のモジュールを好きに組み合わせて、アプリケーションをスタートする。
+合成基点に関するコードは独立した関数に切り出しておくと保守性が高まる。
+
+```ts
+// 合成基点 - Mainメソッドに限りなく近い場所で使う
+function createHomeController() {
+  // データアクセス層
+  const userRepository = new UserRepository()
+  // ドメイン層
+  const userService = new UserService(userRepository)
+  // UI層
+  const homeController = new HomeController(userService)
+
+  return homeController
+}
+```
+
+合成は合成基点でのみ行うこと。そうしないと介入が難しくなるから。
+
+また、もしDIコンテナを使う場合、合成基点の外で使うのはNG。
+Service Locator というアンチパターンになっちゃうから。
