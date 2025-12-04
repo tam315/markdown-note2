@@ -1,19 +1,41 @@
 # Inngest
 
-## Quick Start
+## 概要
 
-**Funciton**(`inngest.createFunction()`) は、バックグラウンド処理を高い信頼性で実行するためのもの。
-どういうことが可能になるかというと、リトライやバッチ処理、複雑な処理順序、複数の処理の組み合わせ、などである。
+**Inngest** は、信頼性の高いバックグラウンドジョブを簡単に実装可能にしてくれる、フルマネージドなサービス。
+例えば、リトライ、定期バッチ処理、複雑な順序を持つ処理、スケジューリング、
+sagaパターンのような長時間トランザクションなどを、簡単に実装し管理できる。
+
+基本的なコード例は以下のとおり。
+
+```ts
+inngest.createFunction(
+  { id: 'send-welcome-email' },
+  // Trigger
+  { event: 'user.signup' },
+  // Handler
+  async ({ event, step }) => {
+    const user = await step.run('get-user', () => getUser(event.data.userId))
+    await step.run('send-email', () => sendEmail(user.email))
+    await step.run('update-status', () => markEmailSent(user.id))
+  },
+)
+```
+
+**Funciton**(`inngest.createFunction()`) は、イベントやスケジュールをトリガーにして実行される処理の単位。
 Functionの単位でFlow Control(Concurrency, Throttling, Rate Limitng, Debounce, Priority)を設定できる。
 
 Functionは event または cron により**Trigger**される。
 
-**event**はアプリケーションのコードから明示的に送信したり、webhook や APIリクエストを介して外部から受け取ったりできる。
+**event**はアプリケーションのコードから明示的に発出したり、
+webhook や APIリクエストを介して外部から受け取ったりする。
 
 **Handler**は、Functionの定義において、あるeventに対応して実行されるコード全体のこと。
 Handlerの中では event と step を扱える。
 
 **Step**(`step.run`) は、Handlerの中で使用できる、Inngestにおける基礎的な処理の単位。
+
+## Stepとは
 
 複数の処理がある場合には、それぞれを Step として定義することが推奨される。
 一つのstepが実行されるたびに、結果がInngestに永続化されるため、障害発生時に途中から再開できるからだ。
@@ -49,7 +71,7 @@ Stepは、複数を同時に実行する（並列）ことも、順番に実行�
 `step.sendEvent()`はイベントを送信する。
 結果を受け取らない非同期処理、いわゆるFan-outパターンに使える。
 
-Fuction のユースケースは以下の通り。
+## Inngestのユースケース
 
 - **バックグラウンド関数**
   - メインの処理の外側で実行できる、パフォーマンスや信頼性を担保したい処理に最適
