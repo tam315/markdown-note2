@@ -34,7 +34,7 @@ Functionの単位でFlow Control(Concurrency, Throttling, Rate Limitng, Debounce
 
 Functionは event または cron により**Trigger**される。
 
-**event**は、アプリケーションのコードから明示的に発出されたり、
+**Event**は、アプリケーションのコードから明示的に発出されたり、
 Cron Jobにより発出されたり、
 Inngestで作成したwebhookにより発出されたりする。
 
@@ -134,3 +134,93 @@ Eventを手動でDev Serverに送信するには3つの方法がある。
 - curlなどでHTTPリクエストを送る
 
 `inngest.yaml`には、Inngestの設定が書ける。
+
+## Events & Triggers
+
+### イベントの送出
+
+`inngest.send()`や`step.sendEvent()`により、
+単一または複数のイベントを送出できる。
+イベントIDは、処理状況を確認したりしたくなったときに使える。
+await を忘れるとサーバーレス環境などで問題がおきがち。
+
+```ts
+const { ids } = await inngest.send([
+  { name: 'app/user.created', data: { userId: '123' } },
+  { name: 'app/email.sent', data: { to: 'user@example.com' } },
+])
+```
+
+イベントの送出をするにはイベントキーが必要。
+環境変数`INNGEST_EVENT_KEY`で設定することが推奨されている。
+
+イベントは`https://inn.gs/***`なREST APIからも送ることができる。
+
+### Eventのペイロードの形式
+
+イベントのペイロードには`name`と`data`が必須。それ以外は任意。
+
+- `id`は、イベントの重複排除をしたいときに使う
+- `ts`は、タイムスタンプを明示的にセットしたいときに使う
+- `v`は、ペイロードの形式をバージョニングして、コード側で処理分岐したいときに使う
+- `user`は、ユーザーを特定するための情報を格納できる。保存時に暗号化される。
+
+イベント名を名付けるときのコツ
+
+- Object-Action patternを使う。`account.created`とか。
+- 過去形で命名する
+- ドットとアンスコで組み上げる。`blog_post.published`とか。
+- Prefixを活用する。`api/user.created`,`stripe/customer.created`
+
+### Crons
+
+定期実行 x fan-outパターンはよく使う。
+週次レポートを全ユーザーに送信するとか。
+
+### Delayed Functions
+
+`step.sleep()`や`step.sleepUntil()`により、実行を遅延できる。メリットは以下。
+
+- 耐久性（Durable）
+  - サーバー再起動、サーバーレス関数のタイムアウト、再デプロイがあっても、スケジュールされたジョブは失われないない
+- 長期スケジュール対応
+  - 有料プランで最大1年先、無料プランでも7日先までジョブを予約できる
+- インフラ管理不要
+  - キューやバックログを自分で管理する必要がない
+- プラットフォーム非依存
+  - AWS、Vercel、Cloudflare など、どの環境でも同じように動作する
+
+### Direct Invocation
+
+`step.invoke()`で他のFunctionを呼び出せる。
+
+これにより、投げっぱなしにされたイベントからなる巨大なピタゴラスイッチを構成する代わりに、
+一箇所にオーケーストレーション的なコードを書くことが可能になる。
+
+また、Inngestには`app`という概念があるが、
+`referenceFunction()`を活用することで、**別のappの関数をinvokeすることも可能**である。
+これにより、分散システムやRPCの枠組みが容易に構築できる。
+例えば、TS+Vercelの環境から、Python+AWSの関数を簡単に呼び出せる。
+
+Edge環境とNode.js環境の差でエラーになる場合は[手当て](https://www.inngest.com/docs/guides/invoking-functions-directly#referencing-another-inngest-function)することで使える。
+
+### Webhook
+
+WebhookはEventを生成する主要な要素の一つだ。
+InngestはWebhookのConsumerとして振る舞えるエンドポイントを、コンソールからいくつでも作ることができる。
+
+- Provider: Webhookのイベントを送る人
+- Consumer: Webhookのイベントを受け取って消費する人
+
+Webhookのペイロード形式はプロバイダにより様々だが、
+これをInngestで扱えるEventの形式に必ずTransformしてから取り込む必要がある。
+具体的な方法は以下を参照。
+
+https://www.inngest.com/docs/platform/webhooks
+
+webhookはUIからだけではなく REST API により管理することも可能。
+トランスフォーム周りのコードをコードベース上で管理＆同期したいときに便利だろう。
+
+ローカル開発時には、UIから`Send to Dev Server`ボタンをポチッとすることで、
+イベントをローカルに転送できる。
+あるいはイベントを手動でコピーし、Dev Serverに貼り付けて`Send test`でも可能。
