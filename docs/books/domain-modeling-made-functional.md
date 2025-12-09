@@ -800,7 +800,7 @@ I/Oを扱うようなComposite functionは、なるべくアプリのトップ�
 
 なので、型定義も`WriteModel.Customer`と`ReadModel.Customer`というように分けて定義していくと良い。
 
-### Bunded Contextは専用のストレージを持つべき
+### Bounded Contextは専用のストレージを持つべき
 
 Contextが独立して進化していけるようにするため、Contextごとにストレージは独立させておくべきである。
 そのContextのみがストレージにアクセスし、外部から操作したい場合は必ずAPIを介して行う。

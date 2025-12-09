@@ -272,3 +272,5 @@ Batcingは、Concurrencyと組み合わせられる。
 
 Inngestでは、条件を設定する際や、動的に値を設定する場面で、**CELによるExpression** が使える。
 詳細は[CEL Playground](https://playcel.undistro.io/)で試せる。
+
+## Functions
