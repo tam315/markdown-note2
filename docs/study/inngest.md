@@ -347,3 +347,54 @@ inngest.createFunction(
 例えば特定の関数をCSチームが再実行したい、みたいなときに便利。
 
 https://www.inngest.com/docs/guides/trigger-your-code-from-retool
+
+### Concurrency
+
+用途としては大きく3種類ある。処理容量を超えないようにするために使うのがポイント。
+
+- Basic Concurrency
+  - 単に処理能力を超えないように制限したいとき
+  - `cuncurrency`属性を設定
+- Concurrency Keys
+  - マルチテナントの公平性を保ちたいときなど
+  - `cuncurrency`,`key`属性を設定
+  - keyには`event.data.userId`などを設定する
+- Sharing limits across Functions
+  - DBや外部APIのスループットを制御したいときなど
+  - `concurrency`,`key`,`scope`属性を設定
+  - scopeには、環境ごとで区切るか、アカウント全体かを選べる
+  - concurrencyは定数で管理して同じ数字を入れるように気をつけること
+
+Concurrencyは**Stepの同時実行数**を見ている。
+また、`step.sleep()`などしているものはカウントに入らない。
+タスクはFIFOで実行され、手を付けたRunを早く片付くことが優先される。
+関数内の特定のStepだけにConcurrencyを設定したいときは、そこを関数に切り出して行う。
+
+### Throttling
+
+`limit`,`period`,`key`属性を設定できる。
+一定期間における関数の開始数を制限したいときに使う。
+関数が走り出した後は、なにも制御されないないので注意。
+制限数を超えたとしてもあくまで開始を遅らせるだけで、
+必ず実行はされることが保証されている点がRate Limitingと異なる。
+
+### Rate Limiting
+
+`limit`,`period`,`key`属性を設定できる。
+一定期間における関数の実行数を制限したいときに使う。
+制限数を超えた場合、関数は実行されず捨てられる。
+一定期間内の、**最初のイベント**を拾いたいときに使う。
+
+### Debouncing
+
+`period`,`key`,`timeout(任意)`属性を設定できる。
+イベントがSettleする(periodを経過する)まで待ってから実行する。
+一定期間内の、**最後のイベント**を拾いたいときに使う。
+永遠にデバウンスされ続けるのを避けたいときには`timeout`を使う。
+
+### Priority
+
+`run`属性に評価式を書くことで、何秒分を優先させるかをセットできる。
+通常はキューに突っ込まれた時刻順で処理されるが、
+そこに強制的に割り込むことができるイメージ。
+Concurrencyなどと組み合わせて使うと効果的。
