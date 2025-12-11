@@ -495,3 +495,28 @@ OpenAIのクライアントをHandlerの引数で利用可能にするなど。
 
 `encryptionMiddleware`を使うと、任意のフィールドを暗号化できる。
 暗号化と復号化はアプリケーション側でのみ行われ、Inngest側には平文が渡らない。
+
+## Deployment
+
+アプリケーションサーバーをデプロイしたときには、Inngestクラウドとの手動同期が必要。
+ただし、Vercelなどいくつかのプラットフォームでは自動同期が可能。
+
+## Environment
+
+Inngestには4種類の環境がある。
+
+- Production Environment: 本番環境
+- Branch Environment: ブランチごとの環境。Vercelのプレビュー環境などに対応する。
+- Custom Environment: 独自に定義する環境。例えばstaging,QAなど。
+- Local Environment: ローカル開発環境
+
+ポイントは以下。
+
+- 環境ごとに、データは完全に分離されている。
+- 環境ごとに、Event KeysとSigning Keysが異なる。ただしBranch Environmentは利便性のためにすべて共通。
+- 環境ごとに、複数のアプリケーションを紐づけられる。
+
+**Branch Environment** を使うには、Inngestクライアントの`env`属性にブランチ名を設定する。
+Vercelなら自動で行われる。
+これがセットされていないと、イベントが正しい環境に送信されないので注意する。
+Branch Environmentは3日でアーカイブされる。
