@@ -156,6 +156,9 @@ const config = {
 
   markdown: {
     mermaid: true,
+    // 'detect'にすることで.mdファイルはCommonMark、.mdxファイルのみMDXとして処理される。
+    // デフォルトの'mdx'だと.mdファイル内の`<`もJSXタグとして解釈されてビルドエラーになる。
+    format: 'detect',
     hooks: {
       onBrokenMarkdownLinks: 'warn',
     }
