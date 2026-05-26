@@ -1281,7 +1281,7 @@ https://atmarkit.itmedia.co.jp/ait/articles/2207/22/news002.html
 
 ## テスト
 
-[Ultimate Rust 2](../study/rust-ultimate) の方を参照のこと。
+[Ultimate Rust 2](/study/rust-ultimate/) の方を参照のこと。
 
 ## クロスコンパイル
 

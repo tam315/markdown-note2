@@ -1,11 +1,12 @@
-import { themes } from 'prism-react-renderer'
-const lightCodeTheme = themes.github
-const darkCodeTheme = themes.dracula
-import remarkMath from 'remark-math'
-import rehypeKatex from 'rehype-katex'
+import { themes } from 'prism-react-renderer';
+const lightCodeTheme = themes.github;
+const darkCodeTheme = themes.dracula;
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
+  trailingSlash: true, // こうしないとsitemap.xmlのURLと実際のURLがずれる
   title: 'Yuuniworks Note',
   tagline: 'Shota Tamuraの個人的なメモ帳です✍🏻',
   favicon: 'img/favicon.png',
@@ -161,9 +162,9 @@ const config = {
     format: 'detect',
     hooks: {
       onBrokenMarkdownLinks: 'warn',
-    }
+    },
   },
   themes: ['@docusaurus/theme-mermaid'],
-}
+};
 
-export default config
+export default config;
