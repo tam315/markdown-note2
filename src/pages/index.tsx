@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 import { useHistory } from '@docusaurus/router';
@@ -10,7 +10,7 @@ export default function Home() {
   useEffect(() => {
     // トップページは基本的に見せない
     history.replace('/about');
-  }, []);
+  }, [history]);
 
   return <Layout description={siteConfig.tagline}></Layout>;
 }
