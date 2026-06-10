@@ -38,10 +38,11 @@
 /* 大項目を判別しやすいように下線を表示する */
 .markdown > h4 {
   text-decoration: underline;
-  text-decoration-style: dotted
+  text-decoration-style: dotted;
 }
 
 /* マークダウンページ下部の「前へ」「次へ」のリンクを表示しない */
-.pagination-nav__link--prev, .pagination-nav__link--next {
-  display: none
+.pagination-nav__link--prev,
+.pagination-nav__link--next {
+  display: none;
 }

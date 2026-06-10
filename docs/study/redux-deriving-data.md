@@ -90,7 +90,7 @@ const selectItemId = (state, itemId) => itemId;
 
 const selectItemById = createSelector(
   [selectItems, selectItemId],
-  (items, itemId) => items[itemId],
+  (items, itemId) => items[itemId]
 );
 
 const item = selectItemById(state, 42);
@@ -124,7 +124,7 @@ useSelector((state) => selectItemById(state, 42));
 const makeSelectItemsByCategory = () => {
   const selectItemsByCategory = createSelector(
     [(state) => state.items, (state, category) => category],
-    (items, category) => items.filter((item) => item.category === category),
+    (items, category) => items.filter((item) => item.category === category)
   );
   return selectItemsByCategory;
 };
@@ -143,7 +143,7 @@ import { selectTodoById } from './todosSlice';
 function TodoListitem({ todoId }) {
   const todo = useSelector(
     // 匿名関数
-    (state) => selectTodoById(state, todoId),
+    (state) => selectTodoById(state, todoId)
   );
 }
 ```
@@ -160,7 +160,7 @@ function CategoryList({ category }) {
   const selectItemsByCategory = useMemo(makeSelectItemsByCategory, []);
 
   const itemsByCategory = useSelector((state) =>
-    selectItemsByCategory(state, category),
+    selectItemsByCategory(state, category)
   );
 }
 ```

@@ -218,6 +218,6 @@ const addCommentFeatureReducer = createReducer(
       state.comments.byId[commentId] = { id: commentId, text: commentText };
       state.comments.allIds.concat(commentId);
     },
-  },
+  }
 );
 ```

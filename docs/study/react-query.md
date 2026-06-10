@@ -41,8 +41,8 @@ import { useQuery } from 'react-query';
 function MyComponent() {
   const { isLoading, error, data } = useQuery('repoData', () =>
     fetch('https://api.github.com/repos/tannerlinsley/react-query').then(
-      (res) => res.json(),
-    ),
+      (res) => res.json()
+    )
   );
 
   if (isLoading) return 'Loading...';
@@ -215,7 +215,7 @@ const userQueries = useQueries(
       queryKey: ['user', user.id],
       queryFn: () => fetchUserById(user.id),
     };
-  }),
+  })
 )``;
 ```
 
@@ -551,7 +551,7 @@ await queryClient.refetchQueries({ queryKey: ['posts'], type: 'active' });
 // デフォルトクエリ関数を作る
 const defaultQueryFn = async ({ queryKey }) => {
   const { data } = await axios.get(
-    `https://jsonplaceholder.typicode.com${queryKey[0]}`,
+    `https://jsonplaceholder.typicode.com${queryKey[0]}`
   );
   return data;
 };

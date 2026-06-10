@@ -544,7 +544,7 @@ function get<T, K extends keyof T & string>(obj: T, key: K): T[K] {
 
 ```ts
 const names = ['john', 'lisa', 'zowie'] as const;
-type Name = typeof names[number]; // 'john' | 'lisa' | 'zowie'
+type Name = (typeof names)[number]; // 'john' | 'lisa' | 'zowie'
 ```
 
 ### その他の型

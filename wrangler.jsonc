@@ -2,14 +2,14 @@
   "name": "markdown-note2",
   "compatibility_date": "2025-12-16",
   "assets": {
-    "directory": "./build"
+    "directory": "./build",
   },
   "workers_dev": true,
   "preview_urls": true,
   "routes": [
     {
       "pattern": "note.yuuniworks.com",
-      "custom_domain": true
-    }
-  ]
+      "custom_domain": true,
+    },
+  ],
 }

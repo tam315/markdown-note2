@@ -70,8 +70,8 @@ const SomeServerComponent = () => {
     <ExampleClientComponent>
       <ExampleServerComponent />
     </ExampleClientComponent>
-  )
-}
+  );
+};
 ```
 
 ### サーバサイド or クライアントサイドでしか使えないコードを明示する
@@ -81,7 +81,7 @@ await fetch('https://external-service.com/data', {
   headers: {
     authorization: process.env.API_KEY,
   },
-})
+});
 ```
 
 例えば上記は`NEXT_PUBLIC`がついていないのでクライアントサイドでは動作しない。
@@ -93,9 +93,9 @@ npm install client-only
 ```
 
 ```tsx
-import 'server-only'
+import 'server-only';
 // or
-import 'client-only'
+import 'client-only';
 ```
 
 こうすることでサーバサイド or クライアントサイドでしか動作しないことを明示＆保証できる。
@@ -115,24 +115,24 @@ Server Component では Context を作ったり使ったりできないので、
 Client Component で Context をセットアップして ↓
 
 ```tsx
-'use client'
+'use client';
 
-import { ThemeProvider } from 'acme-theme'
-import { AuthProvider } from 'acme-auth'
+import { ThemeProvider } from 'acme-theme';
+import { AuthProvider } from 'acme-auth';
 
 export function Providers({ children }) {
   return (
     <ThemeProvider>
       <AuthProvider>{children}</AuthProvider>
     </ThemeProvider>
-  )
+  );
 }
 ```
 
 Server Component でそれをつかう ↓
 
 ```tsx
-import { Providers } from './providers'
+import { Providers } from './providers';
 
 export default function RootLayout({ children }) {
   return (
@@ -141,7 +141,7 @@ export default function RootLayout({ children }) {
         <Providers>{children}</Providers>
       </body>
     </html>
-  )
+  );
 }
 ```
 

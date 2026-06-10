@@ -219,7 +219,7 @@ IIFE と同じく、グローバルを汚さずに初期設定を行うために
   init: () => {
     /* 何らかの初期化作業 */
   },
-}.init());
+}).init();
 ```
 
 ### 関数プロパティによるメモ化パータン
@@ -607,7 +607,7 @@ const obj = {
 };
 
 console.log(
-  obj.increment().increment().decrement().value, // 2
+  obj.increment().increment().decrement().value // 2
 );
 ```
 
@@ -790,7 +790,7 @@ const child = Object.create(Parent.prototype, { age: { value: 17 } });
 const cake = mix(
   { egg: 2, large: true },
   { butter: 1, salted: true },
-  { sugar: 'sure!' },
+  { sugar: 'sure!' }
 );
 ```
 

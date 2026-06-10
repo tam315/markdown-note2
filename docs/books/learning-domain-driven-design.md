@@ -374,14 +374,14 @@ Event sourcingでは、集約のメソッドで内部状態を変えるのでは
 ```ts
 interface EventStore {
   /* あるエンティティに関するイベントを全て取得する */
-  fetch(instanceId: string): Promise<Event[]>
+  fetch(instanceId: string): Promise<Event[]>;
 
   /* あるエンティティに関するイベントを追加する */
   append(
     instanceId: string,
     newEvents: Event[],
-    expectedVersion: number, // 並行処理で変更が競合しないようにするための楽観ロック用
-  ): Promise<void>
+    expectedVersion: number // 並行処理で変更が競合しないようにするための楽観ロック用
+  ): Promise<void>;
 }
 ```
 

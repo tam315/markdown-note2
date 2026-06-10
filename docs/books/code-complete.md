@@ -1236,7 +1236,7 @@ result = getData(
   data,
   EmploymentStatus_CurrentEmployee,
   PayrollType_Salaried,
-  SavingsPlan_NoDeduction,
+  SavingsPlan_NoDeduction
 );
 ```
 

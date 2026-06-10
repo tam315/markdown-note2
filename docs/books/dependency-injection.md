@@ -78,13 +78,13 @@ DIを実現する方法の一つに、コンストラクタ経由でのDI(Constr
 ```ts
 // 依存するインターフェース（抽象）
 interface Logger {
-  log(message: string): void
+  log(message: string): void;
 }
 
 // Loggerの具体的な実装
 class ConsoleLogger implements Logger {
   log(message: string): void {
-    console.log(`[LOG] ${message}`)
+    console.log(`[LOG] ${message}`);
   }
 }
 
@@ -95,21 +95,21 @@ class UserService {
 
   createUser(name: string): void {
     // ユーザー作成処理
-    this.logger.log(`ユーザー「${name}」を作成しました`)
+    this.logger.log(`ユーザー「${name}」を作成しました`);
   }
 
   deleteUser(name: string): void {
     // ユーザー削除処理
-    this.logger.log(`ユーザー「${name}」を削除しました`)
+    this.logger.log(`ユーザー「${name}」を削除しました`);
   }
 }
 
 // 使用例
-const logger = new ConsoleLogger()
-const userService = new UserService(logger) // コンストラクタ経由で依存を注入
+const logger = new ConsoleLogger();
+const userService = new UserService(logger); // コンストラクタ経由で依存を注入
 
-userService.createUser('太郎')
-userService.deleteUser('次郎')
+userService.createUser('太郎');
+userService.deleteUser('次郎');
 ```
 
 上記のコードは、インターフェースに対してプログラミングをすることで、疎結合を実現している。
@@ -248,13 +248,13 @@ DIコンテナを使うとコードの全体像を把握するのが難しくな
 // 合成基点 - Mainメソッドに限りなく近い場所で使う
 function createHomeController() {
   // データアクセス層
-  const userRepository = new UserRepository()
+  const userRepository = new UserRepository();
   // ドメイン層
-  const userService = new UserService(userRepository)
+  const userService = new UserService(userRepository);
   // UI層
-  const homeController = new HomeController(userService)
+  const homeController = new HomeController(userService);
 
-  return homeController
+  return homeController;
 }
 ```
 

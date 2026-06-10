@@ -134,19 +134,19 @@ test('incrementAsync Saga test', (assert) => {
   assert.deepEqual(
     gen.next().value,
     call(delay, 1000), // テストの理想形をこう書ける。なぜならcallの返り値はプレーンなオブジェクトだから。
-    'incrementAsync Saga must call delay(1000)',
+    'incrementAsync Saga must call delay(1000)'
   );
 
   assert.deepEqual(
     gen.next().value,
     put({ type: 'INCREMENT' }), // 同上
-    'incrementAsync Saga must dispatch an INCREMENT action',
+    'incrementAsync Saga must dispatch an INCREMENT action'
   );
 
   assert.deepEqual(
     gen.next(),
     { done: true, value: undefined },
-    'incrementAsync Saga must be done',
+    'incrementAsync Saga must be done'
   );
 
   assert.end();
@@ -167,7 +167,7 @@ const iterator = fetchProducts();
 assert.deepEqual(
   iterator.next().value,
   call(Api.fetch, '/products'),
-  "fetchProducts should yield an Effect call(Api.fetch, './products')",
+  "fetchProducts should yield an Effect call(Api.fetch, './products')"
 );
 
 const fakeProducts = {};
@@ -177,7 +177,7 @@ assert.deepEqual(
   // nextに引数を与えると、前回のyieldの結果を上書きできる。まじか。
   iterator.next(fakeProducts).value,
   put({ type: 'PRODUCTS_RECEIVED', fakeProducts }),
-  "fetchProducts should yield an Effect put({ type: 'PRODUCTS_RECEIVED', products })",
+  "fetchProducts should yield an Effect put({ type: 'PRODUCTS_RECEIVED', products })"
 );
 ```
 
@@ -202,7 +202,7 @@ function* fetchProducts() {
 assert.deepEqual(
   iterator.next().value,
   call(Api.fetch, '/products'),
-  "fetchProducts should yield an Effect call(Api.fetch, './products')",
+  "fetchProducts should yield an Effect call(Api.fetch, './products')"
 );
 
 const fakeError = {};
@@ -210,7 +210,7 @@ const fakeError = {};
 assert.deepEqual(
   iterator.throw(fakeError).value,
   put({ type: 'PRODUCTS_REQUEST_FAILED', fakeError }),
-  "fetchProducts should yield an Effect put({ type: 'PRODUCTS_REQUEST_FAILED', error })",
+  "fetchProducts should yield an Effect put({ type: 'PRODUCTS_REQUEST_FAILED', error })"
 );
 ```
 

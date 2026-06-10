@@ -127,7 +127,7 @@ const counter = createReducer(0, {
 const counter = createReducer(0, (builder) =>
   builder
     .addCase(increment, (state, action) => {})
-    .addCase(decrement, (state, action) => {}),
+    .addCase(decrement, (state, action) => {})
 );
 ```
 
@@ -221,7 +221,7 @@ export const fetchIssue = createAsyncThunk(
     const { org, repo, issueId } = arg;
     const issues = await getIssue(org, repo, issueId);
     return issues;
-  },
+  }
 );
 
 const issues = createSlice({
@@ -355,13 +355,13 @@ const booksSlice = createSlice({
 // グローバル化されていないセレクタには、entityだけを明示的に渡す必要がある
 const nonGlobalizedSelectors = booksAdapter.getSelectors();
 const allBooks = useSelector((state) =>
-  nonGlobalizedSelectors.selectAll(state.enties.books),
+  nonGlobalizedSelectors.selectAll(state.enties.books)
 );
 
 // グローバル化されたセレクタには、root stateをそのまま渡せる
 // つまり、useSelectorにそのまま渡せる
 const globalizedSelectors = booksAdapter.getSelectors<RootState>(
-  (state) => state.books,
+  (state) => state.books
 );
 const bookIds = useSelector(globalizedSelectors.selectAll);
 ```
@@ -450,7 +450,7 @@ const data = useSelector(
     commentsLoading: state.comments.loading,
     commentsError: state.comments.error,
     comments: state.comments.commentsByIssue[issueId],
-  }),
+  })
   // shallowEqual,
 );
 ```
@@ -527,7 +527,7 @@ const mapStateToProps = state => ({
 ```ts
 module.hot.accept(
   dependencies, // 監視するファイル
-  callback, // ファイルが変更されたときに何をするか
+  callback // ファイルが変更されたときに何をするか
 );
 ```
 
@@ -646,7 +646,7 @@ const render = () => {
     <Provider store={store}>
       <App />
     </Provider>,
-    document.getElementById('root'),
+    document.getElementById('root')
   );
 };
 

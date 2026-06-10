@@ -74,7 +74,7 @@ db.doc('users/someSpecificId').set(
   {
     name: 'Ada',
   },
-  { merge: true },
+  { merge: true }
 );
 ```
 
@@ -115,7 +115,7 @@ db.doc('users/someSpecificId').set(
   {
     name: 'Ada',
   },
-  { merge: true },
+  { merge: true }
 );
 ```
 
@@ -261,7 +261,7 @@ const querySnapshot = await db
 // querySnapshot.docs[]に、documentSnapshotが入っている。
 // これらにforEachするためのショートハンド。
 querySnapshot.forEach((queryDocumentSnapshot) =>
-  console.log(queryDocumentSnapshot.data()),
+  console.log(queryDocumentSnapshot.data())
 );
 ```
 
@@ -313,7 +313,7 @@ db.collection('cities')
       // Listen for document metadata changes
       includeMetadataChanges: true,
     },
-    function (doc) {},
+    function (doc) {}
   );
 ```
 
@@ -351,7 +351,7 @@ unsubscribe();
 ```js
 db.collection('cities').onSnapshot(
   (snapshot) => {},
-  (error) => {},
+  (error) => {}
 );
 ```
 
@@ -691,7 +691,7 @@ db.collection('cities').onSnapshot(
       var source = snapshot.metadata.fromCache ? 'local cache' : 'server';
       console.log('Data came from ' + source);
     });
-  },
+  }
 );
 ```
 

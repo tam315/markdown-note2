@@ -141,7 +141,7 @@ function Example() {
     // ここに`componentDidUpdate`でwatchしたいstate or propsを指定する。
     // 省略した場合は、renderのたびに毎回呼ばれる。
     // 空配列を指定した場合は、マウント時に1回だけ呼ばれる。
-    [count],
+    [count]
   );
   return <div />;
 }

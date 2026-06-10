@@ -284,7 +284,6 @@ allMarkdownRemark(sort: {fields: [frontmatter___date], order: DESC}) {…}
 Gatsby lets you use GraphQL to query your data and map the data to pages---all at **build time**
 
 1.  ビルド時
-
     1.  ノード作成時の処理（onCreateNode）
 
         特定のノードタイプ（Markdown など）だったとき、slug をフィールドとして追加で埋め込む。
@@ -292,7 +291,6 @@ Gatsby lets you use GraphQL to query your data and map the data to pages---all a
     2.  ページ作成の処理（createPages）
 
         クエリを実行して先ほどの slug の情報を取り出し、新しいページを作成する。
-
         - path を slug に設定する
         - どのテンプレートを使うか設定する
         - slug の情報をページクエリ時に使えるように`context`として埋め込む
@@ -394,7 +392,6 @@ https://www.netlifycms.org/docs/add-to-your-site/
     所定の設定を行うこと。All Netlify CMS files are contained in a
     static `admin` folder. E.g. as gatsby, static folder is
     `/static`
-
     - `/static/admin/index.html`
     - `/static/admin/config.ytml`
 
@@ -402,7 +399,6 @@ https://www.netlifycms.org/docs/add-to-your-site/
     Github に Gatsby のレポジトリをプッシュしたうえで、Netlify のコンソールから指示に従って設定を行うだけ。
 
 3.  **Netlify の認証に関する設定**
-
     - 「Identity」のサービスを有効にする
 
     - 編集ユーザの設定\

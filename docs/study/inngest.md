@@ -22,11 +22,11 @@ inngest.createFunction(
   { event: 'user.signup' },
   // Handler
   async ({ event, step }) => {
-    const user = await step.run('get-user', () => getUser(event.data.userId))
-    await step.run('send-email', () => sendEmail(user.email))
-    await step.run('update-status', () => markEmailSent(user.id))
-  },
-)
+    const user = await step.run('get-user', () => getUser(event.data.userId));
+    await step.run('send-email', () => sendEmail(user.email));
+    await step.run('update-status', () => markEmailSent(user.id));
+  }
+);
 ```
 
 **Funciton**(`inngest.createFunction()`) は、イベントやスケジュールをトリガーにして実行される処理の単位。
@@ -153,7 +153,7 @@ await を忘れるとサーバーレス環境などで問題がおきがち。
 const { ids } = await inngest.send([
   { name: 'app/user.created', data: { userId: '123' } },
   { name: 'app/email.sent', data: { to: 'user@example.com' } },
-])
+]);
 ```
 
 イベントの送出をするにはイベントキーが必要。
@@ -313,19 +313,19 @@ inngest.createFunction(
   { id: 'simple-function' },
   { event: 'test/simple.function' },
   async ({ step }) => {
-    console.log('hello')
+    console.log('hello');
 
     await step.run('a', async () => {
-      console.log('a')
-    })
+      console.log('a');
+    });
     await step.run('b', async () => {
-      console.log('b')
-    })
+      console.log('b');
+    });
     await step.run('c', async () => {
-      console.log('c')
-    })
-  },
-)
+      console.log('c');
+    });
+  }
+);
 
 // "hello"
 //

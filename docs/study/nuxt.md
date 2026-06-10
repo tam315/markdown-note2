@@ -1023,7 +1023,7 @@ module.exports = function (moduleOptions) {
 
     // Customize existing loaders
     const barLoader = config.module.rules.find(
-      (rule) => rule.loader === 'bar-loader',
+      (rule) => rule.loader === 'bar-loader'
     );
   });
 };

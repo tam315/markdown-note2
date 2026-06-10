@@ -82,7 +82,7 @@ deleteAccount({
           existingAccounts.filter(
             (existingAccount) =>
               readField('id', existingAccount) !==
-              fetchResult.data?.deleteAccount?.id,
+              fetchResult.data?.deleteAccount?.id
           ),
       },
     });

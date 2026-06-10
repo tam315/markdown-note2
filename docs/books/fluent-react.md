@@ -660,7 +660,7 @@ RSCはSuspenseと組み合わせることができる。
 React Elementsをブラウザに送るために文字列化することをSerializationという。
 
 ```jsx
-const htmlString = ReactDOMServer.renderToString(<App />)
+const htmlString = ReactDOMServer.renderToString(<App />);
 // htmlString will be `<div id="root"><div>Hello World</div></div>`
 ```
 
@@ -674,8 +674,8 @@ React Elementの`$$typeof`はSymbolなのでそのままではシリアライズ
 以下のように標準APIを使って、そこだけ文字列に置き換えて疎通させている。
 
 ```jsx
-JSON.stringify(ReactElement, replacer)
-JSON.parse(jsonString, replacer)
+JSON.stringify(ReactElement, replacer);
+JSON.parse(jsonString, replacer);
 // replacerのシグネチャーは (key,value)=>value
 // これを使って `$typeof`<->string を相互変換する
 ```
@@ -689,13 +689,13 @@ RSCが有効なアプリケーションで、ナビゲーション(e.g. `<a href
 このような方法を Event Delegation とよぶ。
 
 ```jsx
-window.addEventListener('click', event => {
+window.addEventListener('click', (event) => {
   if (event.target.tagName !== 'A') {
-    return
+    return;
   }
-  event.preventDefault()
-  navigate(event.target.href)
-})
+  event.preventDefault();
+  navigate(event.target.href);
+});
 ```
 
 navigate関数では、初期ロード時のようにHTMLシェルも含めた全体ではなく、

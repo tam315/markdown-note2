@@ -51,18 +51,18 @@ stream$.subscribe((data) => console.log(data));
 // hot observable => 0,1,2,2,3,3,4,4
 let stream$ = interval(1000).pipe(
   take(5),
-  publish(), // important
+  publish() // important
 );
 stream$.subscribe(
   (data) => console.log(`subscriber from first minute: ${data}`),
   (err) => console.log(err),
-  () => console.log('completed'),
+  () => console.log('completed')
 );
 setTimeout(() => {
   stream$.subscribe(
     (data) => console.log(`subscriber from 2nd minute: ${data}`),
     (err) => console.log(err),
-    () => console.log('completed'),
+    () => console.log('completed')
   );
 }, 2100);
 stream$.connect(); // important
@@ -72,7 +72,7 @@ stream$.connect(); // important
 let stream$ = interval(1000).pipe(
   take(5),
   publish(),
-  refCount(), // important
+  refCount() // important
 );
 setTimeout(() => {
   stream$.subscribe((data) => console.log(data));
@@ -100,8 +100,8 @@ const stream$ = of(1, 2, 3).pipe(
   flatMap((val) =>
     of(val)
       .pipe(ajax({ url: url + val }))
-      .pipe(map((e) => e.response)),
-  ),
+      .pipe(map((e) => e.response))
+  )
 );
 
 // fetch
@@ -175,7 +175,7 @@ let stream$ = of(1, 2).pipe(
     if (value > 1) throw 'error';
     return value;
   }),
-  retry(5),
+  retry(5)
 );
 
 // retryWhen
@@ -186,7 +186,7 @@ let error$ = throwError('crash').pipe(catchError((err) => of('patched', err)));
 error$.subscribe(
   (data) => console.log(data),
   (err) => console.error(err),
-  () => console.log('complete'),
+  () => console.log('complete')
 );
 // ('patched', 'crash', 'complete')　すべて正常系
 ```

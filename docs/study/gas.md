@@ -85,7 +85,7 @@ range.offset(
   0, // 行方向のオフセット
   0, // 列方向のオフセット
   range.getHeight(), // 高さ
-  range.getWidth(), // 幅
+  range.getWidth() // 幅
 );
 
 // 列数、行数を取得する
@@ -114,7 +114,7 @@ range
     null,
     null,
     null,
-    SpreadsheetApp.BorderStyle.SOLID_MEDIUM,
+    SpreadsheetApp.BorderStyle.SOLID_MEDIUM
   );
 ```
 
@@ -139,7 +139,7 @@ function onOpen() {
 ```js
 // コピー
 var sourceSS = SpreadsheetApp.openById(
-  '1c0GvbVUDeBmhTpq_A3vJh2xsebtLuwGwpBYqcOBqGvo',
+  '1c0GvbVUDeBmhTpq_A3vJh2xsebtLuwGwpBYqcOBqGvo'
 );
 var sourceSheet = sourceSS.getSheetByName('target-sheet-name');
 var sourceRange = sourceSheet.getDataRange();

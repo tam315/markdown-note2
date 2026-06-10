@@ -52,7 +52,7 @@ export class UserResolver {
   @Mutation(() => Boolean) // 成功したかどうかを返す
   async register(
     @Arg('email') email: string, // クエリ時の引数名、格納する変数名と型
-    @Arg('password') password: string,
+    @Arg('password') password: string
   ) {
     const hashedPassword = await hash(password, 12);
     try {
@@ -138,7 +138,7 @@ export class UserResolver {
   @Mutation(() => LoginRespone)
   async login(
     @Arg('email') email: string,
-    @Arg('password') password: string,
+    @Arg('password') password: string
   ): Promise<LoginRespone> {
     const user = await User.findOne({ where: { email } });
     if (!user) {
@@ -214,7 +214,7 @@ import { MyContext } from './MyContext';
 
 export const isAuthorized: MiddlewareFn<MyContext> = async (
   { context },
-  next,
+  next
 ) => {
   const authorization = context.req.headers['authorization'];
   if (!authorization) {
@@ -291,7 +291,7 @@ export const createRefreshToken = (user: User) => {
   return sign(
     { userId: user.id, tokenVersion: user.tokenVersion },
     process.env.REFRESH_TOKEN_SECRET!,
-    { expiresIn: '7d' },
+    { expiresIn: '7d' }
   );
 };
 ```
@@ -328,7 +328,7 @@ ReactDOM.render(
       <App />
     </ApolloProvider>
   </React.StrictMode>,
-  document.getElementById('root'),
+  document.getElementById('root')
 );
 ```
 
@@ -433,7 +433,7 @@ app.use(
     origin: 'http://localhost:3000',
     // 資格情報(Cookie)の送信をしてもいいか
     credentials: true,
-  }),
+  })
 );
 ```
 
